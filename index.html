@@ -1,1049 +1,1545 @@
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#050507" />
-<title>Epic 3D Hero Opener — WebGL + GSAP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Epic 3D Hero Opener — WebGL + GSAP Studio</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#22d3ee',
+              blue: '#3b82f6',
+              purple: '#8b5cf6',
+              dark: '#050507',
+              panel: '#0d0e15',
+              border: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          fontFamily: {
+            sans: ['Montserrat', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.164.0/build/three.module.js",
-    "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Import map for Three.js & GSAP -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.164.0/build/three.module.js",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+    }
   }
-}
-</script>
+  </script>
 
-<style>
-/* =========================================================
-   DESIGN TOKENS
-========================================================= */
-:root {
-  --bg: #050507;
-  --hud: rgba(255, 255, 255, 0.85);
-  --grid: rgba(255, 255, 255, 0.15);
-  --accent: #22d3ee;
-  --font-sans: 'Montserrat', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-}
+  <style>
+    :root {
+      --bg: #050507;
+      --hud: rgba(255, 255, 255, 0.85);
+      --grid: rgba(255, 255, 255, 0.15);
+      --accent: #22d3ee;
+    }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #08090e; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: var(--bg);
-  color: white;
-  overflow: hidden;
-  overscroll-behavior: none;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+    /* WebGL Canvas Stage Container */
+    #hero-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #050507;
+    }
 
-#stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-}
+    #webgl {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
 
-#webgl {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  z-index: 1;
-}
+    /* SVG frame lines */
+    .svg-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9;
+      opacity: 0;
+    }
+    .svg-frame path {
+      stroke: var(--hud);
+      stroke-width: 1;
+      fill: none;
+      stroke-dasharray: 2000;
+      stroke-dashoffset: 2000;
+    }
 
-/* =========================================================
-   HUD OVERLAY
-========================================================= */
-.hud {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  pointer-events: none;
-  will-change: opacity;
-}
+    /* HUD elements */
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-/* SVG frame lines */
-.svg-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9;
-  opacity: 0;
-}
-.svg-frame path {
-  stroke: var(--hud);
-  stroke-width: 1;
-  fill: none;
-  stroke-dasharray: 2000;
-  stroke-dashoffset: 2000;
-}
+    .bracket {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-color: var(--hud);
+      border-style: solid;
+      border-width: 0;
+      opacity: 0;
+    }
+    .bracket.tl { top: 20px; left: 20px; border-top-width: 1.5px; border-left-width: 1.5px; }
+    .bracket.tr { top: 20px; right: 20px; border-top-width: 1.5px; border-right-width: 1.5px; }
+    .bracket.bl { bottom: 20px; left: 20px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+    .bracket.br { bottom: 20px; right: 20px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
 
-/* Framing brackets */
-.bracket {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  border-color: var(--hud);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0;
-}
-.bracket.tl { top: 24px; left: 24px; border-top-width: 1.5px; border-left-width: 1.5px; }
-.bracket.tr { top: 24px; right: 24px; border-top-width: 1.5px; border-right-width: 1.5px; }
-.bracket.bl { bottom: 24px; left: 24px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
-.bracket.br { bottom: 24px; right: 24px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .grid-overlay .g-line { position: absolute; background: var(--grid); }
+    .grid-overlay .g-line.h { left: 0; right: 0; height: 1px; }
+    .grid-overlay .g-line.v { top: 0; bottom: 0; width: 1px; }
+    .grid-overlay .g-line.h1 { top: 33.33%; }
+    .grid-overlay .g-line.h2 { top: 66.66%; }
+    .grid-overlay .g-line.v1 { left: 33.33%; }
+    .grid-overlay .g-line.v2 { left: 66.66%; }
 
-/* Rule-of-thirds grid */
-.grid-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-}
-.grid-overlay .g-line {
-  position: absolute;
-  background: var(--grid);
-}
-.grid-overlay .g-line.h { left: 0; right: 0; height: 1px; }
-.grid-overlay .g-line.v { top: 0; bottom: 0; width: 1px; }
-.grid-overlay .g-line.h1 { top: 33.33%; }
-.grid-overlay .g-line.h2 { top: 66.66%; }
-.grid-overlay .g-line.v1 { left: 33.33%; }
-.grid-overlay .g-line.v2 { left: 66.66%; }
+    .crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+    }
+    .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--hud); }
+    .crosshair::before { width: 1px; height: 100%; left: 50%; top: 0; }
+    .crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
+    .crosshair.pulse { animation: crosshairPulse 2s ease-in-out infinite; }
 
-/* Center crosshair */
-.crosshair {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 28px;
-  height: 28px;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-}
-.crosshair::before,
-.crosshair::after {
-  content: '';
-  position: absolute;
-  background: var(--hud);
-}
-.crosshair::before { width: 1px; height: 100%; left: 50%; top: 0; }
-.crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
-.crosshair.pulse { animation: crosshairPulse 2s ease-in-out infinite; }
+    @keyframes crosshairPulse {
+      0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    }
 
-@keyframes crosshairPulse {
-  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
-}
+    .coord {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--hud);
+      line-height: 1.6;
+      opacity: 0;
+      text-transform: uppercase;
+    }
+    .coord.tl { top: 70px; left: 20px; }
+    .coord.tr { top: 70px; right: 20px; text-align: right; }
+    .coord.bl { bottom: 70px; left: 20px; }
+    .coord.br { bottom: 70px; right: 20px; text-align: right; }
+    .coord .label { color: var(--accent); margin-right: 4px; }
 
-/* Coordinate readouts */
-.coord {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: var(--hud);
-  line-height: 1.7;
-  opacity: 0;
-  text-transform: uppercase;
-}
-.coord.tl { top: 90px; left: 24px; }
-.coord.tr { top: 90px; right: 24px; text-align: right; }
-.coord.bl { bottom: 90px; left: 24px; }
-.coord.br { bottom: 90px; right: 24px; text-align: right; }
-.coord .label { color: var(--accent); margin-right: 6px; }
+    .tick-rail {
+      position: absolute;
+      left: 0; right: 0;
+      height: 5px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      opacity: 0;
+    }
+    .tick-rail.top { top: 6px; }
+    .tick-rail.bottom { bottom: 6px; }
+    .tick-rail .tick { width: 1px; height: 5px; background: var(--hud); opacity: 0.5; }
 
-/* Tick rails */
-.tick-rail {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 5px;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 24px;
-  opacity: 0;
-  pointer-events: none;
-}
-.tick-rail.top { top: 6px; }
-.tick-rail.bottom { bottom: 6px; }
-.tick-rail .tick {
-  width: 1px;
-  height: 5px;
-  background: var(--hud);
-  opacity: 0.6;
-}
-
-/* =========================================================
-   TYPOGRAPHY
-========================================================= */
-.title-wrap {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 20;
-  pointer-events: none;
-  width: 90%;
-  max-width: 1400px;
-  transform-origin: center center;
-}
-.headline {
-  font-family: var(--font-sans);
-  font-weight: 900;
-  font-size: clamp(40px, 8vw, 128px);
-  line-height: 0.9;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin: 0;
-  color: white;
-  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-}
-.headline .line { display: block; overflow: hidden; }
-.headline .char {
-  display: inline-block;
-  transform: translateY(100%);
-  opacity: 0;
-  will-change: transform, opacity;
-}
-.subtitle {
-  margin-top: 20px;
-  font-family: var(--font-mono);
-  font-size: clamp(10px, 1.2vw, 14px);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent);
-  opacity: 0;
-  font-weight: 400;
-  transition: letter-spacing 0.3s ease;
-}
-.subtitle .char {
-  display: inline-block;
-  opacity: 0;
-  will-change: opacity;
-}
-
-/* =========================================================
-   LOADER
-========================================================= */
-#loader {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 20px;
-  transition: opacity 0.6s ease;
-}
-#loader.hidden { opacity: 0; pointer-events: none; }
-#loader .spinner {
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-#loader .label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* =========================================================
-   MOBILE
-========================================================= */
-@media (max-width: 768px) {
-  .coord { font-size: 8px; letter-spacing: 1px; }
-  .coord.tl { top: 70px; left: 16px; }
-  .coord.tr { top: 70px; right: 16px; }
-  .coord.bl { bottom: 70px; left: 16px; }
-  .coord.br { bottom: 70px; right: 16px; }
-  .bracket { width: 32px; height: 32px; }
-  .bracket.tl { top: 16px; left: 16px; }
-  .bracket.tr { top: 16px; right: 16px; }
-  .bracket.bl { bottom: 16px; left: 16px; }
-  .bracket.br { bottom: 16px; right: 16px; }
-  .tick-rail .tick:nth-child(even) { display: none; }
-}
-</style>
+    /* Hero Typography */
+    .title-wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 20;
+      pointer-events: none;
+      width: 90%;
+      max-width: 1200px;
+      transform-origin: center center;
+    }
+    .headline {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: clamp(32px, 6vw, 96px);
+      line-height: 0.92;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0;
+      color: white;
+      text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    }
+    .headline .line { display: block; overflow: hidden; }
+    .headline .char {
+      display: inline-block;
+      transform: translateY(100%);
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+    .subtitle {
+      margin-top: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(9px, 1.1vw, 13px);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0;
+      font-weight: 600;
+      transition: letter-spacing 0.3s ease;
+    }
+    .subtitle .char { display: inline-block; opacity: 0; }
+  </style>
 </head>
 
-<body>
+<body class="bg-black text-gray-100 flex flex-col h-screen overflow-hidden font-sans antialiased select-none">
 
-<div id="loader">
-  <div class="spinner"></div>
-  <div class="label">Initializing Motion Engine</div>
-</div>
-
-<div id="stage">
-  <canvas id="webgl"></canvas>
-
-  <div class="hud" id="hud">
-    <!-- SVG vector frame lines -->
-    <svg class="svg-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M 0 15 L 100 15" />
-      <path d="M 0 85 L 100 85" />
-      <path d="M 15 0 L 15 100" />
-      <path d="M 85 0 L 85 100" />
-    </svg>
-
-    <!-- Framing brackets -->
-    <div class="bracket tl"></div>
-    <div class="bracket tr"></div>
-    <div class="bracket bl"></div>
-    <div class="bracket br"></div>
-
-    <!-- Rule-of-thirds grid -->
-    <div class="grid-overlay">
-      <div class="g-line h h1"></div>
-      <div class="g-line h h2"></div>
-      <div class="g-line v v1"></div>
-      <div class="g-line v v2"></div>
+  <!-- TOP APP HEADER BAR -->
+  <header class="h-14 border-b border-white/10 bg-brand-panel/90 backdrop-blur px-4 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <i data-lucide="box" class="w-4 h-4 text-black font-bold"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-sm tracking-wide flex items-center gap-2">
+          EPIC 3D HERO OPENER
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">v2.4 PRO</span>
+        </h1>
+        <p class="text-[10px] text-gray-400 font-mono">WebGL Shader Pipeline & GSAP Motion Controller</p>
+      </div>
     </div>
 
-    <!-- Center crosshair -->
-    <div class="crosshair pulse"></div>
+    <!-- Center Control Quick Bar -->
+    <div class="flex items-center space-x-2 bg-black/40 border border-white/10 p-1 rounded-lg">
+      <button id="btn-play-pause" class="px-3 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-cyan-500/20">
+        <i data-lucide="pause" class="w-3.5 h-3.5" id="icon-play-pause"></i>
+        <span id="lbl-play-pause">PAUSE</span>
+      </button>
 
-    <!-- Tick rails (populated by JS) -->
-    <div class="tick-rail top" id="ticks-top"></div>
-    <div class="tick-rail bottom" id="ticks-bottom"></div>
+      <button id="btn-replay" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-cyan-400"></i>
+        REPLAY SCENE
+      </button>
 
-    <!-- Coordinate readouts -->
-    <div class="coord tl">
-      <div><span class="label">LAT</span>36°49'11" N</div>
-      <div><span class="label">LON</span>36°55'42" E</div>
-    </div>
-    <div class="coord tr">
-      <div><span class="label">FRAME</span><span id="frame-readout">00:00:00:00</span></div>
-      <div><span class="label">FPS</span><span id="fps-readout">--</span></div>
-    </div>
-    <div class="coord bl">
-      <div><span class="label">SYS</span>MOTION.ENGINE</div>
-      <div><span class="label">STAT</span>ONLINE</div>
-    </div>
-    <div class="coord br">
-      <div><span class="label">Z</span><span id="z-readout">1000.00</span></div>
-      <div><span class="label">ROLL</span><span id="roll-readout">0.00°</span></div>
+      <div class="h-4 w-px bg-white/10 mx-1"></div>
+
+      <button id="btn-sound-toggle" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-xs flex items-center gap-1.5 text-gray-300 transition-colors border border-white/10" title="Toggle Synthesizer SFX">
+        <i data-lucide="volume-x" class="w-3.5 h-3.5 text-gray-400" id="icon-sound"></i>
+        <span class="font-mono text-[10px] text-gray-400" id="lbl-sound">SFX OFF</span>
+      </button>
     </div>
 
-    <!-- Typography -->
-    <div class="title-wrap" id="title-wrap">
-      <h1 class="headline" id="headline">
-        <span class="line" id="line-1"></span>
-        <span class="line" id="line-2"></span>
-      </h1>
-      <div class="subtitle" id="subtitle"></div>
+    <!-- Right Controls / Actions -->
+    <div class="flex items-center space-x-3">
+      <button id="btn-code-modal" class="px-3 py-1.5 rounded border border-cyan-500/30 hover:border-cyan-500 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-xs font-mono font-medium flex items-center gap-1.5 transition-all">
+        <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
+        EXPORT / CODE
+      </button>
+
+      <button id="btn-fullscreen" class="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="Toggle Fullscreen">
+        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE LAYOUT -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDE PANEL (CUSTOMIZER & CONTROLS) -->
+    <aside id="sidebar" class="w-80 md:w-96 border-r border-white/10 bg-brand-panel flex flex-col shrink-0 z-20 transition-all duration-300">
+      
+      <!-- Panel Header Tabs -->
+      <div class="flex border-b border-white/10 text-xs font-medium bg-black/30">
+        <button id="tab-btn-content" class="flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold">
+          <i data-lucide="type" class="w-3.5 h-3.5"></i> CONTENT
+        </button>
+        <button id="tab-btn-scene" class="flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i> 3D PIPELINE
+        </button>
+        <button id="tab-btn-hud" class="flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> HUD / FX
+        </button>
+      </div>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-6">
+
+        <!-- TAB 1: CONTENT CUSTOMIZER -->
+        <div id="tab-content-page" class="space-y-5">
+          <div class="space-y-1">
+            <h3 class="text-xs font-bold text-gray-300 tracking-wider uppercase flex items-center gap-1.5">
+              <i data-lucide="heading" class="w-3.5 h-3.5 text-cyan-400"></i> Headline Typography
+            </h3>
+            <p class="text-[11px] text-gray-400">Edit the 3D cinematic staggered titles below.</p>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">Headline Line 1</label>
+              <input type="text" id="input-line-1" value="MAXING &" class="w-full bg-black/60 border border-white/15 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">Headline Line 2</label>
+              <input type="text" id="input-line-2" value="TRANSACTIONS" class="w-full bg-black/60 border border-white/15 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">Subtitle Tagline</label>
+              <input type="text" id="input-subtitle" value="NO PLUGINS REQUIRED" class="w-full bg-black/60 border border-white/15 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors" />
+            </div>
+
+            <button id="btn-apply-text" class="w-full py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-xs rounded shadow-md transition-all flex items-center justify-center gap-1.5">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i> APPLY TEXT & REPLAY
+            </button>
+          </div>
+
+          <div class="pt-4 border-t border-white/10 space-y-3">
+            <label class="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">Preset Themes</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="preset-btn p-2 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs transition-colors" data-l1="CYBERNETIC" data-l2="INTELLIGENCE" data-sub="QUANTUM MATRIX V4">
+                <div class="font-bold text-gray-200">Cyberpunk</div>
+                <div class="text-[10px] text-cyan-400 font-mono">Neon & Grid</div>
+              </button>
+
+              <button class="preset-btn p-2 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs transition-colors" data-l1="FINTECH" data-l2="ECOSYSTEM" data-sub="NEXT GEN LIQUIDITY">
+                <div class="font-bold text-gray-200">FinTech</div>
+                <div class="text-[10px] text-blue-400 font-mono">Clean Corporate</div>
+              </button>
+
+              <button class="preset-btn p-2 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs transition-colors" data-l1="NEURAL" data-l2="ARCHITECT" data-sub="SYNTHETIC REALITY ENGINE">
+                <div class="font-bold text-gray-200">Sci-Fi AI</div>
+                <div class="text-[10px] text-purple-400 font-mono">Deep Tech</div>
+              </button>
+
+              <button class="preset-btn p-2 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs transition-colors" data-l1="MAXING &" data-l2="TRANSACTIONS" data-sub="NO PLUGINS REQUIRED">
+                <div class="font-bold text-gray-200">Default</div>
+                <div class="text-[10px] text-emerald-400 font-mono">Epic Opener</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: 3D PIPELINE & CAMERA -->
+        <div id="tab-scene-page" class="space-y-5 hidden">
+          <div class="space-y-1">
+            <h3 class="text-xs font-bold text-gray-300 tracking-wider uppercase flex items-center gap-1.5">
+              <i data-lucide="camera" class="w-3.5 h-3.5 text-cyan-400"></i> Camera & Motion Controls
+            </h3>
+            <p class="text-[11px] text-gray-400">Adjust camera behavior and Three.js mesh parameters.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-mono text-gray-300">Start Distance (Z)</span>
+                <span id="val-cam-start" class="font-mono text-cyan-400">1000</span>
+              </div>
+              <input type="range" id="slider-cam-start" min="600" max="1500" value="1000" step="10" class="w-full accent-cyan-400 cursor-pointer" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-mono text-gray-300">Climax Zoom (Z)</span>
+                <span id="val-cam-end" class="font-mono text-cyan-400">200</span>
+              </div>
+              <input type="range" id="slider-cam-end" min="50" max="400" value="200" step="10" class="w-full accent-cyan-400 cursor-pointer" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-mono text-gray-300">Mouse Parallax Intensity</span>
+                <span id="val-parallax" class="font-mono text-cyan-400">1.0x</span>
+              </div>
+              <input type="range" id="slider-parallax" min="0" max="3" value="1" step="0.1" class="w-full accent-cyan-400 cursor-pointer" />
+            </div>
+
+            <div class="pt-3 border-t border-white/10 space-y-3">
+              <h4 class="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Shader Panel Colors</h4>
+              <div class="flex items-center gap-3">
+                <label class="text-xs text-gray-300">Accent Border Color:</label>
+                <input type="color" id="picker-border" value="#22d3ee" class="w-8 h-8 rounded bg-transparent cursor-pointer border border-white/20" />
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-white/10 space-y-3">
+              <h4 class="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Dust Particles Density</h4>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-mono text-gray-300">Particle Count</span>
+                  <span id="val-particles" class="font-mono text-cyan-400">600</span>
+                </div>
+                <input type="range" id="slider-particles" min="100" max="2000" value="600" step="50" class="w-full accent-cyan-400 cursor-pointer" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: HUD & FX -->
+        <div id="tab-hud-page" class="space-y-5 hidden">
+          <div class="space-y-1">
+            <h3 class="text-xs font-bold text-gray-300 tracking-wider uppercase flex items-center gap-1.5">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-cyan-400"></i> HUD Overlay & Chromatic FX
+            </h3>
+            <p class="text-[11px] text-gray-400">Toggle HUD visual layers and shader post-effects.</p>
+          </div>
+
+          <div class="space-y-3">
+            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
+              <span class="text-xs text-gray-200 font-medium">SVG Frame Vector Overlay</span>
+              <input type="checkbox" id="chk-hud-frame" checked class="accent-cyan-400 w-4 h-4 rounded" />
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
+              <span class="text-xs text-gray-200 font-medium">Rule of Thirds Grid</span>
+              <input type="checkbox" id="chk-hud-grid" checked class="accent-cyan-400 w-4 h-4 rounded" />
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
+              <span class="text-xs text-gray-200 font-medium">Telemetry Coordinates</span>
+              <input type="checkbox" id="chk-hud-telemetry" checked class="accent-cyan-400 w-4 h-4 rounded" />
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
+              <span class="text-xs text-gray-200 font-medium">Pulsing Center Crosshair</span>
+              <input type="checkbox" id="chk-hud-crosshair" checked class="accent-cyan-400 w-4 h-4 rounded" />
+            </label>
+          </div>
+
+          <div class="pt-3 border-t border-white/10 space-y-3">
+            <h4 class="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Shader Aberration Pulse</h4>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-mono text-gray-300">Aberration Spike Strength</span>
+                <span id="val-aberration" class="font-mono text-cyan-400">0.020</span>
+              </div>
+              <input type="range" id="slider-aberration" min="0" max="0.08" value="0.02" step="0.005" class="w-full accent-cyan-400 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar Footer Status -->
+      <div class="p-3 border-t border-white/10 bg-black/40 text-[10px] font-mono text-gray-400 flex items-center justify-between shrink-0">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          RENDERER ACTIVE
+        </span>
+        <span id="sidebar-panel-count">22 MESH PANELS</span>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN PREVIEW VIEWPORT STAGE -->
+    <main class="flex-1 relative flex flex-col overflow-hidden bg-black">
+      
+      <!-- Live WebGL Canvas Scene Container -->
+      <div id="hero-viewport">
+
+        <div id="loader" class="absolute inset-0 bg-[#050507] z-50 flex flex-col items-center justify-center gap-4 transition-opacity duration-500">
+          <div class="w-10 h-10 border-2 border-white/10 border-t-cyan-400 rounded-full animate-spin"></div>
+          <div class="font-mono text-xs tracking-widest text-gray-400 uppercase">Initializing Motion Engine</div>
+        </div>
+
+        <canvas id="webgl"></canvas>
+
+        <!-- HUD Layer -->
+        <div class="hud" id="hud">
+          <!-- SVG frame -->
+          <svg class="svg-frame" id="svg-frame-elem" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M 0 15 L 100 15" />
+            <path d="M 0 85 L 100 85" />
+            <path d="M 15 0 L 15 100" />
+            <path d="M 85 0 L 85 100" />
+          </svg>
+
+          <!-- Brackets -->
+          <div class="bracket tl hud-bracket-elem"></div>
+          <div class="bracket tr hud-bracket-elem"></div>
+          <div class="bracket bl hud-bracket-elem"></div>
+          <div class="bracket br hud-bracket-elem"></div>
+
+          <!-- Rule of thirds -->
+          <div class="grid-overlay" id="hud-grid-elem">
+            <div class="g-line h h1"></div>
+            <div class="g-line h h2"></div>
+            <div class="g-line v v1"></div>
+            <div class="g-line v v2"></div>
+          </div>
+
+          <!-- Crosshair -->
+          <div class="crosshair pulse" id="hud-crosshair-elem"></div>
+
+          <!-- Tick rails -->
+          <div class="tick-rail top" id="ticks-top"></div>
+          <div class="tick-rail bottom" id="ticks-bottom"></div>
+
+          <!-- Telemetry coordinates -->
+          <div class="coord tl hud-telemetry-elem">
+            <div><span class="label">LAT</span>36°49'11" N</div>
+            <div><span class="label">LON</span>36°55'42" E</div>
+          </div>
+          <div class="coord tr hud-telemetry-elem">
+            <div><span class="label">FRAME</span><span id="frame-readout">00:00:00:00</span></div>
+            <div><span class="label">FPS</span><span id="fps-readout">--</span></div>
+          </div>
+          <div class="coord bl hud-telemetry-elem">
+            <div><span class="label">SYS</span>MOTION.ENGINE</div>
+            <div><span class="label">STAT</span>ONLINE</div>
+          </div>
+          <div class="coord br hud-telemetry-elem">
+            <div><span class="label">Z</span><span id="z-readout">1000.00</span></div>
+            <div><span class="label">ROLL</span><span id="roll-readout">0.00°</span></div>
+          </div>
+
+          <!-- Headline Typography Layer -->
+          <div class="title-wrap" id="title-wrap">
+            <h1 class="headline" id="headline">
+              <span class="line" id="line-1"></span>
+              <span class="line" id="line-2"></span>
+            </h1>
+            <div class="subtitle" id="subtitle"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM SCRUBBER & TIMELINE TOOLBAR -->
+      <div class="h-14 border-t border-white/10 bg-brand-panel/95 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center space-x-3 w-full max-w-xl">
+          <span class="font-mono text-[11px] text-cyan-400 w-12" id="timeline-time">0.00s</span>
+          
+          <!-- Timeline Progress Slider -->
+          <div class="flex-1 relative flex items-center">
+            <input type="range" id="timeline-scrubber" min="0" max="5" value="0" step="0.01" class="w-full accent-cyan-400 cursor-pointer h-1 bg-white/20 rounded-lg appearance-none" />
+          </div>
+
+          <span class="font-mono text-[11px] text-gray-400">5.00s</span>
+        </div>
+
+        <!-- Telemetry indicators right -->
+        <div class="hidden md:flex items-center space-x-6 text-[11px] font-mono text-gray-400">
+          <div class="flex items-center gap-1.5">
+            <span class="text-cyan-400">CAM Z:</span>
+            <span id="hud-cam-z-live">1000.0</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-cyan-400">PROGRESS:</span>
+            <span id="hud-progress-pct">0%</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- CODE EXPORT MODAL -->
+  <div id="code-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-panel border border-white/15 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-white/10 flex items-center justify-between bg-black/40">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="code" class="w-4 h-4 text-cyan-400"></i>
+          <h2 class="font-bold text-sm text-gray-100">Hero Opener Source Code & Configuration</h2>
+        </div>
+        <button id="btn-close-modal" class="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Code View) -->
+      <div class="flex-1 p-4 overflow-hidden flex flex-col bg-black/60">
+        <div class="flex items-center justify-between mb-2 text-xs font-mono text-gray-400">
+          <span>Three.js + GSAP 3D Shader Setup</span>
+          <button id="btn-copy-code" class="px-3 py-1 rounded bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY HTML & JS
+          </button>
+        </div>
+        
+        <textarea id="code-snippet-area" readonly class="w-full flex-1 bg-black/80 border border-white/10 rounded p-3 font-mono text-xs text-cyan-300 focus:outline-none resize-none leading-relaxed overflow-y-auto"></textarea>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-white/10 bg-black/40 flex justify-end">
+        <button id="btn-close-modal-2" class="px-4 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold text-gray-200 transition-colors">
+          Close Inspector
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- MAIN SCENE LOGIC & DASHBOARD SCRIPT -->
+  <script type="module">
+    import * as THREE from 'three';
+    import gsap from 'gsap';
+
+    /* =========================================================
+       AUDIO SYNTH SFX (Web Audio API)
+    ========================================================= */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+
+      playSwoosh() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.6);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+        filter.frequency.linearRampToValueAtTime(1200, this.ctx.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.6);
+      }
+
+      playGlitch() {
+        if (!this.enabled || !this.ctx) return;
+        const bufferSize = this.ctx.sampleRate * 0.1;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = buffer;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+
+        whiteNoise.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        whiteNoise.start();
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* =========================================================
+       CONFIG STATE
+    ========================================================= */
+    const CONFIG = {
+      layers: [0, -150, -300, -450, -600],
+      panelsPerLayer: [3, 4, 5, 6, 4],
+      panelW: 16,
+      panelH: 9,
+      cameraStart: 1000,
+      cameraMid: 700,
+      cameraEnd: 200,
+      parallaxFactor: 1.0,
+      aberrationMax: 0.02,
+      borderColor: '#22d3ee',
+      particleCount: 600,
+      titleLines: ['MAXING &', 'TRANSACTIONS'],
+      subtitle: 'NO PLUGINS REQUIRED',
+    };
+
+    /* =========================================================
+       SHADERS
+    ========================================================= */
+    const vertexShader = /* glsl */ `
+      varying vec2 vUv;
+      varying vec3 vWorldPos;
+
+      void main() {
+        vUv = uv;
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        vWorldPos = world.xyz;
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }
+    `;
+
+    const fragmentShader = /* glsl */ `
+      precision highp float;
+
+      uniform sampler2D uTexA;
+      uniform sampler2D uTexB;
+      uniform float uProgress;
+      uniform float uAberration;
+      uniform float uOpacity;
+      uniform float uTime;
+      uniform float uDepth;
+      uniform float uBorderWidth;
+      uniform vec3  uBorderColor;
+      uniform vec2  uResolution;
+
+      varying vec2 vUv;
+      varying vec3 vWorldPos;
+
+      vec4 sampleBlurred(sampler2D tex, vec2 uv, float blurAmount) {
+        if (blurAmount <= 0.001) return texture2D(tex, uv);
+
+        vec2 texel = 1.0 / uResolution;
+        vec4 sum = vec4(0.0);
+        float weights[9];
+        weights[0] = 0.051; weights[1] = 0.0918; weights[2] = 0.12245;
+        weights[3] = 0.1531; weights[4] = 0.1633; weights[5] = 0.1531;
+        weights[6] = 0.12245; weights[7] = 0.0918; weights[8] = 0.051;
+        float offset = blurAmount;
+
+        for (int i = 0; i < 9; i++) {
+          float x = (float(i) - 4.0) * offset * texel.x;
+          float y = (float(i) - 4.0) * offset * texel.y;
+          sum += texture2D(tex, uv + vec2(x, y)) * weights[i];
+          sum += texture2D(tex, uv + vec2(-x, -y)) * weights[i];
+        }
+        return sum * 0.5;
+      }
+
+      void main() {
+        float blurAmount = clamp((-uDepth - 400.0) / 200.0, 0.0, 1.0) * 3.5;
+
+        vec2 dir = normalize(vUv - 0.5);
+        vec2 offset = dir * uAberration;
+
+        vec4 aR = sampleBlurred(uTexA, vUv + offset, blurAmount);
+        vec4 aG = sampleBlurred(uTexA, vUv, blurAmount);
+        vec4 aB = sampleBlurred(uTexA, vUv - offset, blurAmount);
+        vec4 texA = vec4(aR.r, aG.g, aB.b, aG.a);
+
+        vec4 bR = sampleBlurred(uTexB, vUv + offset, blurAmount);
+        vec4 bG = sampleBlurred(uTexB, vUv, blurAmount);
+        vec4 bB = sampleBlurred(uTexB, vUv - offset, blurAmount);
+        vec4 texB = vec4(bR.r, bG.g, bB.b, bG.a);
+
+        vec4 mixed = mix(texA, texB, uProgress);
+
+        vec2 edgeUV = vUv;
+        float borderDist = min(min(edgeUV.x, 1.0 - edgeUV.x), min(edgeUV.y, 1.0 - edgeUV.y));
+        float borderMask = 1.0 - smoothstep(0.0, uBorderWidth, borderDist);
+
+        vec2 sheenUV = vUv - 0.5;
+        float sheen = smoothstep(0.4, 0.0, length(sheenUV)) * 0.15;
+
+        vec3 borderRGB = uBorderColor + vec3(sheen);
+        vec3 finalRGB = mix(mixed.rgb, borderRGB, borderMask);
+
+        float alpha = mixed.a * uOpacity;
+        alpha = max(alpha, borderMask * uOpacity * 0.9);
+
+        gl_FragColor = vec4(finalRGB, alpha);
+      }
+    `;
+
+    /* =========================================================
+       SCENE SETUP & CANVAS
+    ========================================================= */
+    const container = document.getElementById('hero-viewport');
+    const canvas = document.getElementById('webgl');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050507);
+    scene.fog = new THREE.Fog(0x050507, 800, 2000);
+
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      3000
+    );
+    camera.position.set(0, 0, CONFIG.cameraStart);
+    camera.rotation.order = 'YXZ';
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance',
+    });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x050507);
+
+    /* Lights */
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(8, 14, 12);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.6);
+    rimLight.position.set(-12, -6, -8);
+    scene.add(rimLight);
+
+    /* Texture Generator */
+    function makeTexture(hue, label) {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 576;
+      const ctx = c.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 1024, 576);
+      grad.addColorStop(0, `hsl(${hue}, 65%, 45%)`);
+      grad.addColorStop(1, `hsl(${(hue + 40) % 360}, 75%, 12%)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 576);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 1024; i += 96) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 576); ctx.stroke();
+      }
+      for (let i = 0; i < 576; i += 96) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = 'bold 72px Montserrat, sans-serif';
+      ctx.fillText(label, 40, 520);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    const textures = Array.from({ length: 6 }, (_, i) =>
+      makeTexture(180 + i * 45, `PANEL-0${i + 1}`)
+    );
+
+    /* Panels Construction */
+    const panels = [];
+    const uniformRegistry = new Map();
+    let panelId = 0;
+
+    CONFIG.layers.forEach((z, layerIndex) => {
+      const count = CONFIG.panelsPerLayer[layerIndex];
+      const spread = 22 + layerIndex * 4;
+
+      for (let i = 0; i < count; i++) {
+        const t = count === 1 ? 0.5 : i / (count - 1);
+        const x = (t - 0.5) * spread;
+        const y = (layerIndex % 2 === 0 ? 1 : -1) * (i % 2 === 0 ? 2.5 : -2.5);
+        const rotationY = (t - 0.5) * 0.25;
+        const rotationZ = (Math.random() - 0.5) * 0.05;
+        const column = x < -3 ? 'left' : x > 3 ? 'right' : 'center';
+
+        const uniforms = {
+          uTexA: { value: textures[panelId % 6] },
+          uTexB: { value: textures[(panelId + 3) % 6] },
+          uProgress: { value: 0 },
+          uAberration: { value: 0.005 },
+          uOpacity: { value: 0 },
+          uTime: { value: 0 },
+          uDepth: { value: z },
+          uBorderWidth: { value: 0.012 },
+          uBorderColor: { value: new THREE.Color(CONFIG.borderColor) },
+          uResolution: { value: new THREE.Vector2(1024, 576) },
+        };
+
+        const material = new THREE.ShaderMaterial({
+          vertexShader,
+          fragmentShader,
+          transparent: true,
+          side: THREE.DoubleSide,
+          uniforms,
+        });
+
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH),
+          material
+        );
+
+        mesh.position.set(x, y, z);
+        mesh.rotation.set(0, rotationY, rotationZ);
+        mesh.scale.setScalar(layerIndex === 0 ? 1.0 : 0.9);
+
+        mesh.userData = {
+          baseX: x,
+          baseY: y,
+          baseZ: z,
+          column,
+          layerIndex,
+          panelIndex: panelId,
+          uniforms,
+        };
+
+        scene.add(mesh);
+        panels.push(mesh);
+        uniformRegistry.set(panelId, uniforms);
+        panelId++;
+      }
+    });
+
+    /* Ambient Dust Points */
+    let dustGeo = new THREE.BufferGeometry();
+    let dustMaterial = new THREE.PointsMaterial({
+      color: 0x88eaff,
+      size: 1.2,
+      transparent: true,
+      opacity: 0.5,
+      sizeAttenuation: true,
+    });
+    let dust = new THREE.Points(dustGeo, dustMaterial);
+    scene.add(dust);
+
+    function rebuildParticles(count) {
+      scene.remove(dust);
+      dustGeo.dispose();
+      dustGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count * 3; i += 3) {
+        pos[i] = (Math.random() - 0.5) * 90;
+        pos[i + 1] = (Math.random() - 0.5) * 60;
+        pos[i + 2] = -Math.random() * 750;
+      }
+      dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      dust = new THREE.Points(dustGeo, dustMaterial);
+      scene.add(dust);
+    }
+    rebuildParticles(CONFIG.particleCount);
+
+    /* Split Typography helpers */
+    function splitIntoLine(containerEl, text) {
+      containerEl.innerHTML = '';
+      const chars = [];
+      [...text].forEach((ch) => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+        containerEl.appendChild(span);
+        chars.push(span);
+      });
+      return chars;
+    }
+
+    const line1El = document.getElementById('line-1');
+    const line2El = document.getElementById('line-2');
+    const subtitleEl = document.getElementById('subtitle');
+
+    let titleChars = [];
+    let subtitleChars = [];
+
+    function updateTitleElements() {
+      titleChars = [
+        ...splitIntoLine(line1El, CONFIG.titleLines[0]),
+        ...splitIntoLine(line2El, CONFIG.titleLines[1]),
+      ];
+      subtitleChars = splitIntoLine(subtitleEl, CONFIG.subtitle);
+    }
+    updateTitleElements();
+
+    /* Build HUD tick rails */
+    function buildTicks(containerEl, count = 36) {
+      containerEl.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        containerEl.appendChild(tick);
+      }
+    }
+    buildTicks(document.getElementById('ticks-top'));
+    buildTicks(document.getElementById('ticks-bottom'));
+
+    /* Pointer Parallax */
+    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+    window.addEventListener('pointermove', (e) => {
+      const rect = container.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        pointer.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.ty = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      }
+    }, { passive: true });
+
+    const camBase = {
+      x: 0, y: 0, z: CONFIG.cameraStart,
+      rotX: 0, rotY: 0, rotZ: 0,
+    };
+
+    /* Telemetry Elements */
+    const fpsEl = document.getElementById('fps-readout');
+    const frameEl = document.getElementById('frame-readout');
+    const zEl = document.getElementById('z-readout');
+    const rollEl = document.getElementById('roll-readout');
+    const liveCamZ = document.getElementById('hud-cam-z-live');
+    const liveProgPct = document.getElementById('hud-progress-pct');
+    const scrubber = document.getElementById('timeline-scrubber');
+    const timelineTimeLbl = document.getElementById('timeline-time');
+
+    /* Animation Render Loop */
+    const clock = new THREE.Clock();
+    let fpsFrames = 0;
+    let fpsLast = 0;
+    let rafId = 0;
+    let startTime = performance.now();
+    let isPlaying = true;
+
+    function tick() {
+      rafId = requestAnimationFrame(tick);
+      const t = clock.getElapsedTime();
+
+      /* Pointer smooth interpolation */
+      pointer.x += (pointer.tx - pointer.x) * 0.05;
+      pointer.y += (pointer.ty - pointer.y) * 0.05;
+
+      /* Apply camera position & parallax intensity */
+      camera.position.x = camBase.x + pointer.x * 1.2 * CONFIG.parallaxFactor;
+      camera.position.y = camBase.y - pointer.y * 0.9 * CONFIG.parallaxFactor;
+      camera.position.z = camBase.z;
+      camera.rotation.x = camBase.rotX - pointer.y * 0.06 * CONFIG.parallaxFactor;
+      camera.rotation.y = camBase.rotY + pointer.x * 0.1 * CONFIG.parallaxFactor;
+      camera.rotation.z = camBase.rotZ;
+
+      /* Update Shader Uniform Time */
+      uniformRegistry.forEach((u) => { u.uTime.value = t; });
+
+      /* Rotate particles */
+      dust.rotation.z = t * 0.005;
+
+      /* Calculate Readouts */
+      fpsFrames++;
+      if (t - fpsLast > 0.5) {
+        fpsEl.textContent = String(Math.round(fpsFrames / (t - fpsLast)));
+        fpsFrames = 0;
+        fpsLast = t;
+      }
+      zEl.textContent = camera.position.z.toFixed(2);
+      liveCamZ.textContent = camera.position.z.toFixed(1);
+      rollEl.textContent = `${(camera.rotation.z * 180 / Math.PI).toFixed(2)}°`;
+
+      const elapsed = (performance.now() - startTime) / 1000;
+      const frames = Math.floor(elapsed * 60);
+      const hh = String(Math.floor(frames / 216000)).padStart(2, '0');
+      const mm = String(Math.floor(frames / 3600) % 60).padStart(2, '0');
+      const ss = String(Math.floor(frames / 60) % 60).padStart(2, '0');
+      const ff = String(frames % 60).padStart(2, '0');
+      frameEl.textContent = `${hh}:${mm}:${ss}:${ff}`;
+
+      /* Sync Scrubber if timeline playing */
+      if (masterTl && isPlaying) {
+        const time = masterTl.time();
+        scrubber.value = time.toFixed(2);
+        timelineTimeLbl.textContent = `${time.toFixed(2)}s`;
+        liveProgPct.textContent = `${Math.round((time / masterTl.duration()) * 100)}%`;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    /* =========================================================
+       GSAP TIMELINE ENGINE
+    ========================================================= */
+    let masterTl;
+
+    function buildTimeline() {
+      if (masterTl) masterTl.kill();
+      gsap.killTweensOf('*');
+      startTime = performance.now();
+
+      /* Reset HUD state */
+      gsap.set('.svg-frame', { opacity: 0 });
+      gsap.set('.svg-frame path', { strokeDashoffset: 2000 });
+      gsap.set('.bracket', { opacity: 0 });
+      gsap.set('.grid-overlay', { opacity: 0 });
+      gsap.set('.tick-rail', { opacity: 0 });
+      gsap.set('.coord', { opacity: 0 });
+      gsap.set('.crosshair', { opacity: 0 });
+      gsap.set(titleChars, { yPercent: 100, opacity: 0 });
+      gsap.set(subtitleChars, { opacity: 0 });
+      gsap.set(subtitleEl, { letterSpacing: '0.05em' });
+      gsap.set('#title-wrap', { scale: 1 });
+      gsap.set('#hud', { opacity: 1 });
+
+      /* Reset Panels */
+      panels.forEach((p) => {
+        p.position.set(p.userData.baseX, p.userData.baseY, p.userData.baseZ);
+        p.rotation.set(0, p.rotation.y, p.rotation.z);
+        p.scale.setScalar(p.userData.layerIndex === 0 ? 0.8 : 0.9);
+        p.userData.uniforms.uProgress.value = 0;
+        p.userData.uniforms.uAberration.value = 0.005;
+        p.userData.uniforms.uOpacity.value = 0;
+        p.userData.uniforms.uBorderColor.value.set(CONFIG.borderColor);
+      });
+
+      /* Reset Camera */
+      Object.assign(camBase, {
+        x: 0, y: 0, z: CONFIG.cameraStart,
+        rotX: 0, rotY: 0, rotZ: 0,
+      });
+
+      masterTl = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        onStart: () => {
+          sound.playSwoosh();
+        }
+      });
+
+      /* PHASE 1: Vector Frame & Text Reveal (0.0s - 1.2s) */
+      masterTl
+        .to('.svg-frame', { opacity: 1, duration: 0.1 }, 0)
+        .to('.svg-frame path', {
+          strokeDashoffset: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.08,
+        }, 0)
+        .to('.bracket', { opacity: 1, duration: 0.6, stagger: 0.06 }, 0.05)
+        .to('.grid-overlay', { opacity: 1, duration: 0.7 }, 0.1)
+        .to('.tick-rail', { opacity: 1, duration: 0.6, stagger: 0.1 }, 0.15)
+        .to('.coord', { opacity: 1, duration: 0.5, stagger: 0.08 }, 0.2)
+        .to('.crosshair', { opacity: 1, duration: 0.4 }, 0.25);
+
+      /* Camera dolly start -> mid */
+      masterTl.to(camBase, {
+        z: CONFIG.cameraMid,
+        duration: 1.0,
+        ease: 'power2.out',
+      }, 0.2);
+
+      /* Fade in mesh panels */
+      panels.forEach((p, idx) => {
+        const isCentral = p.userData.column === 'center';
+        const targetScale = isCentral ? 1.0 : 0.95;
+
+        masterTl.to(p.scale, {
+          x: targetScale,
+          y: targetScale,
+          duration: 0.9,
+          ease: 'power2.out',
+        }, 0.4 + idx * 0.015);
+
+        masterTl.to(p.userData.uniforms.uOpacity, {
+          value: 1,
+          duration: 0.8,
+          ease: 'power2.out',
+        }, 0.4 + idx * 0.025);
+      });
+
+      /* Headline character slide */
+      masterTl.to(titleChars, {
+        yPercent: 0,
+        opacity: 1,
+        duration: 0.7,
+        ease: 'power3.out',
+        stagger: 0.03,
+      }, 0.6);
+
+      /* PHASE 2: Split Parallax & Texture Shader Crossfade (1.2s - 3.2s) */
+      masterTl.to(camBase, {
+        rotX: -0.05,
+        rotY: 0.08,
+        duration: 1.0,
+        ease: 'power2.inOut',
+      }, 1.2);
+
+      panels.forEach((p) => {
+        const col = p.userData.column;
+        const xOffset = col === 'left' ? -2.4 : col === 'right' ? 2.4 : 0;
+        masterTl.to(p.position, {
+          x: p.userData.baseX + xOffset,
+          duration: 1.6,
+          ease: 'power2.inOut',
+        }, 1.4);
+      });
+
+      panels.forEach((p, i) => {
+        masterTl.to(p.userData.uniforms.uProgress, {
+          value: 1,
+          duration: 1.0,
+          ease: 'power2.inOut',
+        }, 1.6 + i * 0.02);
+      });
+
+      masterTl.to(subtitleChars, {
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.015,
+        ease: 'power2.out',
+      }, 2.0);
+
+      masterTl.to(subtitleEl, {
+        letterSpacing: '0.2em',
+        duration: 1.2,
+        ease: 'power2.inOut',
+      }, 2.0);
+
+      /* PHASE 3: Climax Zoom & Outro Lockup (3.2s - 5.0s) */
+      masterTl.to(camBase, {
+        z: CONFIG.cameraEnd,
+        duration: 1.2,
+        ease: 'expo.inOut',
+        onStart: () => sound.playGlitch()
+      }, 3.2);
+
+      /* Aberration FX Spike */
+      panels.forEach((p) => {
+        masterTl.to(p.userData.uniforms.uAberration, {
+          value: CONFIG.aberrationMax,
+          duration: 0.2,
+          ease: 'power4.out',
+        }, 3.5);
+        masterTl.to(p.userData.uniforms.uAberration, {
+          value: 0,
+          duration: 0.8,
+          ease: 'power2.in',
+        }, 3.7);
+      });
+
+      masterTl.to(camBase, {
+        rotX: 0,
+        rotY: 0,
+        duration: 1.2,
+        ease: 'power2.inOut',
+      }, 3.6);
+
+      panels.forEach((p) => {
+        masterTl.to(p.position, {
+          x: p.userData.baseX,
+          duration: 0.9,
+          ease: 'power2.out',
+        }, 4.0);
+      });
+
+      masterTl.to('#title-wrap', {
+        scale: 0.92,
+        duration: 1.0,
+        ease: 'power2.inOut',
+      }, 4.0);
+
+      masterTl.to('#hud', {
+        opacity: 0.45,
+        duration: 0.5,
+        ease: 'power2.out',
+      }, 4.5);
+
+      return masterTl;
+    }
+
+    /* Resize Listener */
+    function onResize() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+    window.addEventListener('resize', onResize);
+
+    /* =========================================================
+       UI CONTROLS & INTERACTION LISTENERS
+    ========================================================= */
+
+    /* Tab Switching */
+    const tabBtns = {
+      content: document.getElementById('tab-btn-content'),
+      scene: document.getElementById('tab-btn-scene'),
+      hud: document.getElementById('tab-btn-hud'),
+    };
+    const tabPages = {
+      content: document.getElementById('tab-content-page'),
+      scene: document.getElementById('tab-scene-page'),
+      hud: document.getElementById('tab-hud-page'),
+    };
+
+    function switchTab(activeKey) {
+      Object.keys(tabBtns).forEach((key) => {
+        if (key === activeKey) {
+          tabBtns[key].classList.add('border-cyan-400', 'text-cyan-400');
+          tabBtns[key].classList.remove('border-transparent', 'text-gray-400');
+          tabPages[key].classList.remove('hidden');
+        } else {
+          tabBtns[key].classList.remove('border-cyan-400', 'text-cyan-400');
+          tabBtns[key].classList.add('border-transparent', 'text-gray-400');
+          tabPages[key].classList.add('hidden');
+        }
+      });
+    }
+
+    tabBtns.content.addEventListener('click', () => switchTab('content'));
+    tabBtns.scene.addEventListener('click', () => switchTab('scene'));
+    tabBtns.hud.addEventListener('click', () => switchTab('hud'));
+
+    /* Apply Headline Text */
+    const line1Input = document.getElementById('input-line-1');
+    const line2Input = document.getElementById('input-line-2');
+    const subtitleInput = document.getElementById('input-subtitle');
+    const applyTextBtn = document.getElementById('btn-apply-text');
+
+    function applyTextAndReplay() {
+      CONFIG.titleLines = [line1Input.value || '', line2Input.value || ''];
+      CONFIG.subtitle = subtitleInput.value || '';
+      updateTitleElements();
+      buildTimeline();
+      masterTl.play(0);
+      isPlaying = true;
+      updatePlayPauseUI();
+    }
+
+    applyTextBtn.addEventListener('click', applyTextAndReplay);
+
+    /* Preset Buttons */
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        line1Input.value = btn.dataset.l1;
+        line2Input.value = btn.dataset.l2;
+        subtitleInput.value = btn.dataset.sub;
+        applyTextAndReplay();
+      });
+    });
+
+    /* Play/Pause & Replay Buttons */
+    const playPauseBtn = document.getElementById('btn-play-pause');
+    const playPauseIcon = document.getElementById('icon-play-pause');
+    const playPauseLbl = document.getElementById('lbl-play-pause');
+    const replayBtn = document.getElementById('btn-replay');
+
+    function updatePlayPauseUI() {
+      if (isPlaying) {
+        playPauseLbl.textContent = 'PAUSE';
+        playPauseIcon.setAttribute('data-lucide', 'pause');
+      } else {
+        playPauseLbl.textContent = 'PLAY';
+        playPauseIcon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (!masterTl) return;
+      if (isPlaying) {
+        masterTl.pause();
+        isPlaying = false;
+      } else {
+        masterTl.play();
+        isPlaying = true;
+      }
+      updatePlayPauseUI();
+    });
+
+    replayBtn.addEventListener('click', () => {
+      buildTimeline();
+      masterTl.play(0);
+      isPlaying = true;
+      updatePlayPauseUI();
+    });
+
+    /* Timeline Scrubber */
+    scrubber.addEventListener('input', (e) => {
+      if (!masterTl) return;
+      const time = parseFloat(e.target.value);
+      masterTl.pause();
+      masterTl.time(time);
+      isPlaying = false;
+      updatePlayPauseUI();
+      timelineTimeLbl.textContent = `${time.toFixed(2)}s`;
+      liveProgPct.textContent = `${Math.round((time / masterTl.duration()) * 100)}%`;
+    });
+
+    /* Audio Synth Toggle */
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    const soundIcon = document.getElementById('icon-sound');
+    const soundLbl = document.getElementById('lbl-sound');
+
+    soundBtn.addEventListener('click', () => {
+      sound.init();
+      sound.enabled = !sound.enabled;
+      if (sound.enabled) {
+        soundLbl.textContent = 'SFX ON';
+        soundLbl.classList.replace('text-gray-400', 'text-cyan-400');
+        soundIcon.setAttribute('data-lucide', 'volume-2');
+        soundIcon.classList.replace('text-gray-400', 'text-cyan-400');
+        sound.playSwoosh();
+      } else {
+        soundLbl.textContent = 'SFX OFF';
+        soundLbl.classList.replace('text-cyan-400', 'text-gray-400');
+        soundIcon.setAttribute('data-lucide', 'volume-x');
+        soundIcon.classList.replace('text-cyan-400', 'text-gray-400');
+      }
+      lucide.createIcons();
+    });
+
+    /* Scene Controls Sliders */
+    const sliderCamStart = document.getElementById('slider-cam-start');
+    const sliderCamEnd = document.getElementById('slider-cam-end');
+    const sliderParallax = document.getElementById('slider-parallax');
+    const sliderParticles = document.getElementById('slider-particles');
+    const pickerBorder = document.getElementById('picker-border');
+    const sliderAberration = document.getElementById('slider-aberration');
+
+    sliderCamStart.addEventListener('input', (e) => {
+      CONFIG.cameraStart = parseFloat(e.target.value);
+      document.getElementById('val-cam-start').textContent = CONFIG.cameraStart;
+      buildTimeline();
+    });
+
+    sliderCamEnd.addEventListener('input', (e) => {
+      CONFIG.cameraEnd = parseFloat(e.target.value);
+      document.getElementById('val-cam-end').textContent = CONFIG.cameraEnd;
+      buildTimeline();
+    });
+
+    sliderParallax.addEventListener('input', (e) => {
+      CONFIG.parallaxFactor = parseFloat(e.target.value);
+      document.getElementById('val-parallax').textContent = `${CONFIG.parallaxFactor.toFixed(1)}x`;
+    });
+
+    sliderParticles.addEventListener('input', (e) => {
+      CONFIG.particleCount = parseInt(e.target.value);
+      document.getElementById('val-particles').textContent = CONFIG.particleCount;
+      rebuildParticles(CONFIG.particleCount);
+    });
+
+    pickerBorder.addEventListener('input', (e) => {
+      CONFIG.borderColor = e.target.value;
+      panels.forEach(p => p.userData.uniforms.uBorderColor.value.set(CONFIG.borderColor));
+    });
+
+    sliderAberration.addEventListener('input', (e) => {
+      CONFIG.aberrationMax = parseFloat(e.target.value);
+      document.getElementById('val-aberration').textContent = CONFIG.aberrationMax.toFixed(3);
+    });
+
+    /* HUD Toggle Checkboxes */
+    document.getElementById('chk-hud-frame').addEventListener('change', (e) => {
+      document.getElementById('svg-frame-elem').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('chk-hud-grid').addEventListener('change', (e) => {
+      document.getElementById('hud-grid-elem').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('chk-hud-telemetry').addEventListener('change', (e) => {
+      document.querySelectorAll('.hud-telemetry-elem').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
+    });
+
+    document.getElementById('chk-hud-crosshair').addEventListener('change', (e) => {
+      document.getElementById('hud-crosshair-elem').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    /* Code Modal & Inspector */
+    const modal = document.getElementById('code-modal');
+    const codeArea = document.getElementById('code-snippet-area');
+
+    document.getElementById('btn-code-modal').addEventListener('click', () => {
+      codeArea.value = `<!-- Epic 3D Hero Opener Configuration Export -->
 <script type="module">
-/* =========================================================
-   IMPORTS
-========================================================= */
 import * as THREE from 'three';
 import gsap from 'gsap';
 
-/* =========================================================
-   CONFIG
-========================================================= */
-const CONFIG = {
-  layers: [0, -150, -300, -450, -600],
-  panelsPerLayer: [3, 4, 5, 6, 4],
-  panelW: 16,
-  panelH: 9,
-  cameraStart: 1000,
-  cameraMid: 700,
-  cameraEnd: 200,
-  titleLines: ['MAXING &', 'TRANSACTIONS'],
-  subtitle: 'NO PLUGINS REQUIRED',
-  hudInset: 24,
-};
+// Configured values from dashboard:
+const CONFIG = ${JSON.stringify(CONFIG, null, 2)};
 
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-/* =========================================================
-   SHADERS
-========================================================= */
-const vertexShader = /* glsl */ `
-  varying vec2 vUv;
-  varying vec3 vWorldPos;
-
-  void main() {
-    vUv = uv;
-    vec4 world = modelMatrix * vec4(position, 1.0);
-    vWorldPos = world.xyz;
-    gl_Position = projectionMatrix * viewMatrix * world;
-  }
-`;
-
-const fragmentShader = /* glsl */ `
-  precision highp float;
-
-  uniform sampler2D uTexA;
-  uniform sampler2D uTexB;
-  uniform float uProgress;
-  uniform float uAberration;
-  uniform float uOpacity;
-  uniform float uTime;
-  uniform float uDepth;
-  uniform float uBorderWidth;
-  uniform vec3  uBorderColor;
-  uniform vec2  uResolution;
-
-  varying vec2 vUv;
-  varying vec3 vWorldPos;
-
-  vec4 sampleBlurred(sampler2D tex, vec2 uv, float blurAmount) {
-    if (blurAmount <= 0.001) return texture2D(tex, uv);
-
-    vec2 texel = 1.0 / uResolution;
-    vec4 sum = vec4(0.0);
-    float weights[9] = float[9](0.051, 0.0918, 0.12245, 0.1531, 0.1633, 0.1531, 0.12245, 0.0918, 0.051);
-    float offset = blurAmount;
-
-    for (int i = 0; i < 9; i++) {
-      float x = (float(i) - 4.0) * offset * texel.x;
-      float y = (float(i) - 4.0) * offset * texel.y;
-      sum += texture2D(tex, uv + vec2(x, y)) * weights[i];
-      sum += texture2D(tex, uv + vec2(-x, -y)) * weights[i];
-    }
-    return sum * 0.5;
-  }
-
-  void main() {
-    float blurAmount = clamp((-uDepth - 400.0) / 200.0, 0.0, 1.0) * 3.5;
-
-    vec2 dir = normalize(vUv - 0.5);
-    vec2 offset = dir * uAberration;
-
-    vec4 aR = sampleBlurred(uTexA, vUv + offset, blurAmount);
-    vec4 aG = sampleBlurred(uTexA, vUv, blurAmount);
-    vec4 aB = sampleBlurred(uTexA, vUv - offset, blurAmount);
-    vec4 texA = vec4(aR.r, aG.g, aB.b, aG.a);
-
-    vec4 bR = sampleBlurred(uTexB, vUv + offset, blurAmount);
-    vec4 bG = sampleBlurred(uTexB, vUv, blurAmount);
-    vec4 bB = sampleBlurred(uTexB, vUv - offset, blurAmount);
-    vec4 texB = vec4(bR.r, bG.g, bB.b, bG.a);
-
-    vec4 mixed = mix(texA, texB, uProgress);
-
-    vec2 edgeUV = vUv;
-    float borderDist = min(min(edgeUV.x, 1.0 - edgeUV.x), min(edgeUV.y, 1.0 - edgeUV.y));
-    float borderMask = 1.0 - smoothstep(0.0, uBorderWidth, borderDist);
-
-    vec2 sheenUV = vUv - 0.5;
-    float sheen = smoothstep(0.4, 0.0, length(sheenUV)) * 0.15;
-
-    vec3 borderRGB = uBorderColor + vec3(sheen);
-    vec3 finalRGB = mix(mixed.rgb, borderRGB, borderMask);
-
-    float alpha = mixed.a * uOpacity;
-    alpha = max(alpha, borderMask * uOpacity * 0.9);
-
-    gl_FragColor = vec4(finalRGB, alpha);
-  }
-`;
-
-/* =========================================================
-   SCENE SETUP
-========================================================= */
-const canvas = document.getElementById('webgl');
-
+// Init WebGL Scene, Camera & GSAP Timeline...
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050507);
-scene.fog = new THREE.Fog(0x050507, 800, 2000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
+camera.position.z = ${CONFIG.cameraStart};
 
-const camera = new THREE.PerspectiveCamera(
-  45,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  3000
-);
-camera.position.set(0, 0, CONFIG.cameraStart);
-camera.rotation.order = 'YXZ';
+// Shader Material Setup
+const fragmentShader = \`${fragmentShader}\`;
+const vertexShader = \`${vertexShader}\`;
 
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  alpha: false,
-  powerPreference: 'high-performance',
-});
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x050507);
-
-/* =========================================================
-   LIGHTS
-========================================================= */
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-keyLight.position.set(8, 14, 12);
-scene.add(keyLight);
-
-const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.6);
-rimLight.position.set(-12, -6, -8);
-scene.add(rimLight);
-
-/* =========================================================
-   PROCEDURAL TEXTURES
-========================================================= */
-function makeTexture(hue, label) {
-  const c = document.createElement('canvas');
-  c.width = 1024;
-  c.height = 576;
-  const ctx = c.getContext('2d');
-
-  const grad = ctx.createLinearGradient(0, 0, 1024, 576);
-  grad.addColorStop(0, `hsl(${hue}, 65%, 45%)`);
-  grad.addColorStop(1, `hsl(${(hue + 40) % 360}, 75%, 12%)`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1024, 576);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 1024; i += 96) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 576); ctx.stroke();
-  }
-  for (let i = 0; i < 576; i += 96) {
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
-  }
-
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = 'bold 72px Montserrat, sans-serif';
-  ctx.fillText(label, 40, 520);
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-const textures = Array.from({ length: 6 }, (_, i) =>
-  makeTexture(180 + i * 45, `PANEL-0${i + 1}`)
-);
-
-/* =========================================================
-   PANEL BUILDER
-========================================================= */
-const panels = [];
-const uniformRegistry = new Map(); // panelIndex → uniforms
-
-let panelId = 0;
-
-CONFIG.layers.forEach((z, layerIndex) => {
-  const count = CONFIG.panelsPerLayer[layerIndex];
-  const spread = 22 + layerIndex * 4;
-
-  for (let i = 0; i < count; i++) {
-    const t = count === 1 ? 0.5 : i / (count - 1);
-    const x = (t - 0.5) * spread;
-    const y = (layerIndex % 2 === 0 ? 1 : -1) * (i % 2 === 0 ? 2.5 : -2.5);
-    const rotationY = (t - 0.5) * 0.25;
-    const rotationZ = (Math.random() - 0.5) * 0.05;
-
-    const column = x < -3 ? 'left' : x > 3 ? 'right' : 'center';
-
-    const uniforms = {
-      uTexA: { value: textures[panelId % 6] },
-      uTexB: { value: textures[(panelId + 3) % 6] },
-      uProgress: { value: 0 },
-      uAberration: { value: 0.005 },
-      uOpacity: { value: 0 },
-      uTime: { value: 0 },
-      uDepth: { value: z },
-      uBorderWidth: { value: 0.012 },
-      uBorderColor: { value: new THREE.Color(0xffffff) },
-      uResolution: { value: new THREE.Vector2(1024, 576) },
-    };
-
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      transparent: true,
-      side: THREE.DoubleSide,
-      uniforms,
-    });
-
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH),
-      material
-    );
-
-    mesh.position.set(x, y, z);
-    mesh.rotation.set(0, rotationY, rotationZ);
-    mesh.scale.setScalar(layerIndex === 0 ? 1.0 : 0.9);
-
-    mesh.userData = {
-      baseX: x,
-      baseY: y,
-      baseZ: z,
-      column,
-      layerIndex,
-      panelIndex: panelId,
-      uniforms,
-    };
-
-    scene.add(mesh);
-    panels.push(mesh);
-    uniformRegistry.set(panelId, uniforms);
-    panelId++;
-  }
-});
-
-/* =========================================================
-   AMBIENT DUST (depth enhancer)
-========================================================= */
-const dustGeo = new THREE.BufferGeometry();
-const dustPositions = new Float32Array(600 * 3);
-for (let i = 0; i < 600 * 3; i += 3) {
-  dustPositions[i] = (Math.random() - 0.5) * 80;
-  dustPositions[i + 1] = (Math.random() - 0.5) * 50;
-  dustPositions[i + 2] = -Math.random() * 700;
-}
-dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-const dust = new THREE.Points(
-  dustGeo,
-  new THREE.PointsMaterial({
-    color: 0x88eaff,
-    size: 1.2,
-    transparent: true,
-    opacity: 0.5,
-    sizeAttenuation: true,
-  })
-);
-scene.add(dust);
-
-/* =========================================================
-   TITLE SPLIT
-========================================================= */
-function splitIntoLine(container, text) {
-  container.innerHTML = '';
-  const chars = [];
-  [...text].forEach((ch) => {
-    const span = document.createElement('span');
-    span.className = 'char';
-    span.textContent = ch === ' ' ? '\u00A0' : ch;
-    container.appendChild(span);
-    chars.push(span);
-  });
-  return chars;
-}
-
-const line1El = document.getElementById('line-1');
-const line2El = document.getElementById('line-2');
-const subtitleEl = document.getElementById('subtitle');
-
-const titleChars = [
-  ...splitIntoLine(line1El, CONFIG.titleLines[0]),
-  ...splitIntoLine(line2El, CONFIG.titleLines[1]),
-];
-
-const subtitleChars = splitIntoLine(subtitleEl, CONFIG.subtitle);
-
-/* =========================================================
-   TICK RAILS
-========================================================= */
-function buildTicks(container, count = 40) {
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    const tick = document.createElement('div');
-    tick.className = 'tick';
-    container.appendChild(tick);
-  }
-}
-buildTicks(document.getElementById('ticks-top'));
-buildTicks(document.getElementById('ticks-bottom'));
-
-/* =========================================================
-   CAMERA PARALLAX (pointer)
-========================================================= */
-const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-window.addEventListener('pointermove', (e) => {
-  pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
-}, { passive: true });
-
-/* Camera base — mutated by GSAP timeline */
-const camBase = {
-  x: 0, y: 0, z: CONFIG.cameraStart,
-  rotX: 0, rotY: 0, rotZ: 0,
-};
-
-/* =========================================================
-   READOUT REFS
-========================================================= */
-const fpsEl = document.getElementById('fps-readout');
-const frameEl = document.getElementById('frame-readout');
-const zEl = document.getElementById('z-readout');
-const rollEl = document.getElementById('roll-readout');
-
-/* =========================================================
-   RENDER LOOP
-========================================================= */
-const clock = new THREE.Clock();
-let fpsFrames = 0;
-let fpsLast = 0;
-let rafId = 0;
-let startTime = performance.now();
-
-function tick() {
-  rafId = requestAnimationFrame(tick);
-  const t = clock.getElapsedTime();
-
-  /* Pointer smoothing */
-  pointer.x += (pointer.tx - pointer.x) * 0.05;
-  pointer.y += (pointer.ty - pointer.y) * 0.05;
-
-  /* Camera: base (GSAP) + pointer offset */
-  camera.position.x = camBase.x + pointer.x * 1.2;
-  camera.position.y = camBase.y - pointer.y * 0.9;
-  camera.position.z = camBase.z;
-  camera.rotation.x = camBase.rotX - pointer.y * 0.06;
-  camera.rotation.y = camBase.rotY + pointer.x * 0.1;
-  camera.rotation.z = camBase.rotZ;
-
-  /* Time uniform for all panels */
-  uniformRegistry.forEach((u) => { u.uTime.value = t; });
-
-  /* Dust drift */
-  dust.rotation.z = t * 0.005;
-
-  /* Readouts */
-  fpsFrames++;
-  if (t - fpsLast > 0.5) {
-    fpsEl.textContent = String(Math.round(fpsFrames / (t - fpsLast)));
-    fpsFrames = 0;
-    fpsLast = t;
-  }
-  zEl.textContent = camera.position.z.toFixed(2);
-  rollEl.textContent = `${(camera.rotation.z * 180 / Math.PI).toFixed(2)}°`;
-  const elapsed = (performance.now() - startTime) / 1000;
-  const frames = Math.floor(elapsed * 60);
-  const hh = String(Math.floor(frames / 216000)).padStart(2, '0');
-  const mm = String(Math.floor(frames / 3600) % 60).padStart(2, '0');
-  const ss = String(Math.floor(frames / 60) % 60).padStart(2, '0');
-  const ff = String(frames % 60).padStart(2, '0');
-  frameEl.textContent = `${hh}:${mm}:${ss}:${ff}`;
-
+// Render Loop
+function animate() {
+  requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
-
-/* =========================================================
-   GSAP TIMELINE
-========================================================= */
-let masterTl;
-
-function buildTimeline() {
-  if (masterTl) masterTl.kill();
-  gsap.killTweensOf('*');
-  startTime = performance.now();
-
-  /* Reset HUD */
-  gsap.set('.svg-frame', { opacity: 0 });
-  gsap.set('.svg-frame path', { strokeDashoffset: 2000 });
-  gsap.set('.bracket', { opacity: 0 });
-  gsap.set('.grid-overlay', { opacity: 0 });
-  gsap.set('.tick-rail', { opacity: 0 });
-  gsap.set('.coord', { opacity: 0 });
-  gsap.set('.crosshair', { opacity: 0 });
-  gsap.set(titleChars, { yPercent: 100, opacity: 0 });
-  gsap.set(subtitleChars, { opacity: 0 });
-  gsap.set(subtitleEl, { letterSpacing: '0.05em' });
-  gsap.set('#title-wrap', { scale: 1 });
-  gsap.set('#hud', { opacity: 1 });
-
-  /* Reset panels */
-  panels.forEach((p) => {
-    p.position.set(p.userData.baseX, p.userData.baseY, p.userData.baseZ);
-    p.rotation.set(0, p.rotation.y, p.rotation.z);
-    p.scale.setScalar(p.userData.layerIndex === 0 ? 0.8 : 0.9);
-    p.userData.uniforms.uProgress.value = 0;
-    p.userData.uniforms.uAberration.value = 0.005;
-    p.userData.uniforms.uOpacity.value = 0;
-  });
-
-  /* Reset camera */
-  Object.assign(camBase, {
-    x: 0, y: 0, z: CONFIG.cameraStart,
-    rotX: 0, rotY: 0, rotZ: 0,
-  });
-
-  masterTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-  /* ============================================================
-     PHASE 1: Grid Draw & Focus (0.0s – 1.2s)
-  ============================================================ */
-  masterTl
-    .to('.svg-frame', { opacity: 1, duration: 0.1 }, 0)
-    .to('.svg-frame path', {
-      strokeDashoffset: 0,
-      duration: 0.8,
-      ease: 'power3.out',
-      stagger: 0.08,
-    }, 0)
-    .to('.bracket', { opacity: 1, duration: 0.6, stagger: 0.06 }, 0.05)
-    .to('.grid-overlay', { opacity: 1, duration: 0.7 }, 0.1)
-    .to('.tick-rail', { opacity: 1, duration: 0.6, stagger: 0.1 }, 0.15)
-    .to('.coord', { opacity: 1, duration: 0.5, stagger: 0.08 }, 0.2)
-    .to('.crosshair', { opacity: 1, duration: 0.4 }, 0.25);
-
-  /* 0.2s — Camera dolly 1000 → 700 */
-  masterTl.to(camBase, {
-    z: CONFIG.cameraMid,
-    duration: 1.0,
-    ease: 'power2.out',
-  }, 0.2);
-
-  /* 0.4s — Panels fade in + central scale up */
-  panels.forEach((p, idx) => {
-    const isCentral = p.userData.column === 'center';
-    const targetScale = isCentral ? 1.0 : 0.95;
-
-    masterTl.to(p.scale, {
-      x: targetScale,
-      y: targetScale,
-      duration: 0.9,
-      ease: 'power2.out',
-    }, 0.4 + idx * 0.015);
-
-    masterTl.to(p.userData.uniforms.uOpacity, {
-      value: 1,
-      duration: 0.8,
-      ease: 'power2.out',
-    }, 0.4 + idx * 0.025);
-  });
-
-  /* 0.6s — Headline chars slide up */
-  masterTl.to(titleChars, {
-    yPercent: 0,
-    opacity: 1,
-    duration: 0.7,
-    ease: 'power3.out',
-    stagger: 0.03,
-  }, 0.6);
-
-  /* ============================================================
-     PHASE 2: Split-Panel Parallax Transition (1.2s – 3.2s)
-  ============================================================ */
-  /* 1.2s — Camera tilt */
-  masterTl.to(camBase, {
-    rotX: -0.05,
-    rotY: 0.08,
-    duration: 1.0,
-    ease: 'power2.inOut',
-  }, 1.2);
-
-  /* 1.4s — Split masks */
-  panels.forEach((p) => {
-    const col = p.userData.column;
-    const xOffset = col === 'left' ? -2.4 : col === 'right' ? 2.4 : 0;
-    masterTl.to(p.position, {
-      x: p.userData.baseX + xOffset,
-      duration: 1.6,
-      ease: 'power2.inOut',
-    }, 1.4);
-  });
-
-  /* 1.6s — Texture crossfade */
-  panels.forEach((p, i) => {
-    masterTl.to(p.userData.uniforms.uProgress, {
-      value: 1,
-      duration: 1.0,
-      ease: 'power2.inOut',
-    }, 1.6 + i * 0.02);
-  });
-
-  /* 2.0s — Subtitle enters */
-  masterTl.to(subtitleChars, {
-    opacity: 1,
-    duration: 0.8,
-    stagger: 0.015,
-    ease: 'power2.out',
-  }, 2.0);
-  masterTl.to(subtitleEl, {
-    letterSpacing: '0.2em',
-    duration: 1.2,
-    ease: 'power2.inOut',
-  }, 2.0);
-
-  /* ============================================================
-     PHASE 3: Climax Zoom & Outro Lockup (3.2s – 5.0s)
-  ============================================================ */
-  /* 3.2s — Fast dolly zoom 700 → 200 */
-  masterTl.to(camBase, {
-    z: CONFIG.cameraEnd,
-    duration: 1.2,
-    ease: 'expo.inOut',
-  }, 3.2);
-
-  /* 3.5s — Aberration spike */
-  panels.forEach((p) => {
-    masterTl.to(p.userData.uniforms.uAberration, {
-      value: 0.02,
-      duration: 0.2,
-      ease: 'power4.out',
-    }, 3.5);
-    masterTl.to(p.userData.uniforms.uAberration, {
-      value: 0,
-      duration: 0.8,
-      ease: 'power2.in',
-    }, 3.7);
-  });
-
-  /* 3.6s — Camera tilt unwinds */
-  masterTl.to(camBase, {
-    rotX: 0,
-    rotY: 0,
-    duration: 1.2,
-    ease: 'power2.inOut',
-  }, 3.6);
-
-  /* 4.0s — Panels drift back + headline scales down */
-  panels.forEach((p) => {
-    masterTl.to(p.position, {
-      x: p.userData.baseX,
-      duration: 0.9,
-      ease: 'power2.out',
-    }, 4.0);
-  });
-  masterTl.to('#title-wrap', {
-    scale: 0.92,
-    duration: 1.0,
-    ease: 'power2.inOut',
-  }, 4.0);
-
-  /* 4.5s — HUD dims */
-  masterTl.to('#hud', {
-    opacity: 0.4,
-    duration: 0.5,
-    ease: 'power2.out',
-  }, 4.5);
-
-  return masterTl;
-}
-
-/* =========================================================
-   RESIZE
-========================================================= */
-let resizeRaf = 0;
-function onResize() {
-  cancelAnimationFrame(resizeRaf);
-  resizeRaf = requestAnimationFrame(() => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  });
-}
-window.addEventListener('resize', onResize);
-window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
-
-/* =========================================================
-   VISIBILITY PAUSE
-========================================================= */
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    cancelAnimationFrame(rafId);
-    masterTl?.pause();
-  } else {
-    clock.getDelta();
-    tick();
-    masterTl?.play();
-  }
-});
-
-/* =========================================================
-   BOOT
-========================================================= */
-function boot() {
-  tick();
-  buildTimeline();
-
-  const loader = document.getElementById('loader');
-  setTimeout(() => {
-    loader.classList.add('hidden');
-    setTimeout(() => loader.remove(), 700);
-  }, 200);
-
-  setTimeout(() => masterTl.play(0), 400);
-}
-
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(boot);
-} else {
-  window.addEventListener('load', boot);
-}
-
-/* =========================================================
-   PUBLIC API
-========================================================= */
-window.HeroEngine = {
-  replay() {
-    buildTimeline();
-    masterTl.play(0);
-  },
-  setHeadline(line1, line2, subtitle) {
-    CONFIG.titleLines = [line1, line2 || ''];
-    if (subtitle) CONFIG.subtitle = subtitle;
-
-    splitIntoLine(line1El, line1);
-    if (line2) splitIntoLine(line2El, line2);
-    else line2El.innerHTML = '';
-    splitIntoLine(subtitleEl, CONFIG.subtitle);
-
-    /* Rebuild char references */
-    titleChars.length = 0;
-    titleChars.push(
-      ...line1El.querySelectorAll('.char'),
-      ...line2El.querySelectorAll('.char')
-    );
-    subtitleChars.length = 0;
-    subtitleChars.push(...subtitleEl.querySelectorAll('.char'));
-
-    buildTimeline();
-    masterTl.play(0);
-  },
-  destroy() {
-    cancelAnimationFrame(rafId);
-    masterTl?.kill();
-    panels.forEach((p) => {
-      p.geometry.dispose();
-      p.material.dispose();
+animate();
+<\/script>`;
+      modal.classList.remove('hidden');
     });
-    dustGeo.dispose();
-    (dust.material).dispose();
-    textures.forEach((t) => t.dispose());
-    renderer.dispose();
-  },
-};
-</script>
 
+    const closeModal = () => modal.classList.add('hidden');
+    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+    document.getElementById('btn-close-modal-2').addEventListener('click', closeModal);
+
+    document.getElementById('btn-copy-code').addEventListener('click', () => {
+      codeArea.select();
+      document.execCommand('copy');
+      alert('Code template copied to clipboard!');
+    });
+
+    /* Fullscreen Toggle */
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    /* Boot sequence */
+    function boot() {
+      lucide.createIcons();
+      tick();
+      buildTimeline();
+
+      const loader = document.getElementById('loader');
+      setTimeout(() => {
+        loader.classList.add('opacity-0');
+        setTimeout(() => loader.remove(), 500);
+      }, 300);
+
+      setTimeout(() => masterTl.play(0), 500);
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(boot);
+    } else {
+      window.addEventListener('load', boot);
+    }
+  </script>
 </body>
 </html>
+```
