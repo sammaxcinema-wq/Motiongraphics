@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Epic Pro Responsive Motion Engine (1080p)</title>
+    <title>Epic 3D Motion Engine (1080p)</title>
     
-    <!-- GSAP for Timeline Animation -->
+    <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <!-- Three.js for WebGL 3D Depth & Glass -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- CCapture & Whammy for Video Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/whammy/1.3.0/whammy.min.js"></script>
 
     <style>
-        /* --- PRO CSS ARCHITECTURE --- */
+        /* --- ORIGINAL PRO CSS ARCHITECTURE --- */
         :root {
             --bg-app: #0f0f11;
             --bg-panel: #1a1a1d;
@@ -40,7 +40,7 @@
             flex-direction: row;
         }
 
-        /* --- SIDEBAR / CONTROL PANEL --- */
+        /* --- SIDEBAR --- */
         #sidebar {
             width: 340px;
             background-color: var(--bg-panel);
@@ -55,18 +55,14 @@
         }
 
         .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); padding-bottom: 10px;
         }
 
         h2 { margin: 0; font-size: 18px; color: var(--accent); letter-spacing: 0.5px; }
         h3 { font-size: 11px; margin: 10px 0 5px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
         
         .control-group { display: flex; flex-direction: column; gap: 5px; }
-        
         label { font-size: 13px; color: #ccc; }
         
         input[type="text"], select {
@@ -91,24 +87,16 @@
         button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
         button:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
-        
         .btn-export { background: #ffffff; margin-top: auto; }
 
         /* --- PREVIEW CONTAINER --- */
         #preview-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #000;
-            overflow: hidden;
-            position: relative;
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            background: #000; overflow: hidden; position: relative;
         }
 
         #canvas-wrapper {
-            width: 1920px; height: 1080px; 
-            position: absolute;
-            transform-origin: center center;
+            width: 1920px; height: 1080px; position: absolute; transform-origin: center center;
         }
 
         #app-canvas {
@@ -116,7 +104,7 @@
             position: relative; overflow: hidden; perspective: 1500px;
         }
 
-        /* --- ANIMATION ELEMENTS --- */
+        /* --- UPGRADED HUD & VISUAL ELEMENTS --- */
         #webgl-canvas { position: absolute; top: 0; left: 0; z-index: 1; width: 100%; height: 100%; }
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         
@@ -134,6 +122,7 @@
             z-index: 5; height: 120px; top: 40%; left: -10%;
         }
 
+        /* HUD Viewfinder Crosshairs */
         .hud-crosshair {
             position: absolute; width: 60px; height: 60px; border: 2px solid #111;
             border-radius: 50%; opacity: 0; z-index: 15;
@@ -142,11 +131,24 @@
         .hud-crosshair::before { width: 2px; height: 140%; left: 50%; top: -20%; }
         .hud-crosshair::after { height: 2px; width: 140%; top: 50%; left: -20%; }
         
+        /* Technical Coordinate Data */
         .hud-data {
             position: absolute; font-family: monospace; font-size: 18px; color: #111;
             z-index: 15; opacity: 0; border-left: 3px solid var(--accent); padding-left: 10px;
         }
         
+        /* Tracking Corner Brackets */
+        .hud-bracket { position: absolute; width: 40px; height: 40px; border: 2px solid #111; opacity: 0; z-index: 15; }
+        .hud-bracket.tl { top: 10%; left: 5%; border-right: none; border-bottom: none; }
+        .hud-bracket.tr { top: 10%; right: 5%; border-left: none; border-bottom: none; }
+        .hud-bracket.bl { bottom: 10%; left: 5%; border-right: none; border-top: none; }
+        .hud-bracket.br { bottom: 10%; right: 5%; border-left: none; border-top: none; }
+
+        /* Thin Accent Lines */
+        .hud-line { position: absolute; background: #111; opacity: 0; z-index: 15; }
+        .hud-line.h { height: 2px; width: 40%; top: 30%; left: 0; }
+        .hud-line.v { width: 2px; height: 40%; bottom: 0; right: 25%; }
+
         #data-stream {
             position: absolute; right: 10%; top: 20%; width: 200px; height: 400px;
             overflow: hidden; font-family: monospace; font-size: 14px; color: #111;
@@ -160,22 +162,7 @@
             transform: rotate(-20deg); z-index: 25; mix-blend-mode: screen; opacity: 0;
         }
 
-        /* --- NEW EPIC: BLOOM & GLITCH LAYERS --- */
-        #screen-bloom {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, rgba(102, 204, 255, 0.4) 0%, transparent 60%);
-            z-index: 26; mix-blend-mode: screen; opacity: 0; pointer-events: none;
-        }
-
-        #glitch-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 27; pointer-events: none; opacity: 0;
-            background: linear-gradient(rgba(102,204,255,0.1) 1px, transparent 1px);
-            background-size: 100% 4px; /* Scanlines */
-            mix-blend-mode: overlay;
-        }
-
-        /* --- MOBILE & TABLET PRO LOGIC --- */
+        /* --- MOBILE PRO LOGIC --- */
         @media (max-width: 1024px) {
             body { flex-direction: column; }
             #preview-container { height: 45vh; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -192,6 +179,7 @@
              #sidebar { width: 300px; height: 100vh; flex-shrink: 0; overflow-y: auto; }
         }
 
+        /* Recording UI */
         #recording-overlay {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 50, 50, 0.95); color: white; padding: 12px 24px;
@@ -204,6 +192,7 @@
 </head>
 <body>
 
+    <!-- PREVIEW CONTAINER -->
     <div id="preview-container">
         <div id="canvas-wrapper">
             <div id="app-canvas">
@@ -212,6 +201,15 @@
                 <div class="ui-layer">
                     <div class="ribbon" id="ribbon-1"></div>
                     
+                    <!-- Epic Upgrades: Brackets, Lines, Crosshairs -->
+                    <div class="hud-bracket tl"></div>
+                    <div class="hud-bracket tr"></div>
+                    <div class="hud-bracket bl"></div>
+                    <div class="hud-bracket br"></div>
+                    
+                    <div class="hud-line h" id="hud-line-h"></div>
+                    <div class="hud-line v" id="hud-line-v"></div>
+
                     <div class="hud-crosshair" style="top: 20%; left: 15%;" id="hud-1"></div>
                     <div class="hud-crosshair" style="bottom: 25%; right: 20%;" id="hud-2"></div>
                     
@@ -224,15 +222,13 @@
                         <div id="main-text">MAXING & TRANSACTIONS</div>
                     </div>
 
-                    <!-- EPIC LAYERS -->
                     <div class="lens-flare" id="flare"></div>
-                    <div id="screen-bloom"></div>
-                    <div id="glitch-overlay"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="panel-header">
             <h2>Epic 3D Engine</h2>
@@ -286,116 +282,86 @@
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
-        // --- 2. THREE.JS SETUP ---
+        // --- 2. EPIC THREE.JS SETUP ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf4f4f4); 
+        scene.background = new THREE.Color(0xf4f4f4);
         
         const camera = new THREE.PerspectiveCamera(45, 1920 / 1080, 0.1, 1000);
         camera.position.set(0, 0, 20);
 
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl-canvas'), alpha: true, antialias: true });
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: document.getElementById('webgl-canvas'), 
+            alpha: true, antialias: true 
+        });
         renderer.setSize(1920, 1080);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
         dirLight.position.set(10, 20, 10);
         scene.add(dirLight);
 
-        // Glass Panels
+        // A. Multi-Plane Glass Panels
         const glassPanels = [];
         const glassMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xffffff, metalness: 0.1, roughness: 0.1, transmission: 0.9,
             transparent: true, opacity: 0.3, ior: 1.5, thickness: 0.5, side: THREE.DoubleSide
         });
 
-        const mesh1 = new THREE.Mesh(new THREE.PlaneGeometry(8, 5), glassMaterial);
-        mesh1.position.set(-12, 5, -5); mesh1.rotation.set(0.2, 0.4, 0.1);
-        scene.add(mesh1); glassPanels.push(mesh1);
+        const createPanel = (w, h, x, y, z, rx, ry, rz) => {
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glassMaterial);
+            mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz);
+            mesh.userData = { baseX: x, baseY: y, baseZ: z };
+            scene.add(mesh); glassPanels.push(mesh);
+        };
+        createPanel(8, 5, -15, 5, -5, 0.2, 0.4, 0.1);   // Left panel
+        createPanel(10, 6, 15, -6, -2, -0.1, -0.4, -0.1); // Right panel
+        createPanel(12, 7, 0, 0, -8, 0, 0, 0);          // Center Back plane
 
-        const mesh2 = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), glassMaterial);
-        mesh2.position.set(15, -6, -2); mesh2.rotation.set(-0.1, -0.4, -0.1);
-        scene.add(mesh2); glassPanels.push(mesh2);
-
-        const mesh3 = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), glassMaterial);
-        mesh3.position.set(0, 12, 5); mesh3.rotation.set(0, 0, 0);
-        scene.add(mesh3); glassPanels.push(mesh3);
-
-        // Dot Grid
-        const dotGeo = new THREE.BufferGeometry();
-        const dotPositions = [];
-        for(let x = -15; x <= 15; x+=2) {
-            for(let y = -10; y <= 10; y+=2) { dotPositions.push(x, y, -10); }
+        // B. Ambient Particle Dust
+        const particleCount = 1500;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePos = new Float32Array(particleCount * 3);
+        for(let i=0; i<particleCount * 3; i+=3) {
+            particlePos[i] = (Math.random() - 0.5) * 60;
+            particlePos[i+1] = (Math.random() - 0.5) * 40;
+            particlePos[i+2] = -10 - Math.random() * 20;
         }
-        dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
-        const dotGrid = new THREE.Points(dotGeo, new THREE.PointsMaterial({ color: 0x111111, size: 0.15 }));
-        scene.add(dotGrid);
-
-        // --- NEW EPIC: 3000 PARTICLE DUST CLOUD ---
-        const particleCount = 3000;
-        const pGeometry = new THREE.BufferGeometry();
-        const pPositions = new Float32Array(particleCount * 3);
-        const pColors = new Float32Array(particleCount * 3);
-        const pSizes = new Float32Array(particleCount);
-        const cyan = new THREE.Color(0x66ccff);
-        const white = new THREE.Color(0xffffff);
-
-        for (let i = 0; i < particleCount; i++) {
-            pPositions[i * 3] = (Math.random() - 0.5) * 60;
-            pPositions[i * 3 + 1] = (Math.random() - 0.5) * 40;
-            pPositions[i * 3 + 2] = -8 - Math.random() * 22;
-            
-            const c = Math.random() > 0.3 ? cyan : white;
-            pColors[i * 3] = c.r; pColors[i * 3 + 1] = c.g; pColors[i * 3 + 2] = c.b;
-            pSizes[i] = Math.random() * 0.06 + 0.01;
-        }
-        pGeometry.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-        pGeometry.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-        pGeometry.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
-
-        const pMaterial = new THREE.ShaderMaterial({
-            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
-            uniforms: { uTime: { value: 0 }, uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) } },
-            vertexShader: `
-                attribute float size; uniform float uTime; uniform float uPixelRatio; varying vec3 vColor;
-                void main() {
-                    vColor = color; vec3 pos = position;
-                    pos.y += sin(uTime * 0.3 + position.x * 0.2) * 0.15;
-                    vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-                    gl_PointSize = size * uPixelRatio * (300.0 / -mv.z);
-                    gl_Position = projectionMatrix * mv;
-                }`,
-            fragmentShader: `
-                varying vec3 vColor;
-                void main() {
-                    float d = length(gl_PointCoord - 0.5);
-                    float alpha = smoothstep(0.5, 0.0, d);
-                    gl_FragColor = vec4(vColor, alpha * 0.65);
-                }`
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+        const particleMat = new THREE.PointsMaterial({ 
+            color: 0x111111, size: 0.08, transparent: true, opacity: 0.4 
         });
-        const particles = new THREE.Points(pGeometry, pMaterial);
-        particles.frustumCulled = false;
+        const particles = new THREE.Points(particleGeo, particleMat);
         scene.add(particles);
 
-        // --- RENDER LOOP ---
+        // C. 3D Dot Matrix Grid
+        const dotGeo = new THREE.BufferGeometry();
+        const dotPositions = [];
+        for(let x = -20; x <= 20; x+=2) {
+            for(let y = -12; y <= 12; y+=2) { dotPositions.push(x, y, -15); }
+        }
+        dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
+        const dotGrid = new THREE.Points(dotGeo, new THREE.PointsMaterial({ color: 0x111111, size: 0.15, transparent: true, opacity: 0.3 }));
+        scene.add(dotGrid);
+
+        // Animation Loop
         const clock = new THREE.Clock();
         function animateWebGL() {
             requestAnimationFrame(animateWebGL);
             const time = clock.getElapsedTime();
             
-            // Float Panels
-            mesh1.position.y = 5 + Math.sin(time * 0.5) * 0.5;
-            mesh2.position.y = -6 + Math.cos(time * 0.6) * 0.5;
-            mesh3.position.y = 12 + Math.sin(time * 0.8) * 0.3;
-
-            // Update Particles
-            pMaterial.uniforms.uTime.value = time;
-
+            // Continuous subtle float
+            glassPanels[0].position.y = glassPanels[0].userData.baseY + Math.sin(time * 0.5) * 0.5;
+            glassPanels[1].position.y = glassPanels[1].userData.baseY + Math.cos(time * 0.6) * 0.5;
+            
+            // Particle drift
+            particles.rotation.y = time * 0.02;
+            
             renderer.render(scene, camera);
         }
         animateWebGL();
 
-        // --- 3. UI LOGIC ---
+        // --- 3. UI LOGIC (Unchanged) ---
         const dataStream = document.getElementById('data-stream');
         for(let i=0; i<20; i++) {
             const line = document.createElement('div');
@@ -414,27 +380,31 @@
 
         document.getElementById('input-color-text').addEventListener('input', (e) => {
             mainTextElement.style.color = e.target.value;
-            document.querySelectorAll('.hud-crosshair').forEach(el => el.style.borderColor = e.target.value);
+            document.querySelectorAll('.hud-crosshair, .hud-bracket, .hud-line').forEach(el => {
+                if(el.classList.contains('hud-line')) el.style.backgroundColor = e.target.value;
+                else el.style.borderColor = e.target.value;
+            });
             document.querySelectorAll('.hud-data').forEach(el => el.style.color = e.target.value);
         });
 
-        // --- 4. MASTER EPIC TIMELINE ---
+        // --- 4. EPIC MASTER TIMELINE (5-Second Sequence) ---
         let masterTl;
         function buildTimeline() {
-            // Reset 2D Elements
+            // Reset Everything
             gsap.set("#main-text", { scale: 0.5, opacity: 0, rotationX: 30 });
             gsap.set(".ribbon", { width: 0, opacity: 0, rotationZ: -15 });
             gsap.set("#hud-1, #hud-2", { opacity: 0, scale: 0 });
             gsap.set("#hud-data-1, #hud-data-2", { opacity: 0, x: -20 });
+            gsap.set(".hud-bracket", { opacity: 0, scale: 1.5 });
+            gsap.set(".hud-line", { opacity: 0, scaleX: 0, scaleY: 0 });
             gsap.set("#data-stream", { opacity: 0, y: 50 });
             gsap.set("#flare", { left: "-30%", opacity: 0, scale: 0.8 });
-            gsap.set("#screen-bloom", { opacity: 0 });
-            gsap.set("#glitch-overlay", { opacity: 0 });
             
-            // Reset 3D Panels
-            glassPanels[0].position.x = -40;
-            glassPanels[1].position.x = 40;
-            glassPanels[2].position.y = 40;
+            glassPanels.forEach(p => {
+                p.position.x = p.userData.baseX;
+                p.position.y = p.userData.baseY;
+                p.position.z = p.userData.baseZ - 10; // Start far back
+            });
 
             const speed = parseFloat(document.getElementById('input-speed').value) || 1;
 
@@ -442,35 +412,34 @@
                 paused: true, defaults: { ease: "expo.out", duration: 1.2 / speed } 
             });
 
-            // Base Animations
-            masterTl.to(".ribbon", { width: "130%", opacity: 1, rotationZ: -5, duration: 1 / speed }, 0)
-                .to(glassPanels[0].position, { x: -15, duration: 1.5 / speed, ease: "power3.out" }, 0.2)
-                .to(glassPanels[1].position, { x: 15, duration: 1.5 / speed, ease: "power3.out" }, 0.3)
-                .to(glassPanels[2].position, { y: 12, duration: 1.5 / speed, ease: "power3.out" }, 0.1)
-                .to("#main-text", { scale: 1, opacity: 1, rotationX: 0, duration: 1.5 / speed }, 0.3)
-                .to("#hud-1, #hud-2", { opacity: 1, scale: 1, duration: 0.6 / speed, stagger: 0.2 / speed }, 0.6)
-                .to("#hud-data-1, #hud-data-2", { opacity: 1, x: 0, duration: 0.6 / speed, stagger: 0.1 / speed }, 0.8)
-                .to("#data-stream", { opacity: 1, y: 0, duration: 0.5 / speed }, 1)
-                .fromTo(".data-line", { y: 50 }, { y: -100, duration: 2 / speed, ease: "none", stagger: 0.05 }, 1)
-                .to("#flare", { left: "130%", opacity: 1, scale: 1, duration: 2 / speed, ease: "power2.inOut" }, 0.5)
-                .to("#flare", { opacity: 0, duration: 0.5 / speed }, 2.5);
+            // 0.0s – 1.0s: Grid/HUD draw in, panels pull forward
+            masterTl.to(".hud-bracket", { opacity: 1, scale: 1, duration: 0.8/speed, stagger: 0.1/speed }, 0)
+                .to(".hud-line", { opacity: 1, scaleX: 1, scaleY: 1, duration: 1/speed, ease: "expo.inOut" }, 0.2)
+                .to(glassPanels.map(p => p.position), { z: (i) => glassPanels[i].userData.baseZ, duration: 1.2/speed, stagger: 0.1/speed }, 0)
+                .to(".ribbon", { width: "130%", opacity: 1, rotationZ: -5, duration: 1/speed }, 0.2)
+                .to("#main-text", { scale: 1, opacity: 1, rotationX: 0, duration: 1.5/speed }, 0.4);
+
+            // 1.0s – 3.0s: Split screen slide, panel swap, camera pan
+            masterTl.to(glassPanels[0].position, { x: -25, duration: 1.5/speed, ease: "power2.inOut" }, 1.0) // Left flies out
+                .to(glassPanels[1].position, { x: 25, duration: 1.5/speed, ease: "power2.inOut" }, 1.0)  // Right flies out
+                .to(glassPanels[2].position, { z: -2, duration: 1.5/speed, ease: "power2.inOut" }, 1.0)   // Center comes forward
+                .to(camera.position, { z: 15, x: -2, duration: 2/speed, ease: "sine.inOut" }, 1.0)        // Camera drift
                 
-            masterTl.fromTo(camera.position, { z: 25 }, { z: 20, duration: 3 / speed, ease: "power2.out" }, 0);
+                // HUD pops in
+                .to("#hud-1, #hud-2", { opacity: 1, scale: 1, duration: 0.6/speed, stagger: 0.2/speed }, 1.2)
+                .to("#hud-data-1, #hud-data-2", { opacity: 1, x: 0, duration: 0.6/speed, stagger: 0.1/speed }, 1.4)
+                .to("#data-stream", { opacity: 1, y: 0, duration: 0.5/speed }, 1.5)
+                .fromTo(".data-line", { y: 50 }, { y: -100, duration: 2/speed, ease: "none", stagger: 0.05 }, 1.5)
 
-            // --- EPIC ADDITIONS (Bloom & Glitch) ---
-            // 1. Glitch burst during panel slide (0.8s)
-            masterTl.to("#glitch-overlay", { opacity: 0.8, duration: 0.05 }, 0.8 / speed)
-                .to("#glitch-overlay", { opacity: 0, duration: 0.2 }, 0.85 / speed);
-
-            // 2. Screen Bloom flash during flare sweep (1.5s)
-            masterTl.to("#screen-bloom", { opacity: 1, duration: 0.15 }, 1.5 / speed)
-                .to("#screen-bloom", { opacity: 0, duration: 0.8, ease: "power2.in" }, 1.65 / speed);
-
-            // 3. Final heavy Glitch & Bloom on text lockup (2.5s)
-            masterTl.to("#glitch-overlay", { opacity: 1, duration: 0.1 }, 2.5 / speed)
-                .to("#glitch-overlay", { opacity: 0, duration: 0.4 }, 2.6 / speed)
-                .to("#screen-bloom", { opacity: 0.6, duration: 0.1 }, 2.5 / speed)
-                .to("#screen-bloom", { opacity: 0, duration: 1, ease: "power2.out" }, 2.6 / speed);
+            // 3.0s – 5.0s: Text reveal, lens flare, camera snaps to center
+            masterTl.to(camera.position, { z: 20, x: 0, duration: 2/speed, ease: "expo.inOut" }, 3.0)
+                .to(glassPanels[0].position, { x: -15, duration: 2/speed, ease: "expo.inOut" }, 3.0)
+                .to(glassPanels[1].position, { x: 15, duration: 2/speed, ease: "expo.inOut" }, 3.0)
+                .to(glassPanels[2].position, { z: -8, duration: 2/speed, ease: "expo.inOut" }, 3.0)
+                
+                // Flare sweep
+                .to("#flare", { left: "130%", opacity: 1, scale: 1, duration: 1.5/speed, ease: "power2.inOut" }, 3.0)
+                .to("#flare", { opacity: 0, duration: 0.5/speed }, 4.5);
         }
 
         buildTimeline();
