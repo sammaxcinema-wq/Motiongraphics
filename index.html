@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Motion Graphics App (1080p Export)</title>
+    
+    <!-- GSAP for Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- CCapture for Video Recording -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
+    <!-- Whammy for WebM Encoding -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/whammy/1.3.0/whammy.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --accent: #FFCC00;
+            --border: #444;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- UI SIDEBAR --- */
+        #sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        h2 { margin-top: 0; font-size: 18px; color: var(--accent); }
+        h3 { font-size: 14px; margin-bottom: 5px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        
+        label { font-size: 13px; display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="color"], select {
+            width: 100%;
+            padding: 8px;
+            background: #111;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        input[type="color"] { padding: 2px; height: 35px; cursor: pointer; }
+        
+        button {
+            background-color: var(--accent);
+            color: #111;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #e6b800; }
+        button:disabled { background-color: #555; cursor: not-allowed; color: #888; }
+
+        /* --- PREVIEW AREA --- */
+        #preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #111;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 
+           The wrapper scales down the 1920x1080 canvas to fit the screen 
+           without breaking the internal absolute positioning of the animation.
+        */
+        #canvas-wrapper {
+            width: 1920px;
+            height: 1080px;
+            position: absolute;
+            transform-origin: center center;
+            /* Scale is controlled by JS based on window size */
+        }
+
+        /* --- THE ACTUAL 1080P CANVAS --- */
+        #app-canvas {
+            width: 1920px;
+            height: 1080px;
+            background-color: #f4f4f4;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Visual Elements (Scaled up for 1080p) */
+        .ribbon {
+            position: absolute;
+            background-color: #FFCC00; /* Default, changed by JS */
+            width: 130%;
+            height: 120px;
+            transform: rotate(-5deg);
+            top: 40%;
+            left: -15%;
+            z-index: 1;
+        }
+        .ribbon-bottom {
+            top: 65%;
+            height: 25px;
+        }
+
+        .accent-line {
+            position: absolute;
+            background-color: #111111;
+            height: 6px;
+            width: 40%;
+            transform: rotate(-5deg);
+            z-index: 2;
+        }
+
+        .dot-matrix {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-image: radial-gradient(#111 20%, transparent 20%);
+            background-size: 22px 22px;
+            z-index: 2;
+        }
+
+        #main-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-3deg);
+            font-size: 140px;
+            font-weight: 900;
+            color: #111111; /* Default, changed by JS */
+            text-transform: uppercase;
+            letter-spacing: -3px;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .glass-panel {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            z-index: 5;
+            opacity: 0;
+        }
+
+        .lens-flare {
+            position: absolute;
+            width: 500px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(-20deg);
+            top: 20%;
+            left: -30%;
+            z-index: 20;
+            mix-blend-mode: overlay;
+        }
+
+        .hud-crosshair {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 2px solid #111;
+            border-radius: 50%;
+            bottom: 20%;
+            right: 10%;
+            z-index: 5;
+            opacity: 0;
+        }
+        .hud-crosshair::before, .hud-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #111;
+        }
+        .hud-crosshair::before { width: 2px; height: 100%; left: 50%; }
+        .hud-crosshair::after { height: 2px; width: 100%; top: 50%; }
+        
+        /* Recording UI Overlay */
+        #recording-overlay {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR CONTROLS -->
+    <div id="sidebar">
+        <h2>Motion Editor</h2>
+        
+        <h3>Text Details</h3>
+        <label>Main Title</label>
+        <input type="text" id="input-text" value="MAXING AND TRANSACTIONS">
+
+        <h3>Colors</h3>
+        <label>Primary Color (Ribbons)</label>
+        <input type="color" id="input-color-primary" value="#FFCC00">
+        <label>Text & Accent Color</label>
+        <input type="color" id="input-color-secondary" value="#111111">
+        <label>Background Color</label>
+        <input type="color" id="input-color-bg" value="#f4f4f4">
+
+        <h3>Animation Speed</h3>
+        <select id="input-speed">
+            <option value="1">Normal (1x)</option>
+            <option value="1.5">Fast (1.5x)</option>
+            <option value="0.5">Slow (0.5x)</option>
+        </select>
+
+        <button id="btn-preview">▶ Play Preview</button>
+        <button id="btn-export">⬇ Export 1080p Video</button>
+        
+        <div id="recording-overlay">🔴 RECORDING 1920x1080...</div>
+    </div>
+
+    <!-- PREVIEW WINDOW -->
+    <div id="preview-container">
+        <!-- Wrapper scales the 1920x1080 canvas to fit the screen -->
+        <div id="canvas-wrapper">
+            <!-- The actual 1920x1080 render area -->
+            <div id="app-canvas">
+                <div class="ribbon" id="ribbon-top"></div>
+                <div class="ribbon ribbon-bottom" id="ribbon-bottom"></div>
+                
+                <div class="accent-line" style="top: 30%; left: -10%;" id="line-1"></div>
+                <div class="accent-line" style="top: 80%; left: 10%;" id="line-2"></div>
+
+                <div class="dot-matrix" style="top: 20%; right: 10%;" id="dots-1"></div>
+                <div class="dot-matrix" style="bottom: 20%; left: 10%;" id="dots-2"></div>
+
+                <div class="glass-panel" style="width: 300px; height: 200px; top: 15%; left: 20%;" id="glass-1"></div>
+                <div class="glass-panel" style="width: 400px; height: 150px; bottom: 15%; right: 20%;" id="glass-2"></div>
+
+                <div class="hud-crosshair" id="hud-1"></div>
+                <div class="hud-crosshair" id="hud-2" style="top: 10%; left: 15%; bottom: auto; right: auto;"></div>
+
+                <div id="main-text">MAXING AND TRANSACTIONS</div>
+
+                <div class="lens-flare" id="flare"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DYNAMIC SCALING (Fit 1080p inside the browser window) ---
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            const container = document.getElementById('preview-container');
+            const scaleX = container.clientWidth / 1920;
+            const scaleY = container.clientHeight / 1080;
+            const scale = Math.min(scaleX, scaleY) * 0.95; // 95% to leave a margin
+            wrapper.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- 2. UI EVENT LISTENERS (Live Editing) ---
+        const textInput = document.getElementById('input-text');
+        const colorPrimary = document.getElementById('input-color-primary');
+        const colorSecondary = document.getElementById('input-color-secondary');
+        const colorBg = document.getElementById('input-color-bg');
+        const speedSelect = document.getElementById('input-speed');
+        const mainTextElement = document.getElementById('main-text');
+
+        // Update Text
+        textInput.addEventListener('input', (e) => {
+            mainTextElement.innerText = e.target.value;
+        });
+
+        // Update Colors
+        colorPrimary.addEventListener('input', (e) => {
+            document.querySelectorAll('.ribbon').forEach(el => el.style.backgroundColor = e.target.value);
+        });
+        
+        colorSecondary.addEventListener('input', (e) => {
+            mainTextElement.style.color = e.target.value;
+            document.querySelectorAll('.accent-line, .hud-crosshair').forEach(el => el.style.backgroundColor = e.target.value);
+        });
+
+        colorBg.addEventListener('input', (e) => {
+            document.getElementById('app-canvas').style.backgroundColor = e.target.value;
+        });
+
+        // --- 3. THE ANIMATION TIMELINE ---
+        let masterTl;
+
+        function buildTimeline() {
+            // Reset elements to initial state
+            gsap.set("#main-text", { scale: 0.8, opacity: 0 });
+            gsap.set(".ribbon", { width: 0, opacity: 0 });
+            gsap.set(".accent-line", { width: 0 });
+            gsap.set(".dot-matrix", { opacity: 0, scale: 0.5 });
+            gsap.set("#flare", { left: "-30%", opacity: 0 });
+            gsap.set(".glass-panel", { opacity: 0, x: 0, y: 0 });
+            gsap.set(".hud-crosshair", { opacity: 0 });
+
+            const speed = parseFloat(speedSelect.value) || 1;
+
+            // Create new timeline
+            masterTl = gsap.timeline({ 
+                paused: true,
+                defaults: { ease: "power4.out", duration: 1.2 / speed } 
+            });
+
+            masterTl.to(".ribbon", { width: "130%", opacity: 1, duration: 1 / speed, stagger: 0.1 / speed })
+                .to(".accent-line", { width: "40%", duration: 0.8 / speed, stagger: 0.1 / speed }, "-=0.8")
+                .to(".dot-matrix", { opacity: 1, scale: 1, duration: 0.6 / speed, stagger: 0.1 / speed }, "-=0.5")
+                .to("#main-text", { opacity: 1, scale: 1, duration: 1.5 / speed, ease: "expo.out" }, "-=0.5")
+                .to("#glass-1", { opacity: 1, x: 80, y: 40, duration: 1.5 / speed, ease: "power2.out" }, "-=1.2")
+                .to("#glass-2", { opacity: 1, x: -80, y: -40, duration: 1.5 / speed, ease: "power2.out" }, "-=1.5")
+                .to(".hud-crosshair", { opacity: 1, duration: 0.5 / speed, stagger: 0.2 / speed }, "-=1")
+                .to("#flare", { left: "130%", opacity: 1, duration: 1.5 / speed, ease: "power1.inOut" }, "-=1.5")
+                .to("#flare", { opacity: 0, duration: 0.2 / speed });
+        }
+
+        // Initialize
+        buildTimeline();
+
+        // Play button
+        document.getElementById('btn-preview').addEventListener('click', () => {
+            buildTimeline(); // Rebuild to apply any speed changes
+            masterTl.play();
+        });
+        
+        // Rebuild timeline if speed changes
+        speedSelect.addEventListener('change', buildTimeline);
+
+        // --- 4. 1080P VIDEO EXPORT ENGINE ---
+        document.getElementById('btn-export').addEventListener('click', function() {
+            const exportBtn = this;
+            const overlay = document.getElementById('recording-overlay');
+            const canvas = document.getElementById('app-canvas');
+            
+            // Disable button during render
+            exportBtn.disabled = true;
+            overlay.style.display = 'block';
+            
+            // Reset animation
+            buildTimeline();
+
+            // Setup CCapture
+            // CCapture records the DOM element frame by frame. 
+            // We use Whammy to encode it to WebM.
+            const capturer = new CCapture({
+                format: 'webm',
+                framerate: 60, // 60fps smooth
+                verbose: true,
+                quality: 1.0, // Highest quality
+                display: false
+            });
+
+            // Give the browser 1 second to render the initial state before capturing
+            setTimeout(() => {
+                capturer.start();
+                masterTl.play();
+
+                // CCapture needs to capture frames via requestAnimationFrame
+                function captureFrame() {
+                    // Check if animation is still playing (GSAP sets progress to 1 when done)
+                    if (masterTl.progress() < 1) {
+                        capturer.capture(canvas);
+                        requestAnimationFrame(captureFrame);
+                    } else {
+                        // Animation finished
+                        capturer.stop();
+                        
+                        // Save the video
+                        capturer.save(function(blob) {
+                            // Create download link
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = 'corporate_intro_1080p.webm';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            
+                            // Reset UI
+                            exportBtn.disabled = false;
+                            overlay.style.display = 'none';
+                        });
+                    }
+                }
+                
+                // Start capturing frames
+                requestAnimationFrame(captureFrame);
+                
+            }, 1000); // 1-second delay to ensure clean start
+        });
+    </script>
+</body>
+  </html>
