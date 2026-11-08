@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Hero Intro Opener (1080p)</title>
+<title>3D Hero Intro Opener (1080p · Cinematic)</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400&family=Montserrat:wght@900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- CCapture.all already bundles Whammy (WebM encoder) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
 
 <style>
@@ -68,7 +67,7 @@ button:disabled{background:#444;color:#888;cursor:not-allowed;transform:none}
 </div>
 
 <div id="sidebar">
-  <div class="panel-header"><h2>3D Hero Intro</h2></div>
+  <div class="panel-header"><h2>3D Hero Intro · AE Style</h2></div>
 
   <div class="control-group">
     <h3>Headline</h3>
@@ -92,7 +91,7 @@ button:disabled{background:#444;color:#888;cursor:not-allowed;transform:none}
   <div class="control-group">
     <h3>Brand Colors</h3>
     <div class="color-row">
-      <div class="color-swatch"><label>Accent (also tints the image planes)</label><input type="color" id="input-color-accent" value="#FFCC00"></div>
+      <div class="color-swatch"><label>Accent (tints planes)</label><input type="color" id="input-color-accent" value="#FFCC00"></div>
       <div class="color-swatch"><label>Text / HUD</label><input type="color" id="input-color-text" value="#FFFFFF"></div>
     </div>
   </div>
@@ -139,16 +138,32 @@ button:disabled{background:#444;color:#888;cursor:not-allowed;transform:none}
 <div id="recording-overlay">🔴 RENDERING…</div>
 
 <script>
+// ============================================================
+// CONSTANTS & MATH HELPERS
+// ============================================================
 const W = 1920, H = 1080;
 const BG = '#0a0a0e';
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = t => t * t * (3 - 2 * t);
 const expoOut = p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
 const pad2 = n => String(Math.floor(n)).padStart(2, '0');
-// Deterministic pseudo-random (keeps frame-perfect exports identical every run)
 const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-// ---------- 1. Responsive preview scaling ----------
+// After Effects style eases
+const aeEaseInOut = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;   // cubic in-out
+const aeEaseOutBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+const aeEaseInExpo = p => p <= 0 ? 0 : Math.pow(2, 10 * p - 10);
+const aeEaseOutExpo = p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
+const aeEaseInOutExpo = p => p <= 0 ? 0 : p >= 1 ? 1 : p < 0.5 ? Math.pow(2, 20 * p - 10) / 2 : (2 - Math.pow(2, -20 * p + 10)) / 2;
+const aeEaseInOutQuint = p => p < 0.5 ? 16 * p * p * p * p * p : 1 - Math.pow(-2 * p + 2, 5) / 2;
+const aeEaseOutElastic = p => {
+  const c4 = (2 * Math.PI) / 3;
+  return p === 0 ? 0 : p === 1 ? 1 : Math.pow(2, -10 * p) * Math.sin((p * 10 - 0.75) * c4) + 1;
+};
+
+// ============================================================
+// RESPONSIVE PREVIEW SCALING
+// ============================================================
 function resizeCanvas() {
   const wrapper = document.getElementById('canvas-wrapper');
   const container = document.getElementById('preview-container');
@@ -159,7 +174,9 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
-// ---------- 2. Config + animation state ----------
+// ============================================================
+// CONFIG + ANIMATION STATE
+// ============================================================
 const cfg = {
   text: 'MAXING & TRANSACTIONS',
   tag1: 'EASY TO CUSTOMIZE',
@@ -176,20 +193,38 @@ const MONO = '"JetBrains Mono", "SF Mono", Menlo, monospace';
 const S = { fr: 0, clk: 0 };
 function resetState() {
   Object.assign(S, {
-    intro: 0,                    // horizontal slice mask: 0 = covered, 1 = gone
-    hudP: 0, hudO: 1,            // HUD draw-in progress / opacity
+    intro: 0,               // slice mask
+    hudP: 0, hudO: 1,
     hs: 0.8, heroO: 0, outerO: 0,
     tiltX: 0, tiltY: 0,
     split: 0, sw2: 0, prog: 0, par: 0,
-    ab: 0.005,                   // chromatic aberration (uAberration)
-    tr: 0, ts: 1,                // headline char reveal clock (s) / scale
-    t1o: 0, t2o: 0, t2ls: 0.05,  // tagline opacity / letter-spacing (em)
-    sl: 0, flash: 0, glow: 0
+    ab: 0.005,
+    tr: 0, ts: 1,
+    t1o: 0, t2o: 0, t2ls: 0.05,
+    sl: 0, flash: 0, glow: 0,
+    // NEW After Effects-style parameters
+    motionBlur: 0,          // 0-1, simulates shutter blur
+    rgbSplit: 0,            // extra RGB separation during whip transitions
+    burn: 0,                // film burn
+    whip: 0,                // horizontal whip pan amount
+    whipDir: 1,
+    scanLine: 0,            // CRT scan line sweep
+    headGlitch: 0,          // glitch offset for headline
+    heroSquash: 1,          // squeeze/squash on hero plane
+    dustBurst: 0,           // dust particle burst
+    gridPulse: 0,           // HUD grid pulse
+    letterBounce: 0,        // bounce for tagline
+    lightSweep: 0,          // light sweep across headline
+    depthFog: 0,            // extra depth fog on far layers
+    ringPulse: 0,           // expanding ring at climax
+    offsetShake: 0          // camera shake
   });
 }
 resetState();
 
-// ---------- 3. Procedural "footage" textures (tinted by the accent colour) ----------
+// ============================================================
+// PROCEDURAL TEXTURES
+// ============================================================
 function hexHue(hex) {
   const n = parseInt(hex.slice(1), 16);
   const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
@@ -208,18 +243,18 @@ function paintTexture(cv, hue, seed) {
   g.addColorStop(1, `hsl(${hue + 30},75%,36%)`);
   x.fillStyle = g; x.fillRect(0, 0, w, h);
 
-  for (let b = 0; b < 6; b++) {                              // soft light blobs
-    const cx = r(b) * w, cy = r(b + 20) * h * 0.8, rad = 150 + r(b + 40) * 350;
+  for (let b = 0; b < 8; b++) {
+    const cx = r(b) * w, cy = r(b + 20) * h * 0.8, rad = 120 + r(b + 40) * 380;
     const h2 = hue + r(b + 60) * 70 - 20;
     const rg = x.createRadialGradient(cx, cy, 0, cx, cy, rad);
-    rg.addColorStop(0, `hsla(${h2},90%,55%,0.5)`);
+    rg.addColorStop(0, `hsla(${h2},90%,55%,0.55)`);
     rg.addColorStop(1, `hsla(${h2},90%,55%,0)`);
     x.fillStyle = rg; x.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
   }
 
-  let bx = 0, bi = 0;                                        // skyline with lit windows
+  let bx = 0, bi = 0;
   while (bx < w) {
-    const bw = 40 + r(100 + bi) * 90, bh = 60 + r(200 + bi) * h * 0.38;
+    const bw = 40 + r(100 + bi) * 90, bh = 60 + r(200 + bi) * h * 0.42;
     x.fillStyle = `hsl(${hue},45%,${4 + r(300 + bi) * 5}%)`;
     x.fillRect(bx, h - bh, bw, bh);
     const wins = Math.floor(bw * bh / 500);
@@ -230,18 +265,18 @@ function paintTexture(cv, hue, seed) {
     bx += bw + 4 + r(700 + bi) * 12; bi++;
   }
 
-  for (let s = 0; s < 7; s++) {                              // light streaks
+  for (let s = 0; s < 9; s++) {
     x.strokeStyle = `rgba(255,255,255,${0.1 + r(800 + s) * 0.2})`;
     x.lineWidth = 1 + r(820 + s) * 4;
     x.beginPath(); x.moveTo(r(840 + s) * w, 0); x.lineTo(r(840 + s) * w - 300, h); x.stroke();
   }
 
-  const og = x.createRadialGradient(w * 0.7, h * 0.3, 0, w * 0.7, h * 0.3, 110);   // bright orb
+  const og = x.createRadialGradient(w * 0.7, h * 0.3, 0, w * 0.7, h * 0.3, 130);
   og.addColorStop(0, `hsla(${hue + 20},100%,78%,0.95)`);
   og.addColorStop(1, `hsla(${hue + 20},100%,78%,0)`);
-  x.fillStyle = og; x.fillRect(w * 0.7 - 110, h * 0.3 - 110, 220, 220);
+  x.fillStyle = og; x.fillRect(w * 0.7 - 130, h * 0.3 - 130, 260, 260);
 
-  const vg = x.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, w * 0.7);   // vignette
+  const vg = x.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, w * 0.7);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
   x.fillStyle = vg; x.fillRect(0, 0, w, h);
 }
@@ -259,7 +294,9 @@ const textures = texCanvases.map(cv => {
   return t;
 });
 
-// ---------- 4. Three.js scene: 5 depth layers of image planes ----------
+// ============================================================
+// THREE.JS SCENE
+// ============================================================
 const webglCanvas = document.getElementById('webgl-canvas');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, W / H, 1, 5000);
@@ -274,6 +311,7 @@ const VERT = `
 varying vec2 vUv;
 void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 
+// Advanced fragment shader with motion blur simulation + whip + extra depth
 const FRAG = `
 uniform sampler2D uTexA;
 uniform sampler2D uTexB;
@@ -283,10 +321,14 @@ uniform float uBlur;
 uniform float uOpacity;
 uniform float uOffset;
 uniform float uDim;
+uniform float uMotionBlur;
+uniform float uWhip;
+uniform float uWhipDir;
+uniform float uDepthFog;
+uniform float uTime;
 varying vec2 vUv;
 
 vec3 mixTex(vec2 uv){
-  // dual-texture crossfade, staggered per plane and swept across x
   float p = clamp(uProgress * 1.5 - uOffset * 0.5 - uv.x * 0.5, 0.0, 1.0);
   p = smoothstep(0.0, 1.0, p);
   return mix(texture2D(uTexA, uv).rgb, texture2D(uTexB, uv).rgb, p);
@@ -299,8 +341,20 @@ vec3 sampleCA(vec2 uv){
   return vec3(r, g, b);
 }
 void main(){
+  // Motion blur simulation via directional multi-tap
   vec3 col;
-  if (uBlur > 0.01) {                              // depth of field: gaussian blur on deep layers
+  if (uMotionBlur > 0.01) {
+    float mblur = uMotionBlur * 0.02;
+    vec3 sum = vec3(0.0); float tot = 0.0;
+    for (int i = -4; i <= 4; i++) {
+      float t = float(i) / 4.0;
+      float w = 1.0 - abs(t) * 0.6;
+      vec2 uv2 = vUv + vec2(uWhip * uWhipDir * mblur * 8.0 * t, 0.0);
+      sum += sampleCA(uv2) * w;
+      tot += w;
+    }
+    col = sum / tot;
+  } else if (uBlur > 0.01) {
     float rad = uBlur * 0.006;
     vec3 sum = vec3(0.0); float tot = 0.0;
     for (int x = -1; x <= 1; x++) {
@@ -314,7 +368,18 @@ void main(){
   } else {
     col = sampleCA(vUv);
   }
-  // glassmorphic border: thin white stroke + diagonal reflection + inner glow
+
+  // Whip pan shearing
+  if (abs(uWhip) > 0.01) {
+    float shear = uWhip * uWhipDir * (vUv.y - 0.5) * 0.06;
+    vec2 uv3 = vUv + vec2(shear, 0.0);
+    col = mix(col, sampleCA(uv3), abs(uWhip) * 0.7);
+  }
+
+  // Depth fog for far layers
+  col = mix(col, vec3(0.04, 0.04, 0.06), uDepthFog);
+
+  // Glassmorphic border
   vec2 e = min(vUv, 1.0 - vUv);
   float ed = min(e.x / 0.0045, e.y / 0.008);
   float border = 1.0 - smoothstep(0.85, 1.15, ed);
@@ -322,11 +387,16 @@ void main(){
   float refl = smoothstep(0.55, 0.75, diag) * (1.0 - smoothstep(0.75, 0.95, diag)) * 0.12;
   float glow = (1.0 - smoothstep(0.0, 6.0, ed)) * 0.08;
   col = mix(col, vec3(1.0), border * 0.6) + refl + glow;
+
+  // Subtle animated scanline sheen
+  float scan = sin(vUv.y * 400.0 + uTime * 3.0) * 0.008;
+  col += scan;
+
   col *= uDim;
   gl_FragColor = vec4(col, uOpacity);
 }`;
 
-const PLANE_SCALE = 36;                           // PlaneGeometry(16, 9) x 36 = 576 x 324 world units
+const PLANE_SCALE = 36;
 const LAYER_Z = [0, -150, -300, -450, -600];
 const planes = [];
 let planeIdx = 0;
@@ -336,10 +406,17 @@ function addPlane(L, x, y, hero) {
     uniforms: {
       uTexA: { value: textures[planeIdx % 6] },
       uTexB: { value: textures[(planeIdx + 3) % 6] },
-      uProgress: { value: 0 }, uAberration: { value: 0.005 },
-      uBlur: { value: L >= 3 ? (L === 3 ? 0.8 : 1.2) : 0 },     // layers deeper than z = -400
-      uOpacity: { value: 0 }, uOffset: { value: rnd(planeIdx + 7) },
-      uDim: { value: 1 - L * 0.1 }
+      uProgress: { value: 0 },
+      uAberration: { value: 0.005 },
+      uBlur: { value: L >= 3 ? (L === 3 ? 0.8 : 1.2) : 0 },
+      uOpacity: { value: 0 },
+      uOffset: { value: rnd(planeIdx + 7) },
+      uDim: { value: 1 - L * 0.1 },
+      uMotionBlur: { value: 0 },
+      uWhip: { value: 0 },
+      uWhipDir: { value: 1 },
+      uDepthFog: { value: 0 },
+      uTime: { value: 0 }
     }
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(16, 9), mat);
@@ -350,10 +427,8 @@ function addPlane(L, x, y, hero) {
   planes.push(mesh);
   planeIdx++;
 }
-// Layer 0: hero plane in the centre + four satellites
 addPlane(0, 0, 0, true);
 [[-640, 230], [640, -230], [-700, -260], [700, 260]].forEach(p => addPlane(0, p[0], p[1], false));
-// Layers 1-4: staggered grids (4-6 planes each), spread widened with depth to stay in frame
 for (let L = 1; L < 5; L++) {
   const n = 4 + (L % 3);
   const spread = (700 + Math.abs(LAYER_Z[L])) / 700;
@@ -364,26 +439,29 @@ for (let L = 1; L < 5; L++) {
   }
 }
 
-// Ambient dust
-const dustCount = 900;
+// Dust particles
+const dustCount = 1200;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(dustCount * 3);
+const dustSeed = new Float32Array(dustCount);
 for (let i = 0; i < dustCount; i++) {
   dustPos[i * 3] = (rnd(i + 1) - 0.5) * 2600;
   dustPos[i * 3 + 1] = (rnd(i + 2000) - 0.5) * 1500;
   dustPos[i * 3 + 2] = -800 + rnd(i + 4000) * 1200;
+  dustSeed[i] = rnd(i + 6000);
 }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
 const dustMat = new THREE.PointsMaterial({ color: 0xffffff, size: 3, transparent: true, opacity: 0.45 });
 const dust = new THREE.Points(dustGeo, dustMat);
 scene.add(dust);
 
-// ---------- 5. 2D overlay (HUD, slice masks, typography) ----------
+// ============================================================
+// 2D OVERLAY (HUD + TYPOGRAPHY + FX)
+// ============================================================
 const overlay = document.getElementById('overlay-canvas');
 const octx = overlay.getContext('2d');
 let vignetteGrad = null;
 
-// Draw a path progressively (the canvas equivalent of strokeDashoffset)
 function strokeProgress(c, path, total, p) {
   if (p <= 0) return;
   c.setLineDash([total, total]);
@@ -412,24 +490,31 @@ function drawHUD(c) {
   c.globalAlpha = S.hudO;
   c.lineWidth = 2; c.strokeStyle = ink;
 
-  // L-shaped framing brackets (24px inset), drawn in via dash offset
   const corners = [[1, 1], [-1, 1], [1, -1], [-1, -1]];
   corners.forEach(([sx, sy]) => {
     const x0 = sx === 1 ? inset : W - inset, y0 = sy === 1 ? inset : H - inset;
     const p = new Path2D();
     p.moveTo(x0 + sx * L, y0); p.lineTo(x0, y0); p.lineTo(x0, y0 + sy * L);
     strokeProgress(c, p, L * 2, S.hudP);
-    if (S.hudP > 0.9) { c.fillStyle = acc; c.fillRect(x0 - 3, y0 - 3, 6, 6); }
+    if (S.hudP > 0.9) {
+      const gl = 4 + S.gridPulse * 6;
+      c.fillStyle = acc;
+      c.fillRect(x0 - 3, y0 - 3, 6, 6);
+      c.globalAlpha = S.hudO * (0.3 + S.gridPulse * 0.7);
+      c.fillRect(x0 - gl / 2, y0 - gl / 2, gl, gl);
+      c.globalAlpha = S.hudO;
+    }
   });
 
-  // Rule-of-thirds grid
-  c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,0.15)';
+  // Grid with pulse
+  c.lineWidth = 1;
+  const gridAlpha = 0.15 + S.gridPulse * 0.25;
+  c.strokeStyle = `rgba(255,255,255,${gridAlpha})`;
   [[W / 3, 0, W / 3, H, H], [2 * W / 3, 0, 2 * W / 3, H, H], [0, H / 3, W, H / 3, W], [0, 2 * H / 3, W, 2 * H / 3, W]].forEach((l, i) => {
     const p = new Path2D(); p.moveTo(l[0], l[1]); p.lineTo(l[2], l[3]);
     strokeProgress(c, p, l[4], clamp(S.hudP * 1.4 - i * 0.2, 0, 1));
   });
 
-  // Tick marks along top and bottom borders
   c.strokeStyle = ink; c.lineWidth = 1;
   const step = 30, count = Math.floor(W / step), vis = Math.floor(clamp(S.hudP, 0, 1) * count);
   c.beginPath();
@@ -440,17 +525,24 @@ function drawHUD(c) {
   }
   c.stroke();
 
-  // Pulsing centre crosshair
   const pulse = 0.55 + 0.35 * Math.sin(S.clk * 5);
   c.globalAlpha = S.hudO * pulse * clamp(S.hudP, 0, 1);
   c.lineWidth = 1; c.strokeStyle = ink;
-  const cx = W / 2, cy = H / 2, r0 = 14 + 4 * Math.sin(S.clk * 5), r1 = 36;
+  const cx = W / 2, cy = H / 2, r0 = 14 + 4 * Math.sin(S.clk * 5) + S.ringPulse * 30, r1 = 36 + S.ringPulse * 60;
   c.beginPath();
   c.moveTo(cx - r1, cy); c.lineTo(cx - r0, cy); c.moveTo(cx + r0, cy); c.lineTo(cx + r1, cy);
   c.moveTo(cx, cy - r1); c.lineTo(cx, cy - r0); c.moveTo(cx, cy + r0); c.lineTo(cx, cy + r1);
   c.stroke();
 
-  // Live coordinates + timecode
+  // Extra expanding ring on climax
+  if (S.ringPulse > 0.01) {
+    c.globalAlpha = S.hudO * (1 - S.ringPulse) * 0.6;
+    c.strokeStyle = acc;
+    c.lineWidth = 2;
+    c.beginPath(); c.arc(cx, cy, 80 + S.ringPulse * 700, 0, Math.PI * 2); c.stroke();
+    c.beginPath(); c.arc(cx, cy, 60 + S.ringPulse * 500, 0, Math.PI * 2); c.stroke();
+  }
+
   const ta = clamp((S.hudP - 0.5) * 2, 0, 1);
   c.globalAlpha = S.hudO * ta;
   c.font = `400 16px ${MONO}`;
@@ -471,7 +563,6 @@ function drawHUD(c) {
 function drawHeadline(c) {
   const label = (cfg.text || '').toUpperCase().trim();
   if (!label) return;
-  // split into lines (balanced two-line split for longer headlines)
   const words = label.split(/\s+/);
   let lines = [label];
   if (label.length > 14 && words.length > 1) {
@@ -483,7 +574,7 @@ function drawHeadline(c) {
     lines = [words.slice(0, best).join(' '), words.slice(best).join(' ')];
   }
 
-  const track = 0.15;                                 // letter-spacing: 0.15em
+  const track = 0.15;
   let size = 130;
   c.font = `900 ${size}px ${cfg.font}`;
   const lineW = s => lines.map(l => {
@@ -495,7 +586,6 @@ function drawHeadline(c) {
   c.font = `900 ${size}px ${cfg.font}`;
   const lh = size * 1.08, blockH = lh * lines.length;
 
-  // soft scrim keeps the white type legible over the image planes
   if (S.heroO > 0.01) {
     c.save();
     c.globalAlpha = S.heroO;
@@ -506,11 +596,9 @@ function drawHeadline(c) {
     c.restore();
   }
 
-  // logo / taglines positions
   const topY = H / 2 - (blockH / 2) * S.ts;
   const botY = H / 2 + (blockH / 2) * S.ts;
 
-  // tagline 1 (above)
   if (S.t1o > 0.01) {
     c.save();
     c.globalAlpha = clamp(S.t1o, 0, 1);
@@ -523,9 +611,10 @@ function drawHeadline(c) {
     c.restore();
   }
 
-  // headline: chars slide up out of a clip mask, line by line (stagger 0.02s per char)
+  // Headline with glitch offset
   c.save();
-  c.translate(W / 2, H / 2); c.scale(S.ts, S.ts);
+  const glitchOff = S.headGlitch * (rnd(S.fr) - 0.5) * 30;
+  c.translate(W / 2 + glitchOff, H / 2); c.scale(S.ts, S.ts);
   c.fillStyle = cfg.ink;
   c.shadowColor = 'rgba(0,0,0,0.5)'; c.shadowBlur = 20; c.shadowOffsetY = 6;
   c.textAlign = 'left'; c.textBaseline = 'middle';
@@ -544,7 +633,9 @@ function drawHeadline(c) {
       const e = expoOut(p);
       if (p > 0 && ch !== ' ') {
         c.globalAlpha = e;
-        c.fillText(ch, x, lineTop + lh / 2 + (1 - e) * lh * 1.1);
+        // Slight bounce overshoot on final lockup
+        const bounce = S.letterBounce * Math.sin(S.clk * 20 + i) * 3;
+        c.fillText(ch, x, lineTop + lh / 2 + (1 - e) * lh * 1.1 + bounce);
       }
       x += ws[i] + tr; g++;
     });
@@ -552,7 +643,20 @@ function drawHeadline(c) {
   });
   c.restore();
 
-  // tagline 2 (below): letter-spacing expands 0.05em -> 0.2em while fading in
+  // Light sweep across headline
+  if (S.lightSweep > 0.01 && S.lightSweep < 0.99) {
+    c.save();
+    c.globalCompositeOperation = 'screen';
+    const sweepX = -W * 0.3 + S.lightSweep * W * 1.6;
+    const lg = c.createLinearGradient(sweepX - 200, 0, sweepX + 200, 0);
+    lg.addColorStop(0, 'rgba(255,255,255,0)');
+    lg.addColorStop(0.5, `rgba(255,255,255,${0.35 * (1 - Math.abs(S.lightSweep - 0.5) * 2)})`);
+    lg.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = lg;
+    c.fillRect(0, H / 2 - 200, W, 400);
+    c.restore();
+  }
+
   if (S.t2o > 0.01) {
     c.save();
     c.globalAlpha = clamp(S.t2o, 0, 1);
@@ -573,153 +677,284 @@ function drawOverlay() {
   const c = octx;
   c.clearRect(0, 0, W, H);
 
-  // Vertical split-panel slices sweeping in opposite directions (1.4s - 2.6s)
+  // Split-panel slices (Phase 2)
   if (S.sw2 > 0.001 && S.sw2 < 0.999) {
-    const N = 8, sw = W / N;
+    const N = 12, sw = W / N;
     for (let i = 0; i < N; i++) {
-      const lp = clamp(S.sw2 * 1.5 - i * 0.07, 0, 1);
+      const lp = clamp(S.sw2 * 1.6 - i * 0.05, 0, 1);
       if (lp <= 0 || lp >= 1) continue;
-      const q = smooth(lp), dir = i % 2 ? 1 : -1;
+      const q = aeEaseInOut(lp), dir = i % 2 ? 1 : -1;
       const y = dir * (q * 2 - 1) * H;
-      c.fillStyle = 'rgba(10,10,14,0.45)'; c.fillRect(i * sw, y, sw, H);
-      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1;
+      c.fillStyle = 'rgba(10,10,14,0.5)'; c.fillRect(i * sw, y, sw, H);
+      c.strokeStyle = 'rgba(255,255,255,0.4)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(i * sw + 0.5, y); c.lineTo(i * sw + 0.5, y + H);
       c.moveTo((i + 1) * sw - 0.5, y); c.lineTo((i + 1) * sw - 0.5, y + H); c.stroke();
     }
   }
 
-  // Intro: horizontal panel slices slide away in opposite directions
+  // Intro slices
   if (S.intro < 0.999) {
-    const N = 8, bh = H / N;
+    const N = 12, bh = H / N;
     for (let i = 0; i < N; i++) {
-      const lp = clamp(S.intro * 1.35 - i * 0.05, 0, 1);
-      const q = smooth(lp), dir = i % 2 ? 1 : -1;
-      const dx = dir * q * W * 1.02;
+      const lp = clamp(S.intro * 1.5 - i * 0.04, 0, 1);
+      const q = aeEaseOutExpo(lp), dir = i % 2 ? 1 : -1;
+      const dx = dir * q * W * 1.05;
       c.fillStyle = BG; c.fillRect(dx, i * bh, W, bh + 1);
       if (q > 0 && q < 1) {
         c.fillStyle = cfg.accent;
-        c.fillRect(dir === 1 ? dx - 3 : dx + W, i * bh, 3, bh + 1);
+        c.fillRect(dir === 1 ? dx - 4 : dx + W, i * bh, 4, bh + 1);
       }
     }
   }
 
-  // Speed streaks during the dolly
+  // Whip pan horizontal streaks
+  if (Math.abs(S.whip) > 0.01) {
+    c.save();
+    c.globalAlpha = Math.min(0.6, Math.abs(S.whip) * 0.8);
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    for (let i = 0; i < 40; i++) {
+      const y = rnd(S.fr + i) * H;
+      const x = rnd(S.fr + i + 500) * W;
+      const w = 200 + rnd(S.fr + i + 900) * 500;
+      c.fillRect(x, y, w * Math.abs(S.whip), 1 + rnd(i) * 2);
+    }
+    c.restore();
+  }
+
+  // Speed streaks during dolly
   if (S.sl > 0.01) {
     c.save();
     c.translate(W / 2, H / 2);
     c.strokeStyle = '#fff';
-    for (let i = 0; i < 70; i++) {
-      const a = rnd(i + 1) * Math.PI * 2, r0 = 330 + rnd(i + 200) * 320, r1 = r0 + (300 + rnd(i + 400) * 700) * S.sl;
-      c.globalAlpha = S.sl * 0.35; c.lineWidth = 1 + rnd(i + 600) * 3;
+    for (let i = 0; i < 90; i++) {
+      const a = rnd(i + 1) * Math.PI * 2, r0 = 330 + rnd(i + 200) * 320, r1 = r0 + (300 + rnd(i + 400) * 800) * S.sl;
+      c.globalAlpha = S.sl * 0.4; c.lineWidth = 1 + rnd(i + 600) * 3;
       c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke();
     }
     c.restore();
   }
 
-  // Lockup glow ("sharp and illuminated")
+  // Lockup glow
   if (S.glow > 0.01) {
     c.save();
     c.globalCompositeOperation = 'screen';
-    c.globalAlpha = S.glow * 0.22;
-    const gg = c.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 650);
+    c.globalAlpha = S.glow * 0.25;
+    const gg = c.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 700);
     gg.addColorStop(0, 'rgba(255,255,255,1)'); gg.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = gg; c.fillRect(0, 0, W, H);
+    c.restore();
+  }
+
+  // Film burn
+  if (S.burn > 0.01) {
+    c.save();
+    c.globalCompositeOperation = 'screen';
+    c.globalAlpha = S.burn * 0.7;
+    const bx = W * 0.5 + Math.sin(S.clk * 3) * W * 0.3;
+    const by = H * 0.5 + Math.cos(S.clk * 4) * H * 0.3;
+    const bg = c.createRadialGradient(bx, by, 0, bx, by, 500 + S.burn * 400);
+    bg.addColorStop(0, 'rgba(255,200,50,0.8)');
+    bg.addColorStop(0.3, 'rgba(255,100,20,0.4)');
+    bg.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    c.restore();
+  }
+
+  // CRT scanline sweep
+  if (S.scanLine > 0.01) {
+    c.save();
+    const sy = S.scanLine * H;
+    const sg = c.createLinearGradient(0, sy - 60, 0, sy + 60);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, `rgba(255,255,255,${0.15 * (1 - Math.abs(S.scanLine - 0.5) * 2)})`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sg; c.fillRect(0, sy - 60, W, 120);
     c.restore();
   }
 
   drawHUD(c);
   drawHeadline(c);
 
+  // Flash
   if (S.flash > 0.005) { c.save(); c.globalAlpha = S.flash; c.fillStyle = '#fff'; c.fillRect(0, 0, W, H); c.restore(); }
 
   // Vignette
   if (!vignetteGrad) {
     vignetteGrad = octx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, Math.hypot(W, H) / 2);
-    vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)'); vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.45)');
+    vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)'); vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
   }
   c.fillStyle = vignetteGrad; c.fillRect(0, 0, W, H);
 
-  // Film grain (deterministic per frame)
+  // Film grain
   if (cfg.fx > 0.01) {
-    c.save(); c.globalAlpha = 0.07 * Math.min(1, cfg.fx);
+    c.save(); c.globalAlpha = 0.08 * Math.min(1, cfg.fx);
     const seed = S.fr * 1000;
-    for (let i = 0; i < 700; i++) {
+    for (let i = 0; i < 900; i++) {
       c.fillStyle = i % 2 ? '#000' : '#fff';
       c.fillRect(rnd(seed + i) * W, rnd(seed + i + 5000) * H, 2, 2);
     }
     c.restore();
   }
+
+  // RGB split overlay (screen-space) during climax
+  if (S.rgbSplit > 0.01) {
+    c.save();
+    c.globalCompositeOperation = 'screen';
+    c.globalAlpha = S.rgbSplit * 0.25;
+    const off = S.rgbSplit * 12;
+    c.fillStyle = 'rgba(255,0,80,0.4)';
+    c.fillRect(-off, 0, W, H);
+    c.fillStyle = 'rgba(0,180,255,0.4)';
+    c.fillRect(off, 0, W, H);
+    c.restore();
+  }
 }
 
-// ---------- 6. Render one frame at time t (seconds) ----------
+// ============================================================
+// RENDER FRAME
+// ============================================================
 function renderFrame(t) {
   S.fr = Math.floor(t * 30);
   S.clk = masterTl ? masterTl.time() : 0;
 
+  // Camera shake
+  const shake = S.offsetShake;
+  const shX = (rnd(S.fr * 13) - 0.5) * shake * 20;
+  const shY = (rnd(S.fr * 17) - 0.5) * shake * 20;
+  camera.position.x = shX;
+  camera.position.y = shY;
   camera.rotation.set(S.tiltX * cfg.fx, S.tiltY * cfg.fx, 0);
+
   for (const m of planes) {
     const d = m.userData, u = m.material.uniforms;
-    let x = d.baseX, y = d.baseY, z = d.baseZ, s;
-    if (d.hero) {                                           // central plane moves toward the camera
-      z += S.par * 60; s = PLANE_SCALE * S.hs;
-    } else {                                                // outer planes: parallax + split left/right
+    let x = d.baseX, y = d.baseY, z = d.baseZ, sx, sy;
+    if (d.hero) {
+      z += S.par * 60;
+      sx = PLANE_SCALE * S.hs;
+      sy = PLANE_SCALE * S.hs * S.heroSquash;
+    } else {
       x += d.side * (S.split * 200 + S.par * 70 * (1 + d.L * 0.25));
-      s = PLANE_SCALE * 0.85;
+      sx = PLANE_SCALE * 0.85;
+      sy = PLANE_SCALE * 0.85;
     }
     m.position.set(x, y, z);
-    m.scale.set(s, s, 1);
+    m.scale.set(sx, sy, 1);
     u.uProgress.value = S.prog;
     u.uAberration.value = S.ab * cfg.fx;
     u.uOpacity.value = d.hero ? S.heroO : S.outerO * (1 - d.L * 0.08);
+    u.uMotionBlur.value = S.motionBlur;
+    u.uWhip.value = S.whip;
+    u.uWhipDir.value = S.whipDir;
+    u.uDepthFog.value = S.depthFog * (d.L / 5);
+    u.uTime.value = t;
   }
   dust.rotation.y = t * 0.02;
+  // Dust burst: increase point size
+  dustMat.size = 3 + S.dustBurst * 30;
+  dustMat.opacity = 0.45 * (1 - S.dustBurst * 0.5);
+
   renderer.render(scene, camera);
   drawOverlay();
 }
 
-// ---------- 7. Master timeline (5.0s) ----------
+// ============================================================
+// MASTER TIMELINE (Cinematic AE-style choreography, ~6.2s)
+// ============================================================
 let masterTl;
 function buildTimeline() {
   if (masterTl) masterTl.kill();
   resetState();
   camera.position.set(0, 0, 1000);
 
-  const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out', duration: 1 } });
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'none' } });
 
-  // PHASE 1 - Grid draw & focus (0.0 - 1.2s)
-  tl.to(S, { intro: 1, duration: 1.1, ease: 'power3.inOut' }, 0)                  // slice mask opens
-    .to(S, { hudP: 1, duration: 0.8, ease: 'power3.out' }, 0)                      // HUD paths draw in
-    .to(camera.position, { z: 700, duration: 1.6, ease: 'power2.out' }, 0.2)       // Z 1000 -> 700
-    .to(S, { hs: 1, duration: 1.0, ease: 'power3.out' }, 0.4)                      // hero plane 0.8 -> 1.0
-    .to(S, { heroO: 1, duration: 0.7, ease: 'power2.out' }, 0.4)
-    .to(S, { outerO: 1, duration: 1.0, ease: 'power2.out' }, 0.4)                  // outer planes fade in
-    .to(S, { tr: 2.6, duration: 2.6, ease: 'none' }, 0.6)                          // header splits + slides up
-    .to(S, { t1o: 1, duration: 0.7 }, 1.0)
-    .to(S, { par: 1, duration: 5, ease: 'none' }, 0);                              // continuous parallax drift
+  // =====================================================
+  // PHASE 1 — SLICE MASK & DEPTH FOCUS (0.0 - 1.4s)
+  // =====================================================
+  tl.to(S, { intro: 1, duration: 1.2, ease: aeEaseOutExpo }, 0)
+    .to(S, { hudP: 1, duration: 0.9, ease: aeEaseOutExpo }, 0.05)
+    .to(camera.position, { z: 620, duration: 1.8, ease: aeEaseInOutQuint }, 0.1)
+    .to(S, { hs: 1.02, duration: 1.1, ease: aeEaseOutBack }, 0.35)
+    .to(S, { heroO: 1, duration: 0.8, ease: aeEaseOutExpo }, 0.35)
+    .to(S, { outerO: 1, duration: 1.1, ease: aeEaseOutExpo }, 0.4)
+    .to(S, { tr: 2.8, duration: 2.8, ease: 'none' }, 0.55)
+    .to(S, { t1o: 1, duration: 0.8, ease: aeEaseOutExpo }, 1.0)
+    .to(S, { par: 1, duration: 6.2, ease: 'none' }, 0)
+    .to(S, { gridPulse: 0.6, duration: 0.5, ease: aeEaseOutExpo }, 0.8)
+    .to(S, { gridPulse: 0, duration: 0.6, ease: aeEaseInOut }, 1.3)
+    .to(S, { depthFog: 0.35, duration: 1.4, ease: aeEaseOutExpo }, 0.3);
 
-  // PHASE 2 - Split-panel parallax transition (1.2 - 3.2s)
-  tl.to(S, { tiltX: -0.05, tiltY: 0.08, duration: 1.0, ease: 'power2.inOut' }, 1.2)
-    .to(S, { split: 1, duration: 1.2, ease: 'power3.inOut' }, 1.4)                 // left -200 / right +200
-    .to(S, { sw2: 1, duration: 1.2, ease: 'power1.inOut' }, 1.4)                   // slice sweep overlay
-    .to(S, { prog: 1, duration: 1.0, ease: 'power2.inOut' }, 1.6)                  // uProgress texture swap
-    .to(S, { t2o: 1, duration: 0.8 }, 2.0)                                         // tagline 2 fades in
-    .to(S, { t2ls: 0.2, duration: 1.2, ease: 'power2.out' }, 2.0);                 // 0.05em -> 0.2em
+  // =====================================================
+  // PHASE 2 — WHIP PAN + SPLIT-PANEL TRANSITION (1.4 - 3.4s)
+  // =====================================================
+  tl.to(S, { tiltX: -0.06, tiltY: 0.1, duration: 1.2, ease: aeEaseInOutQuint }, 1.3)
+    // whip pan right
+    .to(S, { whip: 1, whipDir: 1, duration: 0.25, ease: aeEaseOutExpo }, 1.4)
+    .to(S, { motionBlur: 1, duration: 0.2, ease: aeEaseOutExpo }, 1.4)
+    .to(S, { whip: 0, duration: 0.4, ease: aeEaseInOutQuint }, 1.65)
+    .to(S, { motionBlur: 0, duration: 0.4, ease: aeEaseInOut }, 1.65)
+    // RGB split pulse at peak whip
+    .to(S, { rgbSplit: 1, duration: 0.15, ease: aeEaseOutExpo }, 1.45)
+    .to(S, { rgbSplit: 0, duration: 0.5, ease: aeEaseInOut }, 1.6)
+    // split planes
+    .to(S, { split: 1, duration: 1.3, ease: aeEaseInOutQuint }, 1.5)
+    .to(S, { sw2: 1, duration: 1.3, ease: aeEaseInOutQuint }, 1.5)
+    // texture crossfade
+    .to(S, { prog: 1, duration: 1.1, ease: aeEaseInOutQuint }, 1.7)
+    // tagline 2 + letter-spacing
+    .to(S, { t2o: 1, duration: 0.9, ease: aeEaseOutExpo }, 2.1)
+    .to(S, { t2ls: 0.22, duration: 1.4, ease: aeEaseOutExpo }, 2.1)
+    // scanline sweep
+    .to(S, { scanLine: 1, duration: 0.7, ease: 'none' }, 1.4)
+    .to(S, { scanLine: 0, duration: 0.01, ease: 'none' }, 2.1)
+    // dust burst subtle
+    .to(S, { dustBurst: 0.5, duration: 0.8, ease: aeEaseOutExpo }, 1.6)
+    .to(S, { dustBurst: 0, duration: 1.2, ease: aeEaseInOut }, 2.4);
 
-  // PHASE 3 - Climax zoom & outro lockup (3.2 - 5.0s)
-  tl.to(camera.position, { z: 200, duration: 0.8, ease: 'expo.inOut' }, 3.2)       // fast dolly into centre
-    .to(S, { ab: 0.012, duration: 0.3, ease: 'none' }, 3.2)
-    .to(S, { sl: 1, duration: 0.35, ease: 'power2.out' }, 3.2)
-    .to(S, { sl: 0, duration: 0.4, ease: 'power2.in' }, 3.55)
-    .set(S, { ab: 0.02 }, 3.5)                                                     // aberration spike 0.02 -> 0
-    .to(S, { ab: 0.002, duration: 0.9, ease: 'power2.out' }, 3.5)
-    .to(S, { flash: 0.3, duration: 0.08, ease: 'none' }, 3.85)
-    .to(S, { flash: 0, duration: 0.5, ease: 'power2.out' }, 3.93)
-    .to(camera.position, { z: 560, duration: 1.0, ease: 'expo.out' }, 4.0)         // settle back
-    .to(S, { split: 0, duration: 1.0, ease: 'power3.inOut' }, 4.0)                 // panels drift home
-    .to(S, { tiltX: 0, tiltY: 0, duration: 1.0, ease: 'power2.inOut' }, 4.0)
-    .to(S, { ts: 0.93, duration: 0.9, ease: 'power2.inOut' }, 4.0)                 // lockup scales down slightly
-    .to(S, { glow: 1, duration: 0.8, ease: 'power2.out' }, 4.0)
-    .to(S, { hudO: 0.4, duration: 0.5, ease: 'power2.out' }, 4.5);                 // HUD drops to 0.4
+  // =====================================================
+  // PHASE 3 — CLIMAX DOLLY + LOCKUP (3.4 - 5.4s)
+  // =====================================================
+  tl.to(camera.position, { z: 160, duration: 0.65, ease: aeEaseInExpo }, 3.4)
+    // aberration + whip spike
+    .to(S, { ab: 0.02, duration: 0.3, ease: aeEaseOutExpo }, 3.4)
+    .to(S, { sl: 1, duration: 0.35, ease: aeEaseOutExpo }, 3.4)
+    .to(S, { sl: 0, duration: 0.5, ease: aeEaseInOut }, 3.75)
+    // camera shake
+    .to(S, { offsetShake: 1, duration: 0.15, ease: 'none' }, 3.4)
+    .to(S, { offsetShake: 0, duration: 0.5, ease: aeEaseInOut }, 3.55)
+    // flash + RGB split
+    .to(S, { flash: 0.55, duration: 0.06, ease: 'none' }, 3.92)
+    .to(S, { flash: 0, duration: 0.55, ease: aeEaseOutExpo }, 3.98)
+    .to(S, { rgbSplit: 1.2, duration: 0.08, ease: 'none' }, 3.92)
+    .to(S, { rgbSplit: 0, duration: 0.6, ease: aeEaseOutExpo }, 4.0)
+    // film burn
+    .to(S, { burn: 0.8, duration: 0.15, ease: aeEaseOutExpo }, 3.92)
+    .to(S, { burn: 0, duration: 0.9, ease: aeEaseInOut }, 4.1)
+    // ring pulse
+    .to(S, { ringPulse: 1, duration: 0.6, ease: aeEaseOutExpo }, 3.95)
+    .to(S, { ringPulse: 0, duration: 0.01, ease: 'none' }, 4.6)
+    // settle camera
+    .to(camera.position, { z: 480, duration: 1.0, ease: aeEaseOutExpo }, 4.1)
+    // split returns home
+    .to(S, { split: 0, duration: 1.1, ease: aeEaseInOutQuint }, 4.1)
+    .to(S, { tiltX: 0, tiltY: 0, duration: 1.1, ease: aeEaseInOutQuint }, 4.1)
+    // lockup scale
+    .to(S, { ts: 0.94, duration: 1.0, ease: aeEaseInOutQuint }, 4.1)
+    .to(S, { glow: 1, duration: 0.9, ease: aeEaseOutExpo }, 4.1)
+    // hero squash on impact
+    .to(S, { heroSquash: 0.92, duration: 0.15, ease: aeEaseOutExpo }, 3.95)
+    .to(S, { heroSquash: 1, duration: 0.6, ease: aeEaseOutElastic }, 4.1)
+    // letter bounce on impact
+    .to(S, { letterBounce: 1, duration: 0.4, ease: aeEaseOutExpo }, 4.0)
+    .to(S, { letterBounce: 0, duration: 0.6, ease: aeEaseInOut }, 4.4)
+    // light sweep across headline
+    .to(S, { lightSweep: 1, duration: 0.9, ease: aeEaseInOutQuint }, 4.2)
+    .to(S, { lightSweep: 0, duration: 0.01, ease: 'none' }, 5.1)
+    // HUD dim
+    .to(S, { hudO: 0.4, duration: 0.5, ease: aeEaseOutExpo }, 4.7)
+    // motion blur tail
+    .to(S, { motionBlur: 0.6, duration: 0.2, ease: aeEaseOutExpo }, 3.4)
+    .to(S, { motionBlur: 0, duration: 0.6, ease: aeEaseInOut }, 3.6);
 
   tl.timeScale(cfg.speed);
   masterTl = tl;
@@ -727,7 +962,9 @@ function buildTimeline() {
 }
 buildTimeline();
 
-// ---------- 8. Preview loop ----------
+// ============================================================
+// PREVIEW LOOP
+// ============================================================
 let exporting = false, composing = false;
 const exportCanvas = document.createElement('canvas');
 exportCanvas.width = W; exportCanvas.height = H;
@@ -749,7 +986,9 @@ function loop() {
 }
 requestAnimationFrame(loop);
 
-// ---------- 9. UI wiring ----------
+// ============================================================
+// UI WIRING
+// ============================================================
 const $ = id => document.getElementById(id);
 $('input-text').addEventListener('input', e => cfg.text = e.target.value);
 $('input-tag1').addEventListener('input', e => cfg.tag1 = e.target.value);
@@ -766,7 +1005,7 @@ let accentTimer = null;
 $('input-color-accent').addEventListener('input', e => {
   cfg.accent = e.target.value;
   document.documentElement.style.setProperty('--accent', e.target.value);
-  clearTimeout(accentTimer);                       // repaint textures after the colour picker settles
+  clearTimeout(accentTimer);
   accentTimer = setTimeout(() => { paintAllTextures(); textures.forEach(t => t.needsUpdate = true); }, 150);
 });
 $('input-color-text').addEventListener('input', e => { cfg.ink = e.target.value; });
@@ -789,11 +1028,12 @@ $('input-speed').addEventListener('change', e => {
 $('btn-preview').addEventListener('click', () => { masterTl.timeScale(cfg.speed); masterTl.restart(); });
 scrub.addEventListener('input', () => { masterTl.pause(); masterTl.progress(scrub.value / 1000); });
 
-// Make sure the display + HUD fonts are ready (they load from Google Fonts)
 document.fonts.load('900 100px "Montserrat"').catch(() => {});
 document.fonts.load('300 20px "JetBrains Mono"').catch(() => {});
 
-// ---------- 10. Export ----------
+// ============================================================
+// EXPORT
+// ============================================================
 const exportBtn = $('btn-export');
 const overlayEl = $('recording-overlay');
 
@@ -812,7 +1052,6 @@ function download(blob, name) {
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
 }
 
-// A) Frame-perfect: the timeline is stepped manually, one frame at a time
 function exportFramePerfect() {
   const FPS = 60;
   const duration = masterTl.duration() / cfg.speed;
@@ -842,7 +1081,6 @@ function exportFramePerfect() {
   step();
 }
 
-// B) Fast: real-time MediaRecorder (MP4 where the browser supports it)
 function exportFast() {
   const types = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
   const mime = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
