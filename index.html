@@ -1,501 +1,965 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Epic 3D Motion Engine (1080p)</title>
-    
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- CCapture & Whammy for Video Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/whammy/1.3.0/whammy.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Epic 3D Motion Engine (1080p)</title>
 
-    <style>
-        /* --- ORIGINAL PRO CSS ARCHITECTURE --- */
-        :root {
-            --bg-app: #0f0f11;
-            --bg-panel: #1a1a1d;
-            --bg-input: #000000;
-            --accent: #FFCC00;
-            --text-main: #ffffff;
-            --text-muted: #888888;
-            --border: #333333;
-            --radius: 8px;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:wght@900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- CCapture.all already bundles Whammy (WebM encoder) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ccapture.js/1.1.0/CCapture.all.min.js"></script>
 
-        body {
-            margin: 0;
-            background-color: var(--bg-app);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            flex-direction: row;
-        }
-
-        /* --- SIDEBAR --- */
-        #sidebar {
-            width: 340px;
-            background-color: var(--bg-panel);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            gap: 15px;
-            overflow-y: auto;
-            z-index: 1000;
-            flex-shrink: 0;
-        }
-
-        .panel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); padding-bottom: 10px;
-        }
-
-        h2 { margin: 0; font-size: 18px; color: var(--accent); letter-spacing: 0.5px; }
-        h3 { font-size: 11px; margin: 10px 0 5px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
-        
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 13px; color: #ccc; }
-        
-        input[type="text"], select {
-            width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border);
-            color: white; border-radius: var(--radius); font-size: 14px; transition: border 0.2s;
-        }
-        input[type="text"]:focus, select:focus { border-color: var(--accent); outline: none; }
-
-        .color-row { display: flex; gap: 10px; }
-        .color-swatch { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-        input[type="color"] {
-            width: 100%; height: 40px; padding: 2px; background: var(--bg-input); 
-            border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer;
-        }
-
-        button {
-            background: var(--accent); color: #000; border: none; padding: 14px;
-            font-weight: 800; font-size: 14px; border-radius: var(--radius); 
-            cursor: pointer; transition: transform 0.1s, opacity 0.2s; text-transform: uppercase;
-            letter-spacing: 0.5px; display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
-        button:hover { opacity: 0.9; }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
-        .btn-export { background: #ffffff; margin-top: auto; }
-
-        /* --- PREVIEW CONTAINER --- */
-        #preview-container {
-            flex: 1; display: flex; justify-content: center; align-items: center;
-            background: #000; overflow: hidden; position: relative;
-        }
-
-        #canvas-wrapper {
-            width: 1920px; height: 1080px; position: absolute; transform-origin: center center;
-        }
-
-        #app-canvas {
-            width: 1920px; height: 1080px; background-color: #f4f4f4;
-            position: relative; overflow: hidden; perspective: 1500px;
-        }
-
-        /* --- UPGRADED HUD & VISUAL ELEMENTS --- */
-        #webgl-canvas { position: absolute; top: 0; left: 0; z-index: 1; width: 100%; height: 100%; }
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        
-        #main-text-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-3deg);
-            z-index: 20; text-align: center;
-        }
-        #main-text {
-            font-size: 150px; font-weight: 900; color: #111; text-transform: uppercase;
-            letter-spacing: -4px; white-space: nowrap; text-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .ribbon {
-            position: absolute; background: var(--accent); transform: rotate(-5deg);
-            z-index: 5; height: 120px; top: 40%; left: -10%;
-        }
-
-        /* HUD Viewfinder Crosshairs */
-        .hud-crosshair {
-            position: absolute; width: 60px; height: 60px; border: 2px solid #111;
-            border-radius: 50%; opacity: 0; z-index: 15;
-        }
-        .hud-crosshair::before, .hud-crosshair::after { content: ''; position: absolute; background: #111; }
-        .hud-crosshair::before { width: 2px; height: 140%; left: 50%; top: -20%; }
-        .hud-crosshair::after { height: 2px; width: 140%; top: 50%; left: -20%; }
-        
-        /* Technical Coordinate Data */
-        .hud-data {
-            position: absolute; font-family: monospace; font-size: 18px; color: #111;
-            z-index: 15; opacity: 0; border-left: 3px solid var(--accent); padding-left: 10px;
-        }
-        
-        /* Tracking Corner Brackets */
-        .hud-bracket { position: absolute; width: 40px; height: 40px; border: 2px solid #111; opacity: 0; z-index: 15; }
-        .hud-bracket.tl { top: 10%; left: 5%; border-right: none; border-bottom: none; }
-        .hud-bracket.tr { top: 10%; right: 5%; border-left: none; border-bottom: none; }
-        .hud-bracket.bl { bottom: 10%; left: 5%; border-right: none; border-top: none; }
-        .hud-bracket.br { bottom: 10%; right: 5%; border-left: none; border-top: none; }
-
-        /* Thin Accent Lines */
-        .hud-line { position: absolute; background: #111; opacity: 0; z-index: 15; }
-        .hud-line.h { height: 2px; width: 40%; top: 30%; left: 0; }
-        .hud-line.v { width: 2px; height: 40%; bottom: 0; right: 25%; }
-
-        #data-stream {
-            position: absolute; right: 10%; top: 20%; width: 200px; height: 400px;
-            overflow: hidden; font-family: monospace; font-size: 14px; color: #111;
-            z-index: 15; opacity: 0; mask-image: linear-gradient(to bottom, transparent, black, transparent);
-        }
-        .data-line { margin-bottom: 5px; }
-
-        .lens-flare {
-            position: absolute; width: 600px; height: 200px;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(255,204,0,0.4) 30%, rgba(255,255,255,0) 70%);
-            transform: rotate(-20deg); z-index: 25; mix-blend-mode: screen; opacity: 0;
-        }
-
-        /* --- MOBILE PRO LOGIC --- */
-        @media (max-width: 1024px) {
-            body { flex-direction: column; }
-            #preview-container { height: 45vh; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-            #sidebar { width: 100%; height: 55vh; border-right: none; border-top: 1px solid var(--border); padding: 15px; overflow-y: auto; }
-            .control-group { margin-bottom: 10px; }
-            h3 { margin-top: 15px; }
-            .button-group { display: flex; gap: 10px; margin-top: 15px; }
-            .button-group button { flex: 1; margin-top: 0; }
-        }
-
-        @media (max-width: 1024px) and (orientation: landscape) {
-             body { flex-direction: row; }
-             #preview-container { height: 100vh; flex: 1; border-bottom: none; }
-             #sidebar { width: 300px; height: 100vh; flex-shrink: 0; overflow-y: auto; }
-        }
-
-        /* Recording UI */
-        #recording-overlay {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 50, 50, 0.95); color: white; padding: 12px 24px;
-            border-radius: 30px; font-weight: bold; display: none; z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-    </style>
+<style>
+:root{--bg-app:#0f0f11;--bg-panel:#1a1a1d;--bg-input:#000;--accent:#FFCC00;--text-main:#fff;--text-muted:#888;--border:#333;--radius:8px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg-app);color:var(--text-main);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;height:100vh;height:100dvh;overflow:hidden;flex-direction:row}
+#sidebar{width:340px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px;gap:12px;overflow-y:auto;z-index:1000;flex-shrink:0}
+.panel-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px}
+h2{margin:0;font-size:18px;color:var(--accent);letter-spacing:.5px}
+h3{font-size:11px;margin:8px 0 4px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+.control-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:13px;color:#ccc}
+input[type=text],select{width:100%;padding:10px;background:var(--bg-input);border:1px solid var(--border);color:#fff;border-radius:var(--radius);font-size:14px;transition:border .2s}
+input[type=text]:focus,select:focus{border-color:var(--accent);outline:none}
+input[type=file]{font-size:12px;color:#ccc;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.color-row{display:flex;gap:10px}
+.color-swatch{flex:1;display:flex;flex-direction:column;gap:4px}
+input[type=color]{width:100%;height:40px;padding:2px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer}
+button{background:var(--accent);color:#000;border:none;padding:14px;font-weight:800;font-size:14px;border-radius:var(--radius);cursor:pointer;transition:transform .1s,opacity .2s;text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:center;align-items:center;gap:8px}
+button:hover{opacity:.9}button:active{transform:scale(.98)}
+button:disabled{background:#444;color:#888;cursor:not-allowed;transform:none}
+.btn-export{background:#fff}
+.btn-small{padding:8px;font-size:11px;background:#333;color:#fff}
+.button-group{display:flex;gap:10px;margin-top:6px}
+.button-group button{flex:1}
+#preview-container{flex:1;display:flex;justify-content:center;align-items:center;background:#000;overflow:hidden;position:relative}
+#canvas-wrapper{width:1920px;height:1080px;position:absolute;transform-origin:center center}
+#app-canvas{width:1920px;height:1080px;background:#f4f4f4;position:relative;overflow:hidden}
+#webgl-canvas,#overlay-canvas{position:absolute;top:0;left:0;width:1920px;height:1080px}
+#overlay-canvas{z-index:10;pointer-events:none}
+@media (max-width:1024px){
+ body{flex-direction:column}
+ #preview-container{height:45vh;border-bottom:1px solid var(--border);flex-shrink:0;flex:none}
+ #sidebar{width:100%;height:55vh;border-right:none;border-top:1px solid var(--border);padding:15px}
+}
+@media (max-width:1024px) and (orientation:landscape){
+ body{flex-direction:row}
+ #preview-container{height:100vh;flex:1;border-bottom:none}
+ #sidebar{width:300px;height:100vh}
+}
+#recording-overlay{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(255,50,50,.95);color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.5);animation:pulse 1.5s infinite;white-space:nowrap}
+@keyframes pulse{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
+</style>
 </head>
 <body>
 
-    <!-- PREVIEW CONTAINER -->
-    <div id="preview-container">
-        <div id="canvas-wrapper">
-            <div id="app-canvas">
-                <canvas id="webgl-canvas" width="1920" height="1080"></canvas>
-                
-                <div class="ui-layer">
-                    <div class="ribbon" id="ribbon-1"></div>
-                    
-                    <!-- Epic Upgrades: Brackets, Lines, Crosshairs -->
-                    <div class="hud-bracket tl"></div>
-                    <div class="hud-bracket tr"></div>
-                    <div class="hud-bracket bl"></div>
-                    <div class="hud-bracket br"></div>
-                    
-                    <div class="hud-line h" id="hud-line-h"></div>
-                    <div class="hud-line v" id="hud-line-v"></div>
-
-                    <div class="hud-crosshair" style="top: 20%; left: 15%;" id="hud-1"></div>
-                    <div class="hud-crosshair" style="bottom: 25%; right: 20%;" id="hud-2"></div>
-                    
-                    <div class="hud-data" style="top: 25%; right: 10%;" id="hud-data-1">SYS.STATUS: ONLINE</div>
-                    <div class="hud-data" style="bottom: 15%; left: 10%;" id="hud-data-2">LAT: 40.7128° N</div>
-                    
-                    <div id="data-stream"></div>
-
-                    <div id="main-text-container">
-                        <div id="main-text">MAXING & TRANSACTIONS</div>
-                    </div>
-
-                    <div class="lens-flare" id="flare"></div>
-                </div>
-            </div>
-        </div>
+<div id="preview-container">
+  <div id="canvas-wrapper">
+    <div id="app-canvas">
+      <canvas id="webgl-canvas" width="1920" height="1080"></canvas>
+      <canvas id="overlay-canvas" width="1920" height="1080"></canvas>
     </div>
+  </div>
+</div>
 
-    <!-- SIDEBAR -->
-    <div id="sidebar">
-        <div class="panel-header">
-            <h2>Epic 3D Engine</h2>
-        </div>
-        
-        <div class="control-group">
-            <h3>Text Details</h3>
-            <input type="text" id="input-text" value="MAXING & TRANSACTIONS">
-        </div>
+<div id="sidebar">
+  <div class="panel-header"><h2>Epic 3D Engine</h2></div>
 
-        <div class="control-group">
-            <h3>Brand Colors</h3>
-            <div class="color-row">
-                <div class="color-swatch">
-                    <label>Accent</label>
-                    <input type="color" id="input-color-accent" value="#FFCC00">
-                </div>
-                <div class="color-swatch">
-                    <label>Text</label>
-                    <input type="color" id="input-color-text" value="#111111">
-                </div>
-            </div>
-        </div>
+  <div class="control-group">
+    <h3>Text</h3>
+    <input type="text" id="input-text" value="MAXING & TRANSACTIONS">
+    <select id="input-font">
+      <option value='"Arial Black", Arial, sans-serif'>Arial Black</option>
+      <option value='"Anton", Impact, sans-serif'>Anton</option>
+      <option value='"Bebas Neue", Impact, sans-serif'>Bebas Neue</option>
+      <option value='"Montserrat", Arial, sans-serif'>Montserrat Black</option>
+      <option value='"Space Grotesk", Arial, sans-serif'>Space Grotesk</option>
+      <option value='Impact, sans-serif'>Impact</option>
+    </select>
+  </div>
 
-        <div class="control-group">
-            <h3>Animation Speed</h3>
-            <select id="input-speed">
-                <option value="1">Normal (1x)</option>
-                <option value="1.5">Fast (1.5x)</option>
-                <option value="0.5">Slow (0.5x)</option>
-            </select>
-        </div>
-
-        <div class="button-group">
-            <button id="btn-preview">▶ Play Preview</button>
-            <button id="btn-export" class="btn-export">⬇ Export 1080p</button>
-        </div>
+  <div class="control-group">
+    <h3>Brand Colors</h3>
+    <div class="color-row">
+      <div class="color-swatch"><label>Accent</label><input type="color" id="input-color-accent" value="#FFCC00"></div>
+      <div class="color-swatch"><label>Text</label><input type="color" id="input-color-text" value="#111111"></div>
     </div>
+  </div>
 
-    <div id="recording-overlay">🔴 RENDERING 60FPS VIDEO...</div>
+  <div class="control-group">
+    <h3>Effects Intensity</h3>
+    <input type="range" id="input-fx" min="0" max="150" value="100">
+  </div>
 
-    <script>
-        // --- 1. DYNAMIC RESPONSIVE SCALING ---
-        function resizeCanvas() {
-            const wrapper = document.getElementById('canvas-wrapper');
-            const container = document.getElementById('preview-container');
-            const scale = Math.min(container.clientWidth / 1920, container.clientHeight / 1080) * 0.95;
-            wrapper.style.transform = `scale(${scale})`;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
+  <div class="control-group">
+    <h3>Logo (optional)</h3>
+    <input type="file" id="input-logo" accept="image/*">
+    <button class="btn-small" id="btn-clear-logo">Remove logo</button>
+  </div>
 
-        // --- 2. EPIC THREE.JS SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf4f4f4);
-        
-        const camera = new THREE.PerspectiveCamera(45, 1920 / 1080, 0.1, 1000);
-        camera.position.set(0, 0, 20);
+  <div class="control-group">
+    <h3>Animation Speed</h3>
+    <select id="input-speed">
+      <option value="1">Normal (1x)</option>
+      <option value="1.5">Fast (1.5x)</option>
+      <option value="0.5">Slow (0.5x)</option>
+    </select>
+  </div>
 
-        const renderer = new THREE.WebGLRenderer({ 
-            canvas: document.getElementById('webgl-canvas'), 
-            alpha: true, antialias: true 
-        });
-        renderer.setSize(1920, 1080);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  <div class="control-group">
+    <h3>Timeline</h3>
+    <input type="range" id="scrub" min="0" max="1000" value="0">
+  </div>
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(10, 20, 10);
-        scene.add(dirLight);
+  <div class="control-group">
+    <h3>Export Mode</h3>
+    <select id="input-export-mode">
+      <option value="frame">WebM, frame-perfect 60fps (slower)</option>
+      <option value="fast">Fast real-time (MP4 if supported)</option>
+    </select>
+  </div>
 
-        // A. Multi-Plane Glass Panels
-        const glassPanels = [];
-        const glassMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xffffff, metalness: 0.1, roughness: 0.1, transmission: 0.9,
-            transparent: true, opacity: 0.3, ior: 1.5, thickness: 0.5, side: THREE.DoubleSide
-        });
+  <div class="button-group">
+    <button id="btn-preview">▶ Play Preview</button>
+    <button id="btn-export" class="btn-export">⬇ Export 1080p</button>
+  </div>
+</div>
 
-        const createPanel = (w, h, x, y, z, rx, ry, rz) => {
-            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glassMaterial);
-            mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz);
-            mesh.userData = { baseX: x, baseY: y, baseZ: z };
-            scene.add(mesh); glassPanels.push(mesh);
-        };
-        createPanel(8, 5, -15, 5, -5, 0.2, 0.4, 0.1);   // Left panel
-        createPanel(10, 6, 15, -6, -2, -0.1, -0.4, -0.1); // Right panel
-        createPanel(12, 7, 0, 0, -8, 0, 0, 0);          // Center Back plane
+<div id="recording-overlay">🔴 RENDERING…</div>
 
-        // B. Ambient Particle Dust
-        const particleCount = 1500;
-        const particleGeo = new THREE.BufferGeometry();
-        const particlePos = new Float32Array(particleCount * 3);
-        for(let i=0; i<particleCount * 3; i+=3) {
-            particlePos[i] = (Math.random() - 0.5) * 60;
-            particlePos[i+1] = (Math.random() - 0.5) * 40;
-            particlePos[i+2] = -10 - Math.random() * 20;
-        }
-        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
-        const particleMat = new THREE.PointsMaterial({ 
-            color: 0x111111, size: 0.08, transparent: true, opacity: 0.4 
-        });
-        const particles = new THREE.Points(particleGeo, particleMat);
-        scene.add(particles);
+<script>
+const W = 1920, H = 1080;
+const DEG = Math.PI / 180;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = t => t * t * (3 - 2 * t);
+// Deterministic pseudo-random: same input -> same output (keeps exports frame-perfect)
+const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-        // C. 3D Dot Matrix Grid
-        const dotGeo = new THREE.BufferGeometry();
-        const dotPositions = [];
-        for(let x = -20; x <= 20; x+=2) {
-            for(let y = -12; y <= 12; y+=2) { dotPositions.push(x, y, -15); }
-        }
-        dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
-        const dotGrid = new THREE.Points(dotGeo, new THREE.PointsMaterial({ color: 0x111111, size: 0.15, transparent: true, opacity: 0.3 }));
-        scene.add(dotGrid);
+// ---------- 1. Responsive preview scaling ----------
+function resizeCanvas() {
+  const wrapper = document.getElementById('canvas-wrapper');
+  const container = document.getElementById('preview-container');
+  const scale = Math.min(container.clientWidth / W, container.clientHeight / H) * 0.95;
+  wrapper.style.transform = `scale(${scale})`;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
-        // Animation Loop
-        const clock = new THREE.Clock();
-        function animateWebGL() {
-            requestAnimationFrame(animateWebGL);
-            const time = clock.getElapsedTime();
-            
-            // Continuous subtle float
-            glassPanels[0].position.y = glassPanels[0].userData.baseY + Math.sin(time * 0.5) * 0.5;
-            glassPanels[1].position.y = glassPanels[1].userData.baseY + Math.cos(time * 0.6) * 0.5;
-            
-            // Particle drift
-            particles.rotation.y = time * 0.02;
-            
-            renderer.render(scene, camera);
-        }
-        animateWebGL();
+// ---------- 2. Config + animation state ----------
+const cfg = {
+  text: 'MAXING & TRANSACTIONS',
+  font: '"Arial Black", Arial, sans-serif',
+  accent: '#FFCC00',
+  ink: '#111111',
+  speed: 1,
+  fx: 1,
+  logo: null
+};
 
-        // --- 3. UI LOGIC (Unchanged) ---
-        const dataStream = document.getElementById('data-stream');
-        for(let i=0; i<20; i++) {
-            const line = document.createElement('div');
-            line.className = 'data-line';
-            line.innerText = `DATA_0x${Math.floor(Math.random()*9999)} :: ${Math.random().toString(36).substring(7).toUpperCase()}`;
-            dataStream.appendChild(line);
-        }
+const S = { fr: 0, clk: 0 };
+function resetState() {
+  Object.assign(S, {
+    slat: 0, vg: 0,
+    br: [0, 1, 2, 3].map(() => ({ o: 0, s: 1.5 })),
+    lineO: 0, lineP: 0,
+    ch: [0, 1].map(() => ({ o: 0, s: 0 })),
+    hd: [0, 1, 2].map(() => ({ o: 0, x: -20 })),
+    so: 0, sc: 50,
+    g1: 0, g2: 0,
+    mo: 0, ms: 0.6, mr: 0, mt: 0,
+    roll: 0,
+    ribbonW: 0, ribbonOp: 0, ribbonRot: -15,
+    tr: 0, ts: 0.8, rgb: 45,
+    shake: 0, sw: 0, sp: 0,
+    mq: 0, shine: 0, gl: 0,
+    ir: 0, sl: 0,
+    fx: -0.3, fo: 0, fs: 0.8
+  });
+}
+resetState();
 
-        const mainTextElement = document.getElementById('main-text');
-        document.getElementById('input-text').addEventListener('input', (e) => mainTextElement.innerText = e.target.value);
-        
-        document.getElementById('input-color-accent').addEventListener('input', (e) => {
-            document.documentElement.style.setProperty('--accent', e.target.value);
-            document.querySelectorAll('.ribbon').forEach(el => el.style.background = e.target.value);
-        });
+const streamLines = [];
+for (let i = 0; i < 20; i++) {
+  streamLines.push(`DATA_0x${Math.floor(rnd(i + 1) * 9999)} :: ${Math.floor(rnd(i + 50) * 1e9).toString(36).toUpperCase()}`);
+}
 
-        document.getElementById('input-color-text').addEventListener('input', (e) => {
-            mainTextElement.style.color = e.target.value;
-            document.querySelectorAll('.hud-crosshair, .hud-bracket, .hud-line').forEach(el => {
-                if(el.classList.contains('hud-line')) el.style.backgroundColor = e.target.value;
-                else el.style.borderColor = e.target.value;
-            });
-            document.querySelectorAll('.hud-data').forEach(el => el.style.color = e.target.value);
-        });
+// ---------- 3. Three.js scene ----------
+const webglCanvas = document.getElementById('webgl-canvas');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+camera.position.set(0, 0, 20);
 
-        // --- 4. EPIC MASTER TIMELINE (5-Second Sequence) ---
-        let masterTl;
-        function buildTimeline() {
-            // Reset Everything
-            gsap.set("#main-text", { scale: 0.5, opacity: 0, rotationX: 30 });
-            gsap.set(".ribbon", { width: 0, opacity: 0, rotationZ: -15 });
-            gsap.set("#hud-1, #hud-2", { opacity: 0, scale: 0 });
-            gsap.set("#hud-data-1, #hud-data-2", { opacity: 0, x: -20 });
-            gsap.set(".hud-bracket", { opacity: 0, scale: 1.5 });
-            gsap.set(".hud-line", { opacity: 0, scaleX: 0, scaleY: 0 });
-            gsap.set("#data-stream", { opacity: 0, y: 50 });
-            gsap.set("#flare", { left: "-30%", opacity: 0, scale: 0.8 });
-            
-            glassPanels.forEach(p => {
-                p.position.x = p.userData.baseX;
-                p.position.y = p.userData.baseY;
-                p.position.z = p.userData.baseZ - 10; // Start far back
-            });
+const renderer = new THREE.WebGLRenderer({ canvas: webglCanvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.setClearColor(0x000000, 0);
 
-            const speed = parseFloat(document.getElementById('input-speed').value) || 1;
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(10, 20, 10);
+scene.add(dirLight);
 
-            masterTl = gsap.timeline({ 
-                paused: true, defaults: { ease: "expo.out", duration: 1.2 / speed } 
-            });
+const glassPanels = [];
+const glassMaterial = new THREE.MeshStandardMaterial({
+  color: 0xdfe8ff, metalness: 0.1, roughness: 0.1,
+  transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false
+});
+const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x8899bb, transparent: true, opacity: 0.6 });
 
-            // 0.0s – 1.0s: Grid/HUD draw in, panels pull forward
-            masterTl.to(".hud-bracket", { opacity: 1, scale: 1, duration: 0.8/speed, stagger: 0.1/speed }, 0)
-                .to(".hud-line", { opacity: 1, scaleX: 1, scaleY: 1, duration: 1/speed, ease: "expo.inOut" }, 0.2)
-                .to(glassPanels.map(p => p.position), { z: (i) => glassPanels[i].userData.baseZ, duration: 1.2/speed, stagger: 0.1/speed }, 0)
-                .to(".ribbon", { width: "130%", opacity: 1, rotationZ: -5, duration: 1/speed }, 0.2)
-                .to("#main-text", { scale: 1, opacity: 1, rotationX: 0, duration: 1.5/speed }, 0.4);
+function createPanel(w, h, x, y, z, rx, ry, rz) {
+  const geo = new THREE.PlaneGeometry(w, h);
+  const mesh = new THREE.Mesh(geo, glassMaterial);
+  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMaterial));
+  mesh.position.set(x, y, z);
+  mesh.rotation.set(rx, ry, rz);
+  mesh.userData = { baseX: x, baseY: y, baseZ: z, rot: [rx, ry, rz] };
+  scene.add(mesh);
+  glassPanels.push(mesh);
+}
+createPanel(8, 5, -15, 5, -5, 0.2, 0.4, 0.1);
+createPanel(10, 6, 15, -6, -2, -0.1, -0.4, -0.1);
+createPanel(12, 7, 0, 0, -8, 0, 0, 0);
 
-            // 1.0s – 3.0s: Split screen slide, panel swap, camera pan
-            masterTl.to(glassPanels[0].position, { x: -25, duration: 1.5/speed, ease: "power2.inOut" }, 1.0) // Left flies out
-                .to(glassPanels[1].position, { x: 25, duration: 1.5/speed, ease: "power2.inOut" }, 1.0)  // Right flies out
-                .to(glassPanels[2].position, { z: -2, duration: 1.5/speed, ease: "power2.inOut" }, 1.0)   // Center comes forward
-                .to(camera.position, { z: 15, x: -2, duration: 2/speed, ease: "sine.inOut" }, 1.0)        // Camera drift
-                
-                // HUD pops in
-                .to("#hud-1, #hud-2", { opacity: 1, scale: 1, duration: 0.6/speed, stagger: 0.2/speed }, 1.2)
-                .to("#hud-data-1, #hud-data-2", { opacity: 1, x: 0, duration: 0.6/speed, stagger: 0.1/speed }, 1.4)
-                .to("#data-stream", { opacity: 1, y: 0, duration: 0.5/speed }, 1.5)
-                .fromTo(".data-line", { y: 50 }, { y: -100, duration: 2/speed, ease: "none", stagger: 0.05 }, 1.5)
+// Spinning wireframe solids that pop in with an elastic bounce
+const wireMat = new THREE.MeshBasicMaterial({ color: 0x111111, wireframe: true, transparent: true, opacity: 0.35 });
+const ico = new THREE.Mesh(new THREE.IcosahedronGeometry(4.5, 1), wireMat);
+ico.position.set(0, 0, -6);
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.6, 0.45, 120, 14), wireMat);
+knot.position.set(9, -4, -5);
+const ico2 = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 0), wireMat);
+ico2.position.set(-10, 5, -7);
+scene.add(ico, knot, ico2);
 
-            // 3.0s – 5.0s: Text reveal, lens flare, camera snaps to center
-            masterTl.to(camera.position, { z: 20, x: 0, duration: 2/speed, ease: "expo.inOut" }, 3.0)
-                .to(glassPanels[0].position, { x: -15, duration: 2/speed, ease: "expo.inOut" }, 3.0)
-                .to(glassPanels[1].position, { x: 15, duration: 2/speed, ease: "expo.inOut" }, 3.0)
-                .to(glassPanels[2].position, { z: -8, duration: 2/speed, ease: "expo.inOut" }, 3.0)
-                
-                // Flare sweep
-                .to("#flare", { left: "130%", opacity: 1, scale: 1, duration: 1.5/speed, ease: "power2.inOut" }, 3.0)
-                .to("#flare", { opacity: 0, duration: 0.5/speed }, 4.5);
-        }
+// Particles
+const particleCount = 1500;
+const particleGeo = new THREE.BufferGeometry();
+const particlePos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount * 3; i += 3) {
+  particlePos[i] = (Math.random() - 0.5) * 60;
+  particlePos[i + 1] = (Math.random() - 0.5) * 40;
+  particlePos[i + 2] = -10 - Math.random() * 20;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+const particleMat = new THREE.PointsMaterial({ color: 0x111111, size: 0.08, transparent: true, opacity: 0.4 });
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
 
-        buildTimeline();
-        
-        const playBtn = document.getElementById('btn-preview');
-        playBtn.addEventListener('click', () => { 
-            buildTimeline(); 
-            masterTl.play(); 
-        });
+// Dot matrix grid
+const dotGeo = new THREE.BufferGeometry();
+const dotPositions = [];
+for (let x = -20; x <= 20; x += 2) for (let y = -12; y <= 12; y += 2) dotPositions.push(x, y, -15);
+dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
+const dotMat = new THREE.PointsMaterial({ color: 0x111111, size: 0.15, transparent: true, opacity: 0.3 });
+scene.add(new THREE.Points(dotGeo, dotMat));
 
-        document.getElementById('input-speed').addEventListener('change', buildTimeline);
+// ---------- 4. Morphing shapes (square > circle > triangle > hexagon > star) ----------
+const MP = 120;
+function resample(poly) {
+  const n = poly.length, lens = [0];
+  for (let i = 0; i < n; i++) {
+    const a = poly[i], b = poly[(i + 1) % n];
+    lens.push(lens[i] + Math.hypot(b[0] - a[0], b[1] - a[1]));
+  }
+  const total = lens[n], out = [];
+  for (let k = 0; k < MP; k++) {
+    const d = (k / MP) * total;
+    let i = 0;
+    while (i < n - 1 && lens[i + 1] < d) i++;
+    const a = poly[i], b = poly[(i + 1) % n];
+    const u = (d - lens[i]) / ((lens[i + 1] - lens[i]) || 1);
+    out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]);
+  }
+  // start every outline at its top-most point so shapes morph without twisting
+  let best = 0;
+  for (let k = 1; k < MP; k++) {
+    if (out[k][1] < out[best][1] - 1e-6 || (Math.abs(out[k][1] - out[best][1]) < 1e-6 && Math.abs(out[k][0]) < Math.abs(out[best][0]))) best = k;
+  }
+  return out.slice(best).concat(out.slice(0, best));
+}
+const ngon = (n, r, off) => Array.from({ length: n }, (_, i) => [Math.cos((off + 360 / n * i) * DEG) * r, Math.sin((off + 360 / n * i) * DEG) * r]);
+const star = () => Array.from({ length: 10 }, (_, i) => { const r = i % 2 ? 0.5 : 1.2, a = (-90 + 36 * i) * DEG; return [Math.cos(a) * r, Math.sin(a) * r]; });
+const SHAPES = [
+  resample([[-0.85, -0.85], [0.85, -0.85], [0.85, 0.85], [-0.85, 0.85]]),
+  resample(ngon(90, 1, -90)),
+  resample(ngon(3, 1.15, -90)),
+  resample(ngon(6, 1.05, -90)),
+  resample(star())
+];
+function morphPts(mt) {
+  const m = clamp(mt, 0, SHAPES.length - 1);
+  const i = Math.min(Math.floor(m), SHAPES.length - 2);
+  const f = smooth(m - i);
+  const A = SHAPES[i], B = SHAPES[i + 1];
+  return A.map((p, k) => [p[0] + (B[k][0] - p[0]) * f, p[1] + (B[k][1] - p[1]) * f]);
+}
 
-        // --- 5. 1080P VIDEO EXPORT ENGINE ---
-        const exportBtn = document.getElementById('btn-export');
-        exportBtn.addEventListener('click', function() {
-            const overlay = document.getElementById('recording-overlay');
-            const appCanvas = document.getElementById('app-canvas');
+// ---------- 5. 2D overlay layers ----------
+const overlay = document.getElementById('overlay-canvas');
+const octx = overlay.getContext('2d');
+const textLayer = document.createElement('canvas');
+textLayer.width = W; textLayer.height = H;
+const tctx = textLayer.getContext('2d');
+const SCRAMBLE = '01#$%&*+<>/\\|ABCDEFGHJKLMNPQRSTUVWXYZ';
 
-            exportBtn.disabled = true;
-            overlay.style.display = 'block';
-            buildTimeline();
+let vignetteGrad = null;
 
-            const capturer = new CCapture({
-                format: 'webm',
-                framerate: 60,
-                quality: 1.0,
-                display: false
-            });
+function drawMorph(c, cx, cy, radius, mt, rot, alpha, fillAlpha) {
+  const pts = morphPts(mt);
+  for (let e = 3; e >= 0; e--) {            // trailing echoes
+    const r = radius * (1 + e * 0.12);
+    const a = alpha * (1 - e * 0.27);
+    if (a <= 0.01) continue;
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(rot + e * 0.12);
+    c.beginPath();
+    pts.forEach((p, k) => k ? c.lineTo(p[0] * r, p[1] * r) : c.moveTo(p[0] * r, p[1] * r));
+    c.closePath();
+    if (e === 0 && fillAlpha) { c.globalAlpha = a * fillAlpha; c.fillStyle = cfg.accent; c.fill(); }
+    c.globalAlpha = a;
+    c.lineWidth = e === 0 ? 4 : 2;
+    c.strokeStyle = cfg.ink;
+    c.stroke();
+    c.restore();
+  }
+}
 
-            setTimeout(() => {
-                capturer.start();
-                masterTl.play();
+function drawSlats(c, p, color) {
+  const N = 12, sw = W / N;
+  c.fillStyle = color;
+  for (let i = 0; i < N; i++) {
+    const lp = clamp((p - i * 0.045) / 0.55, 0, 2);
+    if (lp <= 0) continue;
+    if (lp <= 1) {
+      c.fillRect(i * sw, 0, sw + 1, smooth(lp) * H);
+    } else {
+      const u = smooth(lp - 1);
+      c.fillRect(i * sw, u * H, sw + 1, H - u * H);
+    }
+  }
+}
 
-                function captureFrame() {
-                    if (masterTl.progress() < 1) {
-                        capturer.capture(appCanvas); 
-                        requestAnimationFrame(captureFrame);
-                    } else {
-                        capturer.stop();
-                        capturer.save(function(blob) {
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.style.display = 'none';
-                            a.href = url;
-                            a.download = 'Epic_3D_Intro_1080p.webm';
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            exportBtn.disabled = false;
-                            overlay.style.display = 'none';
-                        });
-                    }
-                }
-                requestAnimationFrame(captureFrame);
-            }, 1000); 
-        });
-    </script>
+function drawMarquee(c) {
+  if (S.mq < 0.01) return;
+  const label = ((cfg.text || '') + '   •   ').toUpperCase();
+  c.save();
+  c.translate(W / 2, H / 2);
+  c.rotate(-5 * DEG);
+  c.font = '700 26px monospace';
+  c.textBaseline = 'middle';
+  const uw = c.measureText(label).width || 1;
+  const reps = Math.ceil(2 * W / uw) + 2;
+  for (let k = 0; k < 2; k++) {
+    const y = k === 0 ? -270 : 230;
+    c.save();
+    c.translate(0, y + 22); c.scale(1, S.mq); c.translate(0, -(y + 22));
+    c.fillStyle = k === 0 ? cfg.ink : cfg.accent;
+    c.fillRect(-W, y, 2 * W, 44);
+    c.fillStyle = k === 0 ? cfg.accent : cfg.ink;
+    const off = (S.clk * 160) % uw;
+    for (let r = 0; r < reps; r++) {
+      const x = k === 0 ? -W - off + r * uw : -W - uw + off + r * uw;
+      c.fillText(label, x, y + 23);
+    }
+    c.restore();
+  }
+  c.restore();
+}
+
+function drawName(c) {
+  if (S.tr <= 0.001) return;
+  const label = (cfg.text || '').toUpperCase();
+  const chars = Array.from(label);
+  const n = chars.length;
+  if (!n) return;
+  const tc = tctx;
+  tc.setTransform(1, 0, 0, 1, 0, 0);
+  tc.globalCompositeOperation = 'source-over';
+  tc.globalAlpha = 1;
+  tc.clearRect(0, 0, W, H);
+
+  let size = 150;
+  tc.font = `900 ${size}px ${cfg.font}`;
+  const gap = -4;
+  let widths = chars.map(ch => tc.measureText(ch).width + gap);
+  let total = widths.reduce((a, b) => a + b, 0);
+  const f = Math.min(1, 1750 / total);        // auto-fit long text
+  size = Math.floor(size * f);
+  tc.font = `900 ${size}px ${cfg.font}`;
+  widths = widths.map(w => w * f);
+  total *= f;
+
+  tc.save();
+  tc.translate(W / 2, H / 2);
+  tc.rotate(-3 * DEG);
+  tc.scale(S.ts, S.ts);
+  tc.textAlign = 'center';
+  tc.textBaseline = 'middle';
+  let x0 = -total / 2;
+  const stag = 0.6;
+  const rgb = S.rgb * cfg.fx;
+  for (let i = 0; i < n; i++) {
+    const w = widths[i];
+    const cx = x0 + w / 2;
+    x0 += w;
+    const lp = clamp(S.tr * (1 + stag) - (i / n) * stag, 0, 1);
+    if (lp <= 0) continue;
+    const e = 1 - Math.pow(1 - lp, 3);
+    const y = (1 - e) * 240;
+    const sy = 1 + (1 - e) * 1.0;
+    const rot = (1 - e) * 0.35 * (i % 2 ? 1 : -1);
+    const scrambling = lp < 0.8 && chars[i] !== ' ';
+    const ch = scrambling ? SCRAMBLE[Math.floor(rnd(S.fr * 13 + i * 7) * SCRAMBLE.length)] : chars[i];
+    tc.save();
+    tc.translate(cx, y);
+    tc.rotate(rot);
+    tc.scale(1, sy);
+    const a = Math.min(1, lp * 4);
+    if (rgb > 0.3) {                            // chromatic aberration
+      tc.globalAlpha = a * 0.85;
+      tc.fillStyle = '#ff2e63'; tc.fillText(ch, -rgb, -rgb * 0.3);
+      tc.fillStyle = '#00d4ff'; tc.fillText(ch, rgb, rgb * 0.3);
+    }
+    tc.globalAlpha = a;
+    tc.fillStyle = cfg.ink;
+    tc.fillText(ch, 0, 0);
+    tc.restore();
+  }
+  tc.restore();
+
+  // Light sweep clipped to the letters
+  if (S.shine > 0.001 && S.shine < 0.999) {
+    const sx = -300 + S.shine * (W + 600);
+    tc.save();
+    tc.globalCompositeOperation = 'source-atop';
+    const g = tc.createLinearGradient(sx - 180, H / 2 - 200, sx + 180, H / 2 + 200);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    tc.fillStyle = g;
+    tc.fillRect(0, 0, W, H);
+    tc.restore();
+  }
+
+  // Composite, with glitch slices when active
+  c.save();
+  const gl = S.gl * cfg.fx;
+  if (gl > 0.01) {
+    const bandH = 36;
+    for (let y0 = 240; y0 < 840; y0 += bandH) {
+      const r = rnd(S.fr * 3 + y0);
+      const dx = r > 0.4 ? (rnd(S.fr * 5 + y0 * 0.5) - 0.5) * gl * 180 : 0;
+      c.drawImage(textLayer, 0, y0, W, bandH, dx, y0, W, bandH);
+    }
+  } else {
+    c.shadowColor = 'rgba(0,0,0,0.12)'; c.shadowBlur = 30; c.shadowOffsetY = 10;
+    c.drawImage(textLayer, 0, 0);
+  }
+  c.restore();
+
+  if (cfg.logo) {
+    const lh = 90, lw = cfg.logo.width * (lh / cfg.logo.height);
+    c.save();
+    c.globalAlpha = S.tr;
+    c.drawImage(cfg.logo, W / 2 - lw / 2, H * 0.86 - lh, lw, lh);
+    c.restore();
+  }
+}
+
+function drawHUD(c) {
+  const acc = cfg.accent, ink = cfg.ink;
+  c.save();
+  c.strokeStyle = ink; c.fillStyle = ink; c.lineWidth = 2;
+
+  const bx = [0.05 * W, 0.95 * W - 40, 0.05 * W, 0.95 * W - 40];
+  const by = [0.10 * H, 0.10 * H, 0.90 * H - 40, 0.90 * H - 40];
+  const bdx = [1, -1, 1, -1], bdy = [1, 1, -1, -1];
+  for (let i = 0; i < 4; i++) {
+    const b = S.br[i];
+    if (b.o < 0.001) continue;
+    c.save();
+    c.globalAlpha = clamp(b.o, 0, 1);
+    c.translate(bx[i] + 20, by[i] + 20);
+    c.scale(b.s, b.s);
+    const cx = bdx[i] === 1 ? -20 : 20, cy = bdy[i] === 1 ? -20 : 20;
+    c.beginPath();
+    c.moveTo(cx + bdx[i] * 40, cy); c.lineTo(cx, cy); c.lineTo(cx, cy + bdy[i] * 40);
+    c.stroke();
+    c.restore();
+  }
+
+  if (S.lineO > 0.001) {
+    c.globalAlpha = clamp(S.lineO, 0, 1);
+    const hw = 0.4 * W * S.lineP;
+    c.fillRect(0.2 * W - hw / 2, 0.3 * H, hw, 2);
+    const vh = 0.4 * H * S.lineP;
+    c.fillRect(0.75 * W - 2, H - 0.2 * H - vh / 2, 2, vh);
+    c.globalAlpha = 1;
+  }
+
+  const chPos = [[0.15 * W + 30, 0.20 * H + 30], [0.80 * W - 30, 0.75 * H - 30]];
+  for (let i = 0; i < 2; i++) {
+    const h = S.ch[i];
+    if (h.o < 0.001 || h.s < 0.001) continue;
+    c.save();
+    c.globalAlpha = clamp(h.o, 0, 1);
+    c.translate(chPos[i][0], chPos[i][1]);
+    c.scale(h.s, h.s);
+    c.beginPath(); c.arc(0, 0, 30, 0, Math.PI * 2); c.stroke();
+    c.beginPath();
+    c.moveTo(0, -42); c.lineTo(0, 42); c.moveTo(-42, 0); c.lineTo(42, 0);
+    c.stroke();
+    c.restore();
+  }
+
+  c.font = '18px monospace';
+  c.textBaseline = 'middle';
+  const hdText = ['SYS.STATUS: ONLINE', 'LAT: 40.7128° N', `T+ ${S.clk.toFixed(2)}s`];
+  for (let i = 0; i < 3; i++) {
+    const h = S.hd[i];
+    if (h.o < 0.001) continue;
+    const tw = c.measureText(hdText[i]).width;
+    const x = (i === 1 ? 0.1 * W : 0.9 * W - (tw + 13)) + h.x;
+    const y = i === 0 ? 0.25 * H : 0.85 * H - 22;
+    c.globalAlpha = clamp(h.o, 0, 1);
+    c.fillStyle = acc; c.fillRect(x, y, 3, 22);
+    c.fillStyle = ink; c.fillText(hdText[i], x + 13, y + 11);
+  }
+
+  if (S.so > 0.001) {
+    c.font = '14px monospace';
+    const top = 0.2 * H, left = 0.9 * W - 200;
+    for (let i = 0; i < streamLines.length; i++) {
+      const y = top + 12 + i * 19 + S.sc;
+      const rel = (y - top) / 400;
+      if (rel < 0 || rel > 1) continue;
+      c.globalAlpha = clamp(S.so, 0, 1) * Math.sin(rel * Math.PI);
+      c.fillText(streamLines[i], left, y);
+    }
+  }
+  c.globalAlpha = 1;
+  c.restore();
+}
+
+function drawOverlay(shx, shy) {
+  const c = octx;
+  const acc = cfg.accent, ink = cfg.ink;
+  c.clearRect(0, 0, W, H);
+
+  c.save();
+  c.translate(shx, shy);
+
+  // Iris transition (circle of accent colour that hides the 3D scene)
+  if (S.ir > 0.001) {
+    const r = S.ir * Math.hypot(W, H) / 2 * 1.05;
+    c.beginPath(); c.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+    c.fillStyle = acc; c.fill();
+    c.lineWidth = 8; c.strokeStyle = ink; c.stroke();
+  }
+
+  // Ribbon slash
+  if (S.ribbonOp > 0.001) {
+    c.save();
+    c.globalAlpha = clamp(S.ribbonOp, 0, 1);
+    c.translate(-0.1 * W + 1.3 * W / 2, 0.4 * H + 60);
+    c.rotate(S.ribbonRot * DEG);
+    c.fillStyle = acc;
+    c.fillRect(-1.3 * W / 2, -60, S.ribbonW * W, 120);
+    c.restore();
+  }
+
+  // Morphing shapes + satellites
+  if (S.mo > 0.01) {
+    const oa = clamp(S.mo, 0, 1);
+    drawMorph(c, W / 2, H / 2, S.ms * 330, S.mt, S.mr * DEG, oa * 0.9, 0.16);
+    drawMorph(c, 0.2 * W, 0.7 * H, 70 * S.ms, S.mt + 1, -S.mr * 1.5 * DEG, oa * 0.8, 0);
+    drawMorph(c, 0.82 * W, 0.28 * H, 55 * S.ms, S.mt + 2, S.mr * 2 * DEG, oa * 0.8, 0);
+  }
+
+  drawHUD(c);
+  drawMarquee(c);
+
+  // Speed lines
+  if (S.sl > 0.01) {
+    c.save();
+    c.translate(W / 2, H / 2);
+    c.strokeStyle = ink;
+    for (let i = 0; i < 70; i++) {
+      const a = rnd(i + 1) * Math.PI * 2;
+      const r0 = 380 + rnd(i + 200) * 320;
+      const r1 = r0 + (300 + rnd(i + 400) * 600) * S.sl;
+      c.globalAlpha = S.sl * 0.5;
+      c.lineWidth = 2 + rnd(i + 600) * 3;
+      c.beginPath();
+      c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+      c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  // Shockwave rings
+  if (S.sw > 0.001 && S.sw < 0.999) {
+    c.save();
+    c.translate(W / 2, H / 2);
+    const p = S.sw, e = 1 - Math.pow(1 - p, 3);
+    c.globalAlpha = 1 - p;
+    c.strokeStyle = acc; c.lineWidth = (1 - p) * 22 + 1;
+    c.beginPath(); c.arc(0, 0, e * 1100, 0, Math.PI * 2); c.stroke();
+    const p2 = clamp(p * 1.3 - 0.2, 0, 1), e2 = 1 - Math.pow(1 - p2, 3);
+    c.globalAlpha = (1 - p2) * 0.8;
+    c.strokeStyle = ink; c.lineWidth = (1 - p2) * 8 + 1;
+    c.beginPath(); c.arc(0, 0, e2 * 800, 0, Math.PI * 2); c.stroke();
+    c.restore();
+  }
+
+  // Spark burst
+  if (S.sp > 0.001 && S.sp < 0.999) {
+    const p = S.sp, e = 1 - Math.pow(1 - p, 2);
+    for (let i = 0; i < 48; i++) {
+      const a = rnd(i + 1) * Math.PI * 2;
+      const v = 300 + rnd(i + 99) * 900;
+      const size = 4 + rnd(i + 300) * 9;
+      const x = W / 2 + Math.cos(a) * v * e;
+      const y = H / 2 + Math.sin(a) * v * e + 400 * p * p;
+      c.save();
+      c.globalAlpha = (1 - p) * Math.min(1, cfg.fx);
+      c.translate(x, y); c.rotate(a + p * 6);
+      c.fillStyle = i % 2 ? acc : ink;
+      c.fillRect(-size / 2, -size / 2, size, size * 0.4);
+      c.restore();
+    }
+  }
+
+  drawName(c);
+
+  // Lens flare + anamorphic streak
+  if (S.fo > 0.001) {
+    c.save();
+    c.globalCompositeOperation = 'screen';
+    c.globalAlpha = clamp(S.fo, 0, 1);
+    c.translate(S.fx * W + 300, 0.45 * H);
+    c.save();
+    c.rotate(-20 * DEG);
+    c.scale(300 * S.fs, 100 * S.fs);
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, 1);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.43, 'rgba(255,204,0,0.4)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = g;
+    c.fillRect(-1, -1, 2, 2);
+    c.restore();
+    const sg = c.createLinearGradient(-W, 0, W, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sg;
+    c.fillRect(-W, -2, 2 * W, 4);
+    c.restore();
+  }
+  c.restore(); // end shake group
+
+  // Vignette
+  if (S.vg > 0.001) {
+    if (!vignetteGrad) {
+      vignetteGrad = octx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, Math.hypot(W, H) / 2);
+      vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    }
+    c.save(); c.globalAlpha = clamp(S.vg, 0, 1); c.fillStyle = vignetteGrad; c.fillRect(0, 0, W, H); c.restore();
+  }
+
+  // Film grain (deterministic per frame)
+  if (cfg.fx > 0.01) {
+    c.save();
+    c.globalAlpha = 0.09 * Math.min(1, cfg.fx);
+    const seed = S.fr * 1000;
+    for (let i = 0; i < 900; i++) {
+      c.fillStyle = i % 2 ? '#000' : '#fff';
+      c.fillRect(rnd(seed + i) * W, rnd(seed + i + 5000) * H, 2, 2);
+    }
+    c.restore();
+  }
+
+  // Intro slat wipe, covers everything
+  if (S.slat > 0.001 && S.slat < 1.99) {
+    drawSlats(c, S.slat, ink);
+    drawSlats(c, S.slat - 0.25, acc);
+  }
+}
+
+// ---------- 6. Render one frame at time t (seconds) ----------
+function renderFrame(t) {
+  S.fr = Math.floor(t * 30);
+  S.clk = masterTl ? masterTl.time() : 0;
+
+  glassPanels[0].position.y = glassPanels[0].userData.baseY + Math.sin(t * 0.5) * 0.5;
+  glassPanels[1].position.y = glassPanels[1].userData.baseY + Math.cos(t * 0.6) * 0.5;
+  particles.rotation.y = t * 0.02;
+
+  ico.rotation.set(t * 0.4, t * 0.6, 0);
+  knot.rotation.set(t * 0.7, t * 0.3, 0);
+  ico2.rotation.set(t * 0.5, t * 0.9, t * 0.2);
+  ico.scale.setScalar(Math.max(S.g1, 1e-4));
+  knot.scale.setScalar(Math.max(S.g2, 1e-4));
+  ico2.scale.setScalar(Math.max(S.g2, 1e-4));
+  camera.rotation.z = S.roll;
+
+  // camera shake (3D + 2D)
+  const amp = S.shake * cfg.fx;
+  const sx = (rnd(S.fr * 2 + 1) - 0.5) * amp * 0.6;
+  const sy = (rnd(S.fr * 2 + 2) - 0.5) * amp * 0.6;
+  camera.position.x += sx; camera.position.y += sy;
+  renderer.render(scene, camera);
+  camera.position.x -= sx; camera.position.y -= sy;
+
+  drawOverlay((rnd(S.fr * 2 + 3) - 0.5) * amp * 40, (rnd(S.fr * 2 + 4) - 0.5) * amp * 40);
+}
+
+// ---------- 7. Master timeline (6.2s base) ----------
+let masterTl;
+function buildTimeline() {
+  if (masterTl) masterTl.kill();
+  resetState();
+  camera.position.set(0, 0, 20);
+  glassPanels.forEach(p => {
+    p.position.set(p.userData.baseX, p.userData.baseY, p.userData.baseZ - 10);
+    p.rotation.set(...p.userData.rot);
+  });
+
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'expo.out', duration: 1.2 } });
+
+  // 0.0s  Slat wipe intro + vignette
+  tl.to(S, { slat: 2, duration: 1.7, ease: 'power1.inOut' }, 0)
+    .to(S, { vg: 1, duration: 1.5, ease: 'sine.out' }, 0.2);
+
+  // 0.6s  HUD, panels pull forward, wireframes pop with elastic bounce
+  tl.to(S.br, { o: 1, s: 1, duration: 0.8, stagger: 0.1 }, 0.6)
+    .to(S, { lineO: 1, lineP: 1, duration: 1, ease: 'expo.inOut' }, 0.8);
+  glassPanels.forEach((p, i) => tl.to(p.position, { z: p.userData.baseZ, duration: 1.2 }, 0.6 + i * 0.1));
+  tl.to(S, { g1: 1, duration: 1.4, ease: 'elastic.out(1,0.5)' }, 0.9)
+    .to(S, { g2: 1, duration: 1.4, ease: 'elastic.out(1,0.5)' }, 1.2);
+
+  // 0.9s  Morphing shapes: square > circle > triangle > hexagon > star
+  tl.to(S, { mo: 1, ms: 1, duration: 0.9, ease: 'back.out(1.7)' }, 0.9)
+    .to(S, { mr: 360, duration: 5.3, ease: 'none' }, 0.9)
+    .to(S, { mt: 1, duration: 0.9, ease: 'power3.inOut' }, 1.3)
+    .to(S, { mt: 2, duration: 0.9, ease: 'power3.inOut' }, 2.4)
+    .to(S, { mt: 3, duration: 0.9, ease: 'power3.inOut' }, 3.3)
+    .to(S, { mt: 4, duration: 0.9, ease: 'power3.inOut' }, 4.5);
+
+  // Camera drift and roll
+  tl.to(camera.position, { z: 15, x: -2, duration: 3.2, ease: 'sine.inOut' }, 0.6)
+    .to(S, { roll: 0.05, duration: 1.2, ease: 'power2.inOut' }, 1.2);
+
+  // 1.3s  Ribbon slash, then 1.5s name reveal: letters rise, scramble and resolve, RGB split settles
+  tl.to(S, { ribbonW: 1.3, ribbonOp: 1, ribbonRot: -5, duration: 1 }, 1.3)
+    .to(S, { tr: 1, duration: 1.7, ease: 'power2.out' }, 1.5)
+    .to(S, { ts: 1, duration: 1.6 }, 1.5)
+    .to(S, { rgb: 0, duration: 1.5 }, 1.5);
+
+  // 2.3s  Impact: screen shake, shockwave rings, sparks
+  tl.set(S, { shake: 1 }, 2.3)
+    .to(S, { shake: 0, duration: 0.7 }, 2.3)
+    .to(S, { sw: 1, duration: 1.3, ease: 'power2.out' }, 2.3)
+    .to(S, { sp: 1, duration: 1.5, ease: 'power2.out' }, 2.3);
+
+  // HUD pops in, data stream scrolls
+  tl.to(S.ch, { o: 1, s: 1, duration: 0.6, stagger: 0.2 }, 1.6)
+    .to(S.hd, { o: 1, x: 0, duration: 0.6, stagger: 0.1 }, 1.8)
+    .to(S, { so: 1, duration: 0.5 }, 1.9)
+    .to(S, { sc: -100, duration: 2.4, ease: 'none' }, 1.9);
+
+  // 2.6s  Marquee ribbons open, 2.9s light sweep across the letters
+  tl.to(S, { mq: 1, duration: 0.7 }, 2.6)
+    .to(S, { shine: 1, duration: 1.1, ease: 'power2.inOut' }, 2.9);
+
+  // 2.6s  Panels fold and split apart
+  tl.to(glassPanels[0].position, { x: -25, duration: 1.3, ease: 'power2.inOut' }, 2.6)
+    .to(glassPanels[1].position, { x: 25, duration: 1.3, ease: 'power2.inOut' }, 2.6)
+    .to(glassPanels[2].position, { z: -2, duration: 1.3, ease: 'power2.inOut' }, 2.6)
+    .to(glassPanels[0].rotation, { y: -0.3, duration: 1.3, ease: 'power2.inOut' }, 2.6)
+    .to(glassPanels[1].rotation, { y: 0.3, duration: 1.3, ease: 'power2.inOut' }, 2.6);
+
+  // 3.3s  Glitch burst: sliced text + RGB spike
+  tl.to(S, { gl: 1, rgb: 28, duration: 0.05, ease: 'none' }, 3.3)
+    .to(S, { gl: 0, rgb: 0, duration: 0.3, ease: 'steps(6)' }, 3.35);
+
+  // 3.8s  Iris transition: speed lines, camera zooms through, circle floods the screen
+  tl.to(S, { ir: 1, duration: 0.75, ease: 'expo.inOut' }, 3.8)
+    .to(camera.position, { z: 11, duration: 0.7, ease: 'power2.in' }, 3.8)
+    .to(S, { roll: -0.04, duration: 0.7, ease: 'power2.inOut' }, 3.8)
+    .to(S, { sl: 1, duration: 0.4, ease: 'power2.out' }, 3.8)
+    .to(S, { sl: 0, duration: 0.4, ease: 'power2.in' }, 4.2);
+
+  // 4.6s  Hidden match-cut: scene resets behind the iris from a new angle
+  tl.set(camera.position, { x: 3, y: 1, z: 15 }, 4.6);
+  glassPanels.forEach(p => tl.set(p.position, { x: p.userData.baseX, z: p.userData.baseZ }, 4.6));
+  glassPanels.forEach(p => tl.set(p.rotation, { y: p.userData.rot[1] }, 4.6));
+
+  // 5.0s  Iris opens, camera settles, flare sweeps across the name
+  tl.to(S, { ir: 0, duration: 0.8, ease: 'expo.inOut' }, 5.0)
+    .to(camera.position, { x: 0, y: 0, z: 20, duration: 1.2 }, 5.0)
+    .to(S, { roll: 0, duration: 1.2 }, 5.0)
+    .to(S, { fx: 1.3, fs: 1, duration: 1.2, ease: 'power2.inOut' }, 5.0)
+    .to(S, { fo: 1, duration: 0.3, ease: 'none' }, 5.0)
+    .to(S, { fo: 0, duration: 0.3, ease: 'none' }, 5.9);
+
+  tl.timeScale(cfg.speed);
+  masterTl = tl;
+  tl.time(0);
+}
+buildTimeline();
+
+// ---------- 8. Preview loop ----------
+let exporting = false, composing = false;
+const exportCanvas = document.createElement('canvas');
+exportCanvas.width = W; exportCanvas.height = H;
+const ectx = exportCanvas.getContext('2d');
+function composeExport() {
+  ectx.fillStyle = '#f4f4f4';
+  ectx.fillRect(0, 0, W, H);
+  ectx.drawImage(webglCanvas, 0, 0);
+  ectx.drawImage(overlay, 0, 0);
+}
+
+const scrub = document.getElementById('scrub');
+function loop() {
+  requestAnimationFrame(loop);
+  if (exporting) return;
+  renderFrame(performance.now() / 1000);
+  if (composing) composeExport();
+  if (masterTl.isActive()) scrub.value = Math.round(masterTl.progress() * 1000);
+}
+requestAnimationFrame(loop);
+
+// ---------- 9. UI wiring ----------
+const $ = id => document.getElementById(id);
+$('input-text').addEventListener('input', e => cfg.text = e.target.value);
+
+$('input-font').addEventListener('change', async e => {
+  const f = e.target.value;
+  const first = f.split(',')[0].replace(/["']/g, '').trim();
+  try { await document.fonts.load(`900 100px "${first}"`); } catch (_) {}
+  cfg.font = f;
+});
+
+$('input-color-accent').addEventListener('input', e => {
+  cfg.accent = e.target.value;
+  document.documentElement.style.setProperty('--accent', e.target.value);
+});
+$('input-color-text').addEventListener('input', e => {
+  cfg.ink = e.target.value;
+  const hex = parseInt(e.target.value.slice(1), 16);
+  particleMat.color.setHex(hex); dotMat.color.setHex(hex); wireMat.color.setHex(hex);
+});
+$('input-fx').addEventListener('input', e => cfg.fx = e.target.value / 100);
+
+$('input-logo').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => { cfg.logo = img; };
+  img.src = URL.createObjectURL(file);
+});
+$('btn-clear-logo').addEventListener('click', () => { cfg.logo = null; $('input-logo').value = ''; });
+
+$('input-speed').addEventListener('change', e => {
+  cfg.speed = parseFloat(e.target.value) || 1;
+  masterTl.timeScale(cfg.speed);
+});
+
+$('btn-preview').addEventListener('click', () => { masterTl.timeScale(cfg.speed); masterTl.restart(); });
+scrub.addEventListener('input', () => { masterTl.pause(); masterTl.progress(scrub.value / 1000); });
+
+// ---------- 10. Export ----------
+const exportBtn = $('btn-export');
+const overlayEl = $('recording-overlay');
+
+function finishExport() {
+  exporting = false; composing = false;
+  exportBtn.disabled = false;
+  $('btn-preview').disabled = false;
+  overlayEl.style.display = 'none';
+  buildTimeline();
+}
+function download(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none'; a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+}
+
+// A) Frame-perfect: the timeline is stepped manually, one frame at a time
+function exportFramePerfect() {
+  const FPS = 60;
+  const duration = masterTl.duration() / cfg.speed;
+  const frames = Math.round((duration + 0.25) * FPS);
+  const capturer = new CCapture({ format: 'webm', framerate: FPS, quality: 95, display: false });
+  let i = 0;
+  exporting = true;
+  masterTl.pause(); masterTl.time(0);
+  capturer.start();
+
+  function step() {
+    if (i >= frames) {
+      overlayEl.textContent = '💾 ENCODING WEBM…';
+      capturer.stop();
+      capturer.save(blob => { download(blob, 'Epic_3D_Intro_1080p.webm'); finishExport(); });
+      return;
+    }
+    const t = i / FPS;
+    masterTl.time(Math.min(t * cfg.speed, masterTl.duration()));
+    renderFrame(t);
+    composeExport();
+    capturer.capture(exportCanvas);
+    overlayEl.textContent = `🔴 RENDERING ${i + 1} / ${frames}`;
+    i++;
+    requestAnimationFrame(step);
+  }
+  step();
+}
+
+// B) Fast: real-time MediaRecorder (MP4 where the browser supports it)
+function exportFast() {
+  const types = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+  const mime = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  if (!mime) { alert('MediaRecorder is not supported here. Use frame-perfect mode.'); finishExport(); return; }
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const rec = new MediaRecorder(exportCanvas.captureStream(60), { mimeType: mime, videoBitsPerSecond: 25e6 });
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => { download(new Blob(chunks, { type: mime }), `Epic_3D_Intro_1080p.${ext}`); finishExport(); };
+
+  composing = true;
+  masterTl.timeScale(cfg.speed);
+  masterTl.pause(); masterTl.time(0);
+  rec.start();
+  masterTl.eventCallback('onComplete', () => {
+    masterTl.eventCallback('onComplete', null);
+    setTimeout(() => rec.stop(), 400);
+  });
+  masterTl.play(0);
+}
+
+exportBtn.addEventListener('click', () => {
+  exportBtn.disabled = true;
+  $('btn-preview').disabled = true;
+  overlayEl.style.display = 'block';
+  overlayEl.textContent = '🔴 RENDERING…';
+  buildTimeline();
+  setTimeout(() => {
+    if ($('input-export-mode').value === 'fast') exportFast();
+    else exportFramePerfect();
+  }, 300);
+});
+</script>
 </body>
-  </html>
+</html>
