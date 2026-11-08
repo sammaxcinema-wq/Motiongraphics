@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0a0a0c" />
+<meta name="theme-color" content="#050507" />
 <title>Epic 3D Hero Opener — Production</title>
 
-<!-- Preconnect for faster font + script loads -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
-<!-- Three.js r164 (ESM via importmap) -->
 <script type="importmap">
 {
   "imports": {
@@ -23,15 +21,14 @@
 
 <style>
 /* =========================================================
-   1. DESIGN TOKENS
+   TOKENS
 ========================================================= */
 :root {
-  --bg: #0a0a0c;
+  --bg: #050507;
+  --hud: rgba(255, 255, 255, 0.85);
+  --grid: rgba(255, 255, 255, 0.15);
   --accent: #22d3ee;
-  --accent-2: #ffcc00;
-  --text: #f5f5f5;
-  --hud-stroke: #ffffff;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
@@ -42,11 +39,11 @@ html, body {
   padding: 0;
   height: 100%;
   background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
+  color: white;
   overflow: hidden;
-  overscroll-behavior: none;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
 
 #stage {
@@ -67,179 +64,182 @@ html, body {
 }
 
 /* =========================================================
-   2. HUD
+   HUD
 ========================================================= */
 .hud {
   position: absolute;
   inset: 0;
   z-index: 10;
   pointer-events: none;
-  will-change: transform;
+  will-change: opacity;
 }
 
 .bracket {
   position: absolute;
-  width: 56px;
-  height: 56px;
-  border: 2px solid var(--hud-stroke);
+  width: 48px;
+  height: 48px;
+  border-color: var(--hud);
+  border-style: solid;
+  border-width: 0;
   opacity: 0;
-  will-change: transform, opacity;
 }
-.bracket.tl { top: 6%; left: 4%; border-right: none; border-bottom: none; }
-.bracket.tr { top: 6%; right: 4%; border-left: none; border-bottom: none; }
-.bracket.bl { bottom: 6%; left: 4%; border-right: none; border-top: none; }
-.bracket.br { bottom: 6%; right: 4%; border-left: none; border-top: none; }
+.bracket.tl { top: 24px; left: 24px; border-top-width: 1.5px; border-left-width: 1.5px; }
+.bracket.tr { top: 24px; right: 24px; border-top-width: 1.5px; border-right-width: 1.5px; }
+.bracket.bl { bottom: 24px; left: 24px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.bracket.br { bottom: 24px; right: 24px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+.grid-overlay .g-line {
+  position: absolute;
+  background: var(--grid);
+}
+.grid-overlay .g-line.h { left: 0; right: 0; height: 1px; }
+.grid-overlay .g-line.v { top: 0; bottom: 0; width: 1px; }
+.grid-overlay .g-line.h1 { top: 33.33%; }
+.grid-overlay .g-line.h2 { top: 66.66%; }
+.grid-overlay .g-line.v1 { left: 33.33%; }
+.grid-overlay .g-line.v2 { left: 66.66%; }
 
 .crosshair {
   position: absolute;
-  width: 64px;
-  height: 64px;
-  border: 1.5px solid var(--hud-stroke);
-  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
   opacity: 0;
-  will-change: transform, opacity;
 }
 .crosshair::before,
 .crosshair::after {
   content: '';
   position: absolute;
-  background: var(--hud-stroke);
+  background: var(--hud);
 }
-.crosshair::before { width: 1.5px; height: 140%; left: 50%; top: -20%; }
-.crosshair::after  { height: 1.5px; width: 140%; top: 50%; left: -20%; }
-.crosshair.c1 { top: 22%; left: 14%; }
-.crosshair.c2 { bottom: 26%; right: 18%; }
+.crosshair::before { width: 1px; height: 100%; left: 50%; top: 0; }
+.crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
+.crosshair.pulse { animation: crosshairPulse 2s ease-in-out infinite; }
 
-.hline,
-.vline {
-  position: absolute;
-  background: var(--hud-stroke);
-  opacity: 0;
-  transform-origin: left center;
-  will-change: transform, opacity;
+@keyframes crosshairPulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
 }
-.hline { height: 1px; width: 34%; top: 32%; left: 0; }
-.hline.second { top: 68%; left: auto; right: 0; transform-origin: right center; }
-.vline { width: 1px; height: 34%; bottom: 0; right: 30%; transform-origin: bottom center; }
 
 .coord {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 1.2px;
-  color: var(--hud-stroke);
-  border-left: 2px solid var(--accent);
-  padding-left: 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--hud);
+  line-height: 1.7;
   opacity: 0;
-  line-height: 1.5;
-  will-change: transform, opacity;
+  text-transform: uppercase;
 }
-.coord.top { top: 26%; right: 8%; text-align: left; }
-.coord.bottom { bottom: 14%; left: 6%; }
-.coord .label { color: var(--accent); }
+.coord.tl { top: 90px; left: 24px; }
+.coord.tr { top: 90px; right: 24px; text-align: right; }
+.coord.bl { bottom: 90px; left: 24px; }
+.coord.br { bottom: 90px; right: 24px; text-align: right; }
+.coord .label { color: var(--accent); margin-right: 6px; }
 
-.data-stream {
+.tick-rail {
   position: absolute;
-  right: 8%;
-  top: 18%;
-  width: 180px;
-  height: 340px;
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--hud-stroke);
-  opacity: 0;
-  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
-}
-.data-stream .line { margin-bottom: 6px; opacity: 0.75; white-space: nowrap; }
-
-.glass-frame {
-  position: absolute;
-  inset: 8%;
-  z-index: 8;
-  pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  box-shadow: inset 0 0 120px rgba(34, 211, 238, 0.06);
-  opacity: 0;
-}
-
-.ribbon {
-  position: absolute;
-  left: -10%;
-  top: calc(50% - 42px);
-  height: 84px;
-  width: 0;
-  background: var(--accent);
-  z-index: 5;
-  opacity: 0;
-  transform: rotate(-3deg);
-  will-change: width, opacity;
-}
-
-.flare {
-  position: absolute;
-  width: 680px;
-  height: 220px;
-  top: 40%;
-  left: -40%;
-  background: radial-gradient(ellipse at center,
-    rgba(255,255,255,0.95) 0%,
-    rgba(34,211,238,0.35) 25%,
-    rgba(255,255,255,0) 70%);
-  transform: rotate(-15deg);
-  mix-blend-mode: screen;
-  z-index: 25;
+  left: 0;
+  right: 0;
+  height: 5px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px;
   opacity: 0;
   pointer-events: none;
-  will-change: left, opacity;
+}
+.tick-rail.top { top: 6px; }
+.tick-rail.bottom { bottom: 6px; }
+.tick-rail .tick {
+  width: 1px;
+  height: 5px;
+  background: var(--hud);
+  opacity: 0.6;
 }
 
 /* =========================================================
-   3. TITLE
+   TYPOGRAPHY
 ========================================================= */
-.hero-title-wrap {
+.title-wrap {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) rotate(-2deg);
-  z-index: 20;
+  transform: translate(-50%, -50%);
   text-align: center;
+  z-index: 20;
   pointer-events: none;
   width: 90%;
   max-width: 1400px;
+  will-change: transform;
 }
-.hero-title {
-  font-size: clamp(48px, 9vw, 150px);
+.headline {
+  font-family: var(--font-sans);
   font-weight: 900;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
+  font-size: clamp(40px, 8vw, 128px);
+  line-height: 0.9;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text);
-  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   margin: 0;
-  word-break: break-word;
+  color: white;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
 }
-.hero-title .char {
+.headline .line {
+  display: block;
+  overflow: hidden;
+}
+.headline .char {
   display: inline-block;
+  transform: translateY(100%);
   opacity: 0;
-  transform: translateY(120%);
   will-change: transform, opacity;
 }
-.hero-sub {
-  margin-top: 18px;
-  font-size: 14px;
-  letter-spacing: 0.5em;
+.subtitle {
+  margin-top: 20px;
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 1.2vw, 14px);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--accent);
   opacity: 0;
-  transform: translateY(20px);
-  font-weight: 600;
+  font-weight: 400;
+  will-change: letter-spacing, opacity;
+}
+.subtitle .char {
+  display: inline-block;
+  opacity: 0;
+  will-change: opacity;
 }
 
 /* =========================================================
-   4. LOADER
+   SVG FRAME LINES
+========================================================= */
+.svg-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9;
+  opacity: 0;
+}
+.svg-frame path {
+  stroke: var(--hud);
+  stroke-width: 1;
+  fill: none;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+}
+
+/* =========================================================
+   LOADER
 ========================================================= */
 #loader {
   position: fixed;
@@ -272,17 +272,15 @@ html, body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* =========================================================
-   5. MOBILE
+   RESPONSIVE
 ========================================================= */
 @media (max-width: 768px) {
-  .data-stream { display: none; }
-  .coord.top { top: 16%; right: 6%; font-size: 10px; }
-  .coord.bottom { bottom: 10%; left: 6%; font-size: 10px; }
-  .bracket { width: 40px; height: 40px; }
-  .crosshair { width: 48px; height: 48px; }
-  .hero-sub { font-size: 11px; letter-spacing: 0.3em; }
-  .hline { width: 24%; }
-  .vline { height: 24%; }
+  .bracket { width: 32px; height: 32px; }
+  .coord { font-size: 8px; letter-spacing: 1px; }
+  .coord.tl, .coord.tr { top: 70px; }
+  .coord.bl, .coord.br { bottom: 70px; }
+  .tick-rail { padding: 0 16px; }
+  .tick-rail .tick { height: 4px; }
 }
 </style>
 </head>
@@ -298,41 +296,54 @@ html, body {
   <canvas id="webgl"></canvas>
 
   <div class="hud" id="hud">
+    <svg class="svg-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M 0 15 L 100 15" />
+      <path d="M 0 85 L 100 85" />
+      <path d="M 15 0 L 15 100" />
+      <path d="M 85 0 L 85 100" />
+    </svg>
+
     <div class="bracket tl"></div>
     <div class="bracket tr"></div>
     <div class="bracket bl"></div>
     <div class="bracket br"></div>
 
-    <div class="crosshair c1"></div>
-    <div class="crosshair c2"></div>
-
-    <div class="hline"></div>
-    <div class="hline second"></div>
-    <div class="vline"></div>
-
-    <div class="coord top">
-      <span class="label">LAT</span> 40.7128° N<br>
-      <span class="label">LON</span> 74.0060° W
-    </div>
-    <div class="coord bottom">
-      <span class="label">SYS</span> MOTION.ENGINE // ONLINE<br>
-      <span class="label">FPS</span> <span id="fps">--</span>
+    <div class="grid-overlay">
+      <div class="g-line h h1"></div>
+      <div class="g-line h h2"></div>
+      <div class="g-line v v1"></div>
+      <div class="g-line v v2"></div>
     </div>
 
-    <div class="data-stream" id="data-stream"></div>
+    <div class="crosshair pulse"></div>
 
-    <div class="glass-frame"></div>
+    <div class="tick-rail top" id="ticks-top"></div>
+    <div class="tick-rail bottom" id="ticks-bottom"></div>
 
-    <div class="ribbon"></div>
+    <div class="coord tl">
+      <div><span class="label">LAT</span>36°49'11" N</div>
+      <div><span class="label">LON</span>36°55'42" E</div>
+    </div>
+    <div class="coord tr">
+      <div><span class="label">FRAME</span><span id="frame-readout">00:01:24:12</span></div>
+      <div><span class="label">FPS</span><span id="fps-readout">--</span></div>
+    </div>
+    <div class="coord bl">
+      <div><span class="label">SYS</span>MOTION.ENGINE</div>
+      <div><span class="label">STAT</span>ONLINE</div>
+    </div>
+    <div class="coord br">
+      <div><span class="label">Z</span><span id="z-readout">1000.00</span></div>
+      <div><span class="label">ROLL</span><span id="roll-readout">0.00°</span></div>
+    </div>
 
-    <div class="hero-title-wrap">
-      <h1 class="hero-title" id="hero-title" aria-label="Easy to customize">
-        <!-- injected by JS -->
+    <div class="title-wrap" id="title-wrap">
+      <h1 class="headline" id="headline" aria-label="Maxing and Transactions">
+        <span class="line" data-line="1"></span>
+        <span class="line" data-line="2"></span>
       </h1>
-      <div class="hero-sub" id="hero-sub">NO PLUGINS REQUIRED</div>
+      <div class="subtitle" id="subtitle" aria-label="No plugins required"></div>
     </div>
-
-    <div class="flare"></div>
   </div>
 </div>
 
@@ -344,49 +355,134 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 /* =========================================================
-   0. CONFIG
+   CONFIG
 ========================================================= */
-const CONFIG = {
-  panelCount: 5,
-  panelW: 4.2,
-  panelH: 2.6,
-  cameraFov: 42,
-  cameraStartZ: 22,
-  cameraEndZ: 20,
-  pointerLerp: 0.05,
-  pointerInfluenceX: 1.1,
-  pointerInfluenceY: 0.8,
-  pointerRotX: 0.06,
-  pointerRotY: 0.10,
-  dustCount: 1200,
-  dotSpacing: 2.4,
-  title: 'EASY TO CUSTOMIZE',
+const HERO = {
+  layers: [0, -150, -300, -450, -600],
+  panelsPerLayer: [3, 4, 5, 6, 4],
+  panelW: 16,
+  panelH: 9,
+  cameraStart: 1000,
+  cameraMid: 700,
+  cameraEnd: 200,
+  titleLines: ['MAXING &', 'TRANSACTIONS'],
   subtitle: 'NO PLUGINS REQUIRED',
 };
 
 /* =========================================================
-   1. UTILS
+   UTILS
 ========================================================= */
-const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /* =========================================================
-   2. SCENE SETUP
+   SHADERS
+========================================================= */
+const vertexShader = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vWorldPos;
+  void main() {
+    vUv = uv;
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorldPos = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+const fragmentShader = /* glsl */ `
+  precision highp float;
+
+  uniform sampler2D uTexA;
+  uniform sampler2D uTexB;
+  uniform float uProgress;
+  uniform float uAberration;
+  uniform float uOpacity;
+  uniform float uTime;
+  uniform float uDepth;
+  uniform float uBorderWidth;
+  uniform vec3  uBorderColor;
+  uniform vec2  uResolution;
+
+  varying vec2 vUv;
+  varying vec3 vWorldPos;
+
+  vec4 sampleBlurred(sampler2D tex, vec2 uv, float blurAmount) {
+    if (blurAmount <= 0.001) return texture2D(tex, uv);
+    vec2 texel = 1.0 / uResolution;
+    vec4 sum = vec4(0.0);
+    float weights[5];
+    weights[0] = 0.227027;
+    weights[1] = 0.1945946;
+    weights[2] = 0.1216216;
+    weights[3] = 0.054054;
+    weights[4] = 0.016216;
+
+    float offset = blurAmount;
+    for (int i = 0; i < 5; i++) {
+      vec2 o = vec2(float(i) * offset) * texel;
+      sum += texture2D(tex, uv + o) * weights[i];
+      if (i > 0) sum += texture2D(tex, uv - o) * weights[i];
+    }
+    // horizontal + vertical = separable blur
+    vec4 vert = vec4(0.0);
+    for (int i = 0; i < 5; i++) {
+      vec2 o = vec2(0.0, float(i) * offset) * texel;
+      vert += texture2D(tex, uv + o) * weights[i];
+      if (i > 0) vert += texture2D(tex, uv - o) * weights[i];
+    }
+    return (sum + vert) * 0.5;
+  }
+
+  void main() {
+    float blurAmount = clamp((-uDepth - 400.0) / 200.0, 0.0, 1.0) * 3.5;
+
+    vec2 dir = normalize(vUv - 0.5);
+    vec2 offset = dir * uAberration;
+
+    vec4 aR = sampleBlurred(uTexA, vUv + offset, blurAmount);
+    vec4 aG = sampleBlurred(uTexA, vUv,          blurAmount);
+    vec4 aB = sampleBlurred(uTexA, vUv - offset, blurAmount);
+    vec4 texA = vec4(aR.r, aG.g, aB.b, aG.a);
+
+    vec4 bR = sampleBlurred(uTexB, vUv + offset, blurAmount);
+    vec4 bG = sampleBlurred(uTexB, vUv,          blurAmount);
+    vec4 bB = sampleBlurred(uTexB, vUv - offset, blurAmount);
+    vec4 texB = vec4(bR.r, bG.g, bB.b, bG.a);
+
+    vec4 mixed = mix(texA, texB, uProgress);
+
+    vec2 edgeUV = vUv;
+    float borderDist = min(min(edgeUV.x, 1.0 - edgeUV.x), min(edgeUV.y, 1.0 - edgeUV.y));
+    float borderMask = 1.0 - smoothstep(0.0, uBorderWidth, borderDist);
+
+    vec2 sheenUV = vUv - 0.5;
+    float sheen = smoothstep(0.4, 0.0, length(sheenUV)) * 0.15;
+
+    vec3 borderRGB = uBorderColor + vec3(sheen);
+    vec3 finalRGB = mix(mixed.rgb, borderRGB, borderMask);
+
+    float alpha = mixed.a * uOpacity;
+    alpha = max(alpha, borderMask * uOpacity * 0.9);
+
+    gl_FragColor = vec4(finalRGB, alpha);
+  }
+`;
+
+/* =========================================================
+   THREE.JS SETUP
 ========================================================= */
 const canvas = document.getElementById('webgl');
-const stageEl = document.getElementById('stage');
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a0c);
-scene.fog = new THREE.Fog(0x0a0a0c, 18, 42);
+scene.background = new THREE.Color(0x050507);
+scene.fog = new THREE.Fog(0x050507, 800, 2000);
 
 const camera = new THREE.PerspectiveCamera(
-  CONFIG.cameraFov,
+  45,
   window.innerWidth / window.innerHeight,
   0.1,
-  200
+  3000
 );
-camera.position.set(0, 0, CONFIG.cameraStartZ);
+camera.position.set(0, 0, HERO.cameraStart);
 camera.rotation.order = 'YXZ';
 
 const renderer = new THREE.WebGLRenderer({
@@ -397,137 +493,149 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x050507);
 
-/* =========================================================
-   3. LIGHTS
-========================================================= */
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
+/* Lights */
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
 keyLight.position.set(8, 14, 12);
 scene.add(keyLight);
-
-const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.9);
+const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.6);
 rimLight.position.set(-12, -6, -8);
 scene.add(rimLight);
 
 /* =========================================================
-   4. PROCEDURAL TEXTURES (swap for real images in prod)
+   PROCEDURAL TEXTURES
 ========================================================= */
-function makeTexture(hue, id) {
+function makeTexture(hue, label) {
   const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 512;
+  c.width = 1024;
+  c.height = 576;
   const ctx = c.getContext('2d');
 
-  const grad = ctx.createLinearGradient(0, 0, 512, 512);
-  grad.addColorStop(0, `hsl(${hue}, 70%, 55%)`);
-  grad.addColorStop(1, `hsl(${(hue + 60) % 360}, 80%, 20%)`);
+  const grad = ctx.createLinearGradient(0, 0, 1024, 576);
+  grad.addColorStop(0, `hsl(${hue}, 65%, 45%)`);
+  grad.addColorStop(1, `hsl(${(hue + 40) % 360}, 75%, 12%)`);
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 512, 512);
+  ctx.fillRect(0, 0, 1024, 576);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 2;
-  for (let i = 0; i < 512; i += 64) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+  for (let i = 0; i < 1024; i += 96) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 576); ctx.stroke();
+  }
+  for (let i = 0; i < 576; i += 96) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
   }
 
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.font = 'bold 88px Inter, sans-serif';
-  ctx.fillText(`0${id}`, 32, 470);
+  // subtle grain
+  const img = ctx.getImageData(0, 0, 1024, 576);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 12;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  ctx.putImageData(img, 0, 0);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = 'bold 72px Montserrat, sans-serif';
+  ctx.fillText(label, 40, 520);
 
   const tex = new THREE.CanvasTexture(c);
-  tex.needsUpdate = true;
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return tex;
 }
 
+const textures = Array.from({ length: 6 }, (_, i) =>
+  makeTexture(180 + i * 45, `PANEL-0${i + 1}`)
+);
+
 /* =========================================================
-   5. PANELS
+   PANEL GENERATION
 ========================================================= */
 const panels = [];
+let panelId = 0;
 
-for (let i = 0; i < CONFIG.panelCount; i++) {
-  const geo = new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH, 1, 1);
-  const tex = makeTexture(190 + i * 40, i + 1);
-  const mat = new THREE.MeshPhysicalMaterial({
-    map: tex,
-    color: 0xffffff,
-    metalness: 0.15,
-    roughness: 0.35,
-    transmission: 0.12,
-    transparent: true,
-    opacity: 1,
-    ior: 1.4,
-    thickness: 0.6,
-    clearcoat: 0.5,
-    clearcoatRoughness: 0.3,
-    side: THREE.DoubleSide,
-  });
+for (let layerIndex = 0; layerIndex < HERO.layers.length; layerIndex++) {
+  const z = HERO.layers[layerIndex];
+  const count = HERO.panelsPerLayer[layerIndex];
+  const spread = 22 + layerIndex * 4;
 
-  const mesh = new THREE.Mesh(geo, mat);
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const x = (t - 0.5) * spread;
+    const y = (layerIndex % 2 === 0 ? 1 : -1) * (i % 2 === 0 ? 2.5 : -2.5);
+    const rotationY = (t - 0.5) * 0.25;
+    const rotationZ = (Math.random() - 0.5) * 0.05;
 
-  const col = i - (CONFIG.panelCount - 1) / 2;
-  const x = col * 4.6;
-  const y = Math.sin(col * 0.6) * 0.9;
-  const z = -Math.abs(col) * 2.2 - 2;
+    const column = x < -3 ? 'left' : x > 3 ? 'right' : 'center';
+    const scale = layerIndex === 0 ? 1.0 : 0.9;
 
-  mesh.position.set(x, y, z);
-  mesh.rotation.y = -col * 0.14;
-  mesh.rotation.x = col * 0.03;
+    const geo = new THREE.PlaneGeometry(HERO.panelW, HERO.panelH, 1, 1);
+    const texA = textures[panelId % 6];
+    const texB = textures[(panelId + 3) % 6];
 
-  mesh.userData = {
-    base: mesh.position.clone(),
-    baseRot: mesh.rotation.clone(),
-    floatSpeed: rand(0.35, 0.7),
-    floatAmp: rand(0.12, 0.25),
-    phase: rand(0, Math.PI * 2),
-  };
+    const uniforms = {
+      uTexA: { value: texA },
+      uTexB: { value: texB },
+      uProgress: { value: 0 },
+      uAberration: { value: 0.005 },
+      uOpacity: { value: 0 },
+      uTime: { value: 0 },
+      uDepth: { value: z },
+      uBorderWidth: { value: 0.012 },
+      uBorderColor: { value: new THREE.Color(0xffffff) },
+      uResolution: { value: new THREE.Vector2(1024, 576) },
+    };
 
-  scene.add(mesh);
-  panels.push(mesh);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      side: THREE.DoubleSide,
+      uniforms,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.rotation.set(0, rotationY, rotationZ);
+    mesh.scale.setScalar(scale);
+
+    mesh.userData = {
+      baseX: x,
+      baseY: y,
+      baseZ: z,
+      column,
+      layerIndex,
+      panelIndex: panelId,
+      uniforms,
+    };
+
+    scene.add(mesh);
+    panels.push(mesh);
+    panelId++;
+  }
 }
 
 /* =========================================================
-   6. BACKGROUND DOT GRID
-========================================================= */
-const dotGeo = new THREE.BufferGeometry();
-const dp = [];
-for (let x = -30; x <= 30; x += CONFIG.dotSpacing)
-  for (let y = -16; y <= 16; y += CONFIG.dotSpacing)
-    dp.push(x, y, -22);
-dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3));
-
-const dotGrid = new THREE.Points(
-  dotGeo,
-  new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.06,
-    transparent: true,
-    opacity: 0.22,
-    sizeAttenuation: true,
-  })
-);
-scene.add(dotGrid);
-
-/* =========================================================
-   7. AMBIENT DUST
+   ATMOSPHERE — dust + dot grid
 ========================================================= */
 const dustGeo = new THREE.BufferGeometry();
-const dustPos = new Float32Array(CONFIG.dustCount * 3);
-for (let i = 0; i < CONFIG.dustCount * 3; i += 3) {
-  dustPos[i] = rand(-30, 30);
-  dustPos[i + 1] = rand(-18, 18);
-  dustPos[i + 2] = rand(-25, -4);
+const dustPos = new Float32Array(800 * 3);
+for (let i = 0; i < 800 * 3; i += 3) {
+  dustPos[i] = rand(-40, 40);
+  dustPos[i + 1] = rand(-20, 20);
+  dustPos[i + 2] = rand(-650, 50);
 }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-
 const dust = new THREE.Points(
   dustGeo,
   new THREE.PointsMaterial({
     color: 0x88eaff,
-    size: 0.05,
+    size: 1.5,
     transparent: true,
     opacity: 0.5,
     sizeAttenuation: true,
@@ -535,199 +643,343 @@ const dust = new THREE.Points(
 );
 scene.add(dust);
 
+const dotGeo = new THREE.BufferGeometry();
+const dp = [];
+for (let x = -40; x <= 40; x += 3)
+  for (let y = -20; y <= 20; y += 3)
+    dp.push(x, y, -650);
+dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3));
+const dotGrid = new THREE.Points(
+  dotGeo,
+  new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.6,
+    transparent: true,
+    opacity: 0.15,
+    sizeAttenuation: true,
+  })
+);
+scene.add(dotGrid);
+
 /* =========================================================
-   8. CAMERA PARALLAX
+   TITLE SPLIT
 ========================================================= */
-const camBase = { x: 0, y: 0, z: CONFIG.cameraStartZ, rotX: 0, rotY: 0, rotZ: 0 };
-const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-const scrollState = { t: 0 };
+const headlineEl = document.getElementById('headline');
+const subtitleEl = document.getElementById('subtitle');
+const titleWrapEl = document.getElementById('title-wrap');
 
-window.addEventListener('pointermove', (e) => {
-  pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
-}, { passive: true });
+function buildHeadline(lines) {
+  const lineEls = headlineEl.querySelectorAll('.line');
+  lineEls.forEach((lineEl, i) => {
+    lineEl.innerHTML = '';
+    const text = lines[i] || '';
+    [...text].forEach((ch) => {
+      const span = document.createElement('span');
+      span.className = 'char';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      lineEl.appendChild(span);
+    });
+  });
+}
 
-window.addEventListener('scroll', () => {
-  const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
-  scrollState.t = window.scrollY / max;
-}, { passive: true });
-
-/* =========================================================
-   9. TITLE SPLIT
-========================================================= */
-const heroTitleEl = document.getElementById('hero-title');
-const heroSubEl = document.getElementById('hero-sub');
-const fpsEl = document.getElementById('fps');
-
-function splitTitle(text) {
-  heroTitleEl.innerHTML = '';
-  const frag = document.createDocumentFragment();
+function buildSubtitle(text) {
+  subtitleEl.innerHTML = '';
   [...text].forEach((ch) => {
     const span = document.createElement('span');
     span.className = 'char';
     span.textContent = ch === ' ' ? '\u00A0' : ch;
-    frag.appendChild(span);
+    subtitleEl.appendChild(span);
   });
-  heroTitleEl.appendChild(frag);
-  return Array.from(heroTitleEl.querySelectorAll('.char'));
 }
 
-heroTitleEl.setAttribute('aria-label', CONFIG.title);
-let titleChars = splitTitle(CONFIG.title);
+buildHeadline(HERO.titleLines);
+buildSubtitle(HERO.subtitle);
+
+/* Tick rails */
+const ticksTop = document.getElementById('ticks-top');
+const ticksBottom = document.getElementById('ticks-bottom');
+for (let i = 0; i < 40; i++) {
+  const t1 = document.createElement('div');
+  t1.className = 'tick';
+  ticksTop.appendChild(t1);
+  const t2 = document.createElement('div');
+  t2.className = 'tick';
+  ticksBottom.appendChild(t2);
+}
 
 /* =========================================================
-   10. DATA STREAM
+   HUD LIVE READOUTS
 ========================================================= */
-const dataStream = document.getElementById('data-stream');
-for (let i = 0; i < 18; i++) {
-  const div = document.createElement('div');
-  div.className = 'line';
-  const hex = Math.floor(0x1000 + Math.random() * 0xefff).toString(16).toUpperCase();
-  const status = Math.random() > 0.5 ? 'OK' : 'SYNC';
-  div.textContent = `0x${hex} :: ${status}`;
-  dataStream.appendChild(div);
+const fpsEl = document.getElementById('fps-readout');
+const zEl = document.getElementById('z-readout');
+const rollEl = document.getElementById('roll-readout');
+const frameEl = document.getElementById('frame-readout');
+
+function pad(n, len = 2) {
+  return String(Math.floor(n)).padStart(len, '0');
 }
 
 /* =========================================================
-   11. RENDER LOOP
+   CAMERA STATE (proxy — GSAP mutates, RAF reads)
+========================================================= */
+const camState = {
+  x: 0,
+  y: 0,
+  z: HERO.cameraStart,
+  rotX: 0,
+  rotY: 0,
+  rotZ: 0,
+};
+
+/* =========================================================
+   RENDER LOOP
 ========================================================= */
 const clock = new THREE.Clock();
 let fpsFrames = 0;
 let fpsLast = 0;
+let elapsed = 0;
 let rafId = 0;
 
 function tick() {
   rafId = requestAnimationFrame(tick);
-  const t = clock.getElapsedTime();
+  elapsed = clock.getElapsedTime();
 
-  /* Pointer smoothing */
-  pointer.x = lerp(pointer.x, pointer.tx, CONFIG.pointerLerp);
-  pointer.y = lerp(pointer.y, pointer.ty, CONFIG.pointerLerp);
+  /* Camera */
+  camera.position.set(camState.x, camState.y, camState.z);
+  camera.rotation.x = camState.rotX;
+  camera.rotation.y = camState.rotY;
+  camera.rotation.z = camState.rotZ;
 
-  /* Camera: base (GSAP) + pointer offset */
-  camera.position.x = camBase.x + pointer.x * CONFIG.pointerInfluenceX;
-  camera.position.y = camBase.y - pointer.y * CONFIG.pointerInfluenceY;
-  camera.position.z = camBase.z;
-  camera.rotation.x = camBase.rotX - pointer.y * CONFIG.pointerRotX + scrollState.t * 0.15;
-  camera.rotation.y = camBase.rotY + pointer.x * CONFIG.pointerRotY;
-  camera.rotation.z = camBase.rotZ;
-
-  /* Panels idle float */
+  /* Panels idle + shader time */
   for (let i = 0; i < panels.length; i++) {
     const p = panels[i];
-    const ud = p.userData;
-    p.position.y = ud.base.y + Math.sin(t * ud.floatSpeed + ud.phase) * ud.floatAmp;
-    p.rotation.z = ud.baseRot.z + Math.sin(t * 0.4 + ud.phase) * 0.02;
+    const u = p.userData.uniforms;
+    u.uTime.value = elapsed;
+    p.rotation.z = Math.sin(elapsed * 0.4 + i) * 0.008;
   }
 
-  /* Atmosphere */
-  dust.rotation.y = t * 0.015;
-  dotGrid.rotation.z = t * 0.004;
+  dust.rotation.z = elapsed * 0.01;
+  dotGrid.rotation.z = elapsed * 0.003;
 
-  /* FPS */
+  /* Readouts */
   fpsFrames++;
-  if (t - fpsLast > 0.5) {
-    fpsEl.textContent = String(Math.round(fpsFrames / (t - fpsLast)));
+  if (elapsed - fpsLast > 0.5) {
+    fpsEl.textContent = String(Math.round(fpsFrames / (elapsed - fpsLast)));
     fpsFrames = 0;
-    fpsLast = t;
+    fpsLast = elapsed;
+  }
+  if (zEl) zEl.textContent = camState.z.toFixed(2);
+  if (rollEl) rollEl.textContent = (camState.rotZ * 180 / Math.PI).toFixed(2) + '°';
+  if (frameEl) {
+    const totalFrames = Math.floor(elapsed * 30);
+    const ff = totalFrames % 30;
+    const ss = Math.floor(totalFrames / 30) % 60;
+    const mm = Math.floor(totalFrames / 1800) % 60;
+    const hh = Math.floor(totalFrames / 108000);
+    frameEl.textContent = `${pad(hh)}:${pad(mm)}:${pad(ss)}:${pad(ff)}`;
   }
 
   renderer.render(scene, camera);
 }
 
 /* =========================================================
-   12. GSAP MASTER TIMELINE
+   GSAP MASTER TIMELINE
 ========================================================= */
-let masterTl;
+let masterTl = null;
 
 function buildTimeline() {
-  gsap.killTweensOf('*');
+  if (masterTl) masterTl.kill();
 
-  /* Reset HUD */
-  gsap.set('.bracket', { opacity: 0, scale: 1.6 });
-  gsap.set('.crosshair', { opacity: 0, scale: 0 });
-  gsap.set('.hline, .vline', { opacity: 0, scaleX: 0, scaleY: 0 });
-  gsap.set('.coord', { opacity: 0, y: 20 });
-  gsap.set('.data-stream', { opacity: 0, y: 40 });
-  gsap.set('.glass-frame', { opacity: 0 });
-  gsap.set('.ribbon', { width: 0, opacity: 0 });
-  gsap.set('.flare', { left: '-40%', opacity: 0 });
-  gsap.set(titleChars, { opacity: 0, yPercent: 120 });
-  gsap.set(heroSubEl, { opacity: 0, y: 20 });
+  /* Reset camera */
+  Object.assign(camState, {
+    x: 0, y: 0, z: HERO.cameraStart,
+    rotX: 0, rotY: 0, rotZ: 0,
+  });
 
   /* Reset panels */
   panels.forEach((p) => {
-    p.position.copy(p.userData.base);
-    p.scale.set(1, 1, 1);
-    p.rotation.copy(p.userData.baseRot);
-    p.material.opacity = 1;
+    const d = p.userData;
+    p.position.set(d.baseX, d.baseY, d.baseZ);
+    p.scale.setScalar(d.layerIndex === 0 ? 1.0 : 0.9);
+    p.rotation.set(0, (d.baseX / 44) * 0.25, 0);
+    d.uniforms.uProgress.value = 0;
+    d.uniforms.uAberration.value = 0.005;
+    d.uniforms.uOpacity.value = 0;
   });
 
-  /* Reset camera base */
-  Object.assign(camBase, { x: 0, y: 0, z: CONFIG.cameraStartZ, rotX: 0, rotY: 0, rotZ: 0 });
+  /* Reset HUD */
+  gsap.set('.svg-frame path', { strokeDashoffset: 2000 });
+  gsap.set('.svg-frame', { opacity: 0 });
+  gsap.set('.bracket', { opacity: 0 });
+  gsap.set('.grid-overlay', { opacity: 0 });
+  gsap.set('.tick-rail', { opacity: 0 });
+  gsap.set('.coord', { opacity: 0 });
+  gsap.set('.crosshair', { opacity: 0 });
+  gsap.set('.hud', { opacity: 1 });
+  gsap.set('.title-wrap', { scale: 1 });
 
-  masterTl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+  /* Reset text */
+  const chars = headlineEl.querySelectorAll('.char');
+  gsap.set(chars, { y: '100%', opacity: 0 });
+  gsap.set(subtitleEl, { letterSpacing: '0.05em' });
+  gsap.set(subtitleEl.querySelectorAll('.char'), { opacity: 0 });
 
-  /* ---------- PHASE 1: 0.0s – 1.0s ---------- */
-  masterTl
-    .to('.bracket', { opacity: 1, scale: 1, duration: 0.8, stagger: 0.08 }, 0)
-    .to('.hline', { opacity: 1, scaleX: 1, duration: 1.0, ease: 'expo.inOut' }, 0.15)
-    .to('.vline', { opacity: 1, scaleY: 1, duration: 1.0, ease: 'expo.inOut' }, 0.25)
-    .to('.crosshair', { opacity: 1, scale: 1, duration: 0.7, stagger: 0.2, ease: 'back.out(1.6)' }, 0.4)
-    .to('.coord', { opacity: 1, y: 0, duration: 0.7, stagger: 0.12 }, 0.5)
-    .to('.data-stream', { opacity: 1, y: 0, duration: 0.6 }, 0.6)
-    .to('.glass-frame', { opacity: 1, duration: 1.0 }, 0.2)
-    .to('.ribbon', { width: '130%', opacity: 1, duration: 0.9, ease: 'power2.out' }, 0.2);
+  const tl = gsap.timeline({ paused: true });
+  masterTl = tl;
 
-  masterTl
-    .to(panels[2].position, { z: 8, duration: 1.0, ease: 'power2.out' }, 0)
-    .to(panels[2].rotation, { x: 0, y: 0, duration: 1.0, ease: 'power2.out' }, 0);
+  /* ================= PHASE 1: Grid Draw & Focus (0.0 – 1.2s) ================= */
+  tl.to('.svg-frame', { opacity: 1, duration: 0.1 }, 0.0);
+  tl.to('.svg-frame path', {
+    strokeDashoffset: 0,
+    duration: 0.8,
+    ease: 'power3.out',
+    stagger: 0.08,
+  }, 0.0);
 
-  /* ---------- PHASE 2: 1.0s – 3.0s ---------- */
-  masterTl
-    .to(panels[0].position, { x: -16, z: -4, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[4].position, { x: 16, z: -4, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[0].rotation, { y: 0.4, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[4].rotation, { y: -0.4, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[1].position, { x: -8, z: 2, y: 0.3, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[3].position, { x: 8, z: 2, y: 0.3, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[1].scale, { x: 0.85, y: 0.85, z: 1, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[3].scale, { x: 0.85, y: 0.85, z: 1, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[1].material, { opacity: 0.35, duration: 1.4, ease: 'power2.inOut' }, 1.2)
-    .to(panels[3].material, { opacity: 0.35, duration: 1.4, ease: 'power2.inOut' }, 1.2)
-    .to(panels[2].position, { z: 3, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(panels[2].scale, { x: 0.9, y: 0.9, z: 1, duration: 1.8, ease: 'power2.inOut' }, 1.0)
-    .to(camBase, { z: 17, rotX: 0.05, duration: 2.0, ease: 'power2.inOut' }, 1.0);
+  tl.to('.bracket', { opacity: 1, duration: 0.6, stagger: 0.06 }, 0.05);
+  tl.to('.grid-overlay', { opacity: 1, duration: 0.7 }, 0.1);
+  tl.to('.tick-rail', { opacity: 1, duration: 0.6, stagger: 0.1 }, 0.15);
+  tl.to('.coord', { opacity: 1, duration: 0.5, stagger: 0.08 }, 0.2);
+  tl.to('.crosshair', { opacity: 1, duration: 0.4 }, 0.25);
 
-  /* ---------- PHASE 3: 3.0s – 5.0s ---------- */
-  masterTl
-    .to(camBase, { z: CONFIG.cameraEndZ, x: -0.6, rotY: -0.12, rotX: 0.03, duration: 2.0, ease: 'power3.inOut' }, 3.0)
-    .to(titleChars, {
-      opacity: 1,
-      yPercent: 0,
+  // 0.2s — camera dolly Z 1000 → 700
+  tl.to(camState, {
+    z: HERO.cameraMid,
+    duration: 1.0,
+    ease: 'power2.out',
+  }, 0.2);
+
+  // 0.4s — panels fade in + central scale 0.8→1.0
+  panels.forEach((p, i) => {
+    const d = p.userData;
+    const targetScale = d.layerIndex === 0 ? 1.0 : 0.9;
+    tl.to(d.uniforms.uOpacity, {
+      value: 1,
+      duration: 0.8,
+      ease: 'power2.out',
+    }, 0.4 + i * 0.03);
+    tl.fromTo(p.scale, {
+      x: targetScale * 0.8,
+      y: targetScale * 0.8,
+    }, {
+      x: targetScale,
+      y: targetScale,
       duration: 0.9,
-      ease: 'back.out(1.7)',
-      stagger: { each: 0.035, from: 'start' },
-    }, 3.0)
-    .to(heroSubEl, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, 3.8)
-    .to('.flare', { left: '130%', opacity: 1, duration: 1.4, ease: 'power2.inOut' }, 3.2)
-    .to('.flare', { opacity: 0, duration: 0.6, ease: 'power2.in' }, 4.4)
+      ease: 'power2.out',
+    }, 0.4 + i * 0.02);
+  });
 
-    .to(panels[0].position, { x: -14, z: -2, duration: 1.8, ease: 'power2.inOut' }, 3.0)
-    .to(panels[4].position, { x: 14, z: -2, duration: 1.8, ease: 'power2.inOut' }, 3.0)
-    .to(panels[0].rotation, { y: -0.28, duration: 1.8 }, 3.0)
-    .to(panels[4].rotation, { y: 0.28, duration: 1.8 }, 3.0)
-    .to(panels[1].material, { opacity: 0.7, duration: 1.5 }, 3.0)
-    .to(panels[3].material, { opacity: 0.7, duration: 1.5 }, 3.0)
-    .to(panels[1].scale, { x: 1, y: 1, z: 1, duration: 1.5, ease: 'power2.inOut' }, 3.0)
-    .to(panels[3].scale, { x: 1, y: 1, z: 1, duration: 1.5, ease: 'power2.inOut' }, 3.0)
-    .to(panels[2].scale, { x: 1, y: 1, z: 1, duration: 1.5 }, 3.0);
+  // 0.6s — headline chars stagger up
+  tl.to(chars, {
+    y: '0%',
+    opacity: 1,
+    duration: 0.7,
+    ease: 'power3.out',
+    stagger: 0.03,
+  }, 0.6);
 
-  return masterTl;
+  /* ================= PHASE 2: Split-Panel Parallax (1.2 – 3.2s) ================= */
+  // 1.2s — camera pitch/yaw tilt
+  tl.to(camState, {
+    rotX: -0.05,
+    rotY: 0.08,
+    duration: 1.0,
+    ease: 'power2.inOut',
+  }, 1.2);
+
+  // 1.4s — split masks: left panels → left, right → right
+  panels.forEach((p) => {
+    const d = p.userData;
+    const offset = d.column === 'left' ? -4.0 : d.column === 'right' ? 4.0 : 0;
+    tl.to(p.position, {
+      x: d.baseX + offset,
+      duration: 1.6,
+      ease: 'power2.inOut',
+    }, 1.4);
+  });
+
+  // 1.6s — texture crossfade via shader uProgress
+  panels.forEach((p, i) => {
+    tl.to(p.userData.uniforms.uProgress, {
+      value: 1,
+      duration: 1.0,
+      ease: 'power2.inOut',
+    }, 1.6 + i * 0.03);
+  });
+
+  // 2.0s — subtitle enters, letter-spacing expands
+  tl.to(subtitleEl.querySelectorAll('.char'), {
+    opacity: 1,
+    duration: 0.6,
+    stagger: 0.015,
+    ease: 'power2.out',
+  }, 2.0);
+  tl.to(subtitleEl, {
+    letterSpacing: '0.2em',
+    duration: 1.2,
+    ease: 'power2.inOut',
+  }, 2.0);
+  tl.to(subtitleEl, { opacity: 1, duration: 0.3 }, 2.0);
+
+  /* ================= PHASE 3: Climax Zoom & Outro (3.2 – 5.0s) ================= */
+  // 3.2s — fast dolly zoom 700 → 200
+  tl.to(camState, {
+    z: HERO.cameraEnd,
+    duration: 1.2,
+    ease: 'expo.inOut',
+  }, 3.2);
+
+  // 3.5s — chromatic aberration spike 0.02 → 0
+  panels.forEach((p) => {
+    const u = p.userData.uniforms;
+    tl.to(u.uAberration, {
+      value: 0.02,
+      duration: 0.2,
+      ease: 'power4.out',
+    }, 3.5);
+    tl.to(u.uAberration, {
+      value: 0,
+      duration: 0.8,
+      ease: 'power2.in',
+    }, 3.7);
+  });
+
+  // 3.6s — camera tilt unwinds
+  tl.to(camState, {
+    rotX: 0,
+    rotY: 0,
+    duration: 1.2,
+    ease: 'power2.inOut',
+  }, 3.6);
+
+  // 4.0s — panels drift back
+  panels.forEach((p) => {
+    tl.to(p.position, {
+      x: p.userData.baseX,
+      duration: 0.9,
+      ease: 'power2.out',
+    }, 4.0);
+  });
+
+  // 4.0s — headline scales down slightly
+  tl.to(titleWrapEl, {
+    scale: 0.92,
+    duration: 1.0,
+    ease: 'power2.inOut',
+  }, 4.0);
+
+  // 4.5s — HUD dims to 0.4
+  tl.to('#hud', {
+    opacity: 0.4,
+    duration: 0.5,
+    ease: 'power2.out',
+  }, 4.5);
+
+  return tl;
 }
 
 /* =========================================================
-   13. RESIZE
+   RESIZE
 ========================================================= */
 let resizeRaf = 0;
 function onResize() {
@@ -739,46 +991,49 @@ function onResize() {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    panels.forEach((p) => {
+      p.userData.uniforms.uResolution.value.set(w, h);
+    });
   });
 }
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', () => setTimeout(onResize, 100));
 
 /* =========================================================
-   14. VISIBILITY (pause when tab hidden)
+   VISIBILITY PAUSE
 ========================================================= */
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     cancelAnimationFrame(rafId);
-    masterTl?.pause();
+    if (masterTl) masterTl.pause();
   } else {
-    clock.getDelta(); // reset delta
+    clock.getDelta();
     tick();
-    masterTl?.play();
+    if (masterTl) masterTl.play();
   }
 });
 
 /* =========================================================
-   15. BOOT
+   BOOT
 ========================================================= */
 function boot() {
+  onResize();
   tick();
-  buildTimeline();
 
-  /* Fade out loader */
+  const tl = buildTimeline();
+
   const loader = document.getElementById('loader');
   setTimeout(() => {
     loader.classList.add('hidden');
     setTimeout(() => loader.remove(), 700);
   }, 200);
 
-  /* Play after loader fades */
   setTimeout(() => {
-    masterTl.play(0);
+    tl.play(0);
   }, 400);
 }
 
-/* Wait for fonts so char widths are correct */
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(boot);
 } else {
@@ -786,32 +1041,33 @@ if (document.fonts && document.fonts.ready) {
 }
 
 /* =========================================================
-   16. PUBLIC API (for Next.js / host integration)
+   PUBLIC API
 ========================================================= */
 window.HeroEngine = {
   replay() {
-    buildTimeline();
-    masterTl.play(0);
+    const tl = buildTimeline();
+    tl.play(0);
   },
-  setTitle(title, subtitle) {
-    CONFIG.title = title;
-    CONFIG.subtitle = subtitle || CONFIG.subtitle;
-    heroTitleEl.setAttribute('aria-label', title);
-    titleChars = splitTitle(title);
-    if (subtitle) heroSubEl.textContent = subtitle;
-    buildTimeline();
-    masterTl.play(0);
+  setHeadline(lines) {
+    HERO.titleLines = lines;
+    buildHeadline(lines);
+    const tl = buildTimeline();
+    tl.play(0);
+  },
+  setSubtitle(text) {
+    HERO.subtitle = text;
+    buildSubtitle(text);
+    subtitleEl.setAttribute('aria-label', text);
   },
   destroy() {
     cancelAnimationFrame(rafId);
-    masterTl?.kill();
+    if (masterTl) masterTl.kill();
     panels.forEach((p) => {
       p.geometry.dispose();
-      p.material.map?.dispose();
       p.material.dispose();
     });
-    dotGeo.dispose();
     dustGeo.dispose();
+    dotGeo.dispose();
     renderer.dispose();
   },
 };
