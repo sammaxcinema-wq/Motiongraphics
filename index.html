@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -754,706 +753,616 @@
         vec2 dir = normalize(vUv - 0.5);
         vec2 offset = dir * uAberration;
 
-        vec4 aR = sampleBlurred(uTexA, vUv + offset, blurAmount);
-        vec4 aG = sampleBlurred(uTexA, vUv, blurAmount);
-        vec4 aB = sampleBlurred(uTexA, vUv - offset, blurAmount);
-        vec4 texA = vec4(aR.r, aG.g, aB.b, aG.a);
+        vec4 texA_R = sampleBlurred(uTexA, vUv + offset * 1.5, blurAmount);
+        vec4 texA_G = sampleBlurred(uTexA, vUv, blurAmount);
+        vec4 texA_B = sampleBlurred(uTexA, vUv - offset * 1.5, blurAmount);
+        vec4 colorA = vec4(texA_R.r, texA_G.g, texA_B.b, texA_G.a);
 
-        vec4 bR = sampleBlurred(uTexB, vUv + offset, blurAmount);
-        vec4 bG = sampleBlurred(uTexB, vUv, blurAmount);
-        vec4 bB = sampleBlurred(uTexB, vUv - offset, blurAmount);
-        vec4 texB = vec4(bR.r, bG.g, bB.b, bG.a);
+        vec4 texB_R = sampleBlurred(uTexB, vUv + offset * 1.5, blurAmount);
+        vec4 texB_G = sampleBlurred(uTexB, vUv, blurAmount);
+        vec4 texB_B = sampleBlurred(uTexB, vUv - offset * 1.5, blurAmount);
+        vec4 colorB = vec4(texB_R.r, texB_G.g, texB_B.b, texB_G.a);
 
-        vec4 mixed = mix(texA, texB, uProgress);
+        float transitionProgress = smoothstep(0.0, 1.0, clamp((uProgress * 1.4 - (vWorldPos.z + 600.0) / 800.0), 0.0, 1.0));
+        vec4 finalColor = mix(colorA, colorB, transitionProgress);
 
-        vec2 edgeUV = vUv;
-        float borderDist = min(min(edgeUV.x, 1.0 - edgeUV.x), min(edgeUV.y, 1.0 - edgeUV.y));
-        float borderMask = 1.0 - smoothstep(0.0, uBorderWidth, borderDist);
+        // Cyberpunk scanline effect
+        float scanline = sin(vUv.y * uResolution.y * 1.5 + uTime * 4.0) * 0.04;
+        finalColor.rgb += scanline;
 
-        vec2 sheenUV = vUv - 0.5;
-        float sheen = smoothstep(0.4, 0.0, length(sheenUV)) * 0.15;
+        // Panel border frame
+        float borderThick = 0.015;
+        float border = step(vUv.x, borderThick) + step(1.0 - borderThick, vUv.x) +
+                       step(vUv.y, borderThick) + step(1.0 - borderThick, vUv.y);
+        
+        vec3 blendedColor = mix(finalColor.rgb, uBorderColor, clamp(border, 0.0, 1.0));
 
-        vec3 borderRGB = uBorderColor + vec3(sheen);
-        vec3 finalRGB = mix(mixed.rgb, borderRGB, borderMask);
+        // Holographic lighting gradient
+        float holo = sin(vWorldPos.x * 0.1 + uTime) * 0.08 + cos(vWorldPos.y * 0.1 - uTime) * 0.08;
+        blendedColor += vec3(0.0, holo, holo * 1.5);
 
-        float alpha = mixed.a * uOpacity;
-        alpha = max(alpha, borderMask * uOpacity * 0.9);
-
-        gl_FragColor = vec4(finalRGB, alpha);
+        gl_FragColor = vec4(blendedColor, uOpacity * (0.85 + 0.15 * sin(uTime * 3.0 + vWorldPos.z)));
       }
     `;
 
     /* =========================================================
-       SCENE SETUP & CANVAS
+       CANVAS TEXTURE GENERATOR (Procedural Dynamic UI Textures)
+    ========================================================= */
+    function createProceduralTexture(index, type = 'A') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 576;
+      const ctx = canvas.getContext('2d');
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      if (type === 'A') {
+        grad.addColorStop(0, '#0a0d1a');
+        grad.addColorStop(1, '#05070c');
+      } else {
+        grad.addColorStop(0, '#10081d');
+        grad.addColorStop(1, '#07040a');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.lineWidth = 1;
+      const stepSize = 48;
+      for (let x = 0; x < canvas.width; x += stepSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += stepSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // UI Mockup Elements
+      ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
+      ctx.fillRect(60, 60, 350, 400);
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
+      ctx.strokeRect(60, 60, 350, 400);
+
+      // Header bar inside texture
+      ctx.fillStyle = 'rgba(34, 211, 238, 0.8)';
+      ctx.font = 'bold 22px "JetBrains Mono", monospace';
+      ctx.fillText(`SYSTEM MODULE // 0${index + 1}`, 90, 115);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '14px "JetBrains Mono", monospace';
+      ctx.fillText(`STATUS: SECURE_NODE`, 90, 150);
+      ctx.fillText(`ENCRYPTION: 256-BIT AES`, 90, 180);
+      ctx.fillText(`LATENCY: 0.42ms`, 90, 210);
+
+      // Mini Chart inside texture
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      let py = 350;
+      for (let px = 90; px <= 380; px += 30) {
+        py += (Math.random() * 40 - 20);
+        if (px === 90) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Right side abstract big typography
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = '900 72px "Montserrat", sans-serif';
+      ctx.fillText(type === 'A' ? 'CYBER' : 'QUANTUM', 460, 180);
+      
+      ctx.fillStyle = '#22d3ee';
+      ctx.font = '900 64px "Montserrat", sans-serif';
+      ctx.fillText(type === 'A' ? `NODE_${index}` : `CORE_0${index}`, 460, 260);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.font = '14px "JetBrains Mono", monospace';
+      ctx.fillText('REALTIME WEBGL SHADER RENDERING PIPELINE // NO PLUGINS', 460, 340);
+
+      // Corner cross markers
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2;
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(40, 50); ctx.lineTo(55, 50); ctx.moveTo(50, 40); ctx.lineTo(50, 55); ctx.stroke();
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(969, 526); ctx.lineTo(984, 526); ctx.moveTo(974, 516); ctx.lineTo(974, 536); ctx.stroke();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    /* =========================================================
+       MAIN THREE.JS SCENE SETUP
     ========================================================= */
     const container = document.getElementById('hero-viewport');
     const canvas = document.getElementById('webgl');
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050507);
-    scene.fog = new THREE.Fog(0x050507, 800, 2000);
+    scene.fog = new THREE.FogExp2(0x050507, 0.0015);
 
-    const camera = new THREE.PerspectiveCamera(
-      45,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      3000
-    );
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 3000);
     camera.position.set(0, 0, CONFIG.cameraStart);
-    camera.rotation.order = 'YXZ';
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: false,
-      powerPreference: 'high-performance',
-    });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x050507);
 
-    /* Lights */
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    keyLight.position.set(8, 14, 12);
-    scene.add(keyLight);
+    const panelsGroup = new THREE.Group();
+    scene.add(panelsGroup);
 
-    const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.6);
-    rimLight.position.set(-12, -6, -8);
-    scene.add(rimLight);
-
-    /* Texture Generator */
-    function makeTexture(hue, label) {
-      const c = document.createElement('canvas');
-      c.width = 1024;
-      c.height = 576;
-      const ctx = c.getContext('2d');
-
-      const grad = ctx.createLinearGradient(0, 0, 1024, 576);
-      grad.addColorStop(0, `hsl(${hue}, 65%, 45%)`);
-      grad.addColorStop(1, `hsl(${(hue + 40) % 360}, 75%, 12%)`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1024, 576);
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 1024; i += 96) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 576); ctx.stroke();
-      }
-      for (let i = 0; i < 576; i += 96) {
-        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
-      }
-
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.font = 'bold 72px Montserrat, sans-serif';
-      ctx.fillText(label, 40, 520);
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.needsUpdate = true;
-      return tex;
-    }
-
-    const textures = Array.from({ length: 6 }, (_, i) =>
-      makeTexture(180 + i * 45, `PANEL-0${i + 1}`)
-    );
-
-    /* Panels Construction */
     const panels = [];
-    const uniformRegistry = new Map();
-    let panelId = 0;
+    const totalPanels = CONFIG.layers.reduce((acc, l, i) => acc + CONFIG.panelsPerLayer[i], 0);
+    document.getElementById('sidebar-panel-count').innerText = `${totalPanels} MESH PANELS`;
 
-    CONFIG.layers.forEach((z, layerIndex) => {
-      const count = CONFIG.panelsPerLayer[layerIndex];
-      const spread = 22 + layerIndex * 4;
-
+    // Build 3D Mesh Panels in 3D Space
+    CONFIG.layers.forEach((zPos, layerIdx) => {
+      const count = CONFIG.panelsPerLayer[layerIdx];
+      const radius = 65 + layerIdx * 35;
+      
       for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 0.5 : i / (count - 1);
-        const x = (t - 0.5) * spread;
-        const y = (layerIndex % 2 === 0 ? 1 : -1) * (i % 2 === 0 ? 2.5 : -2.5);
-        const rotationY = (t - 0.5) * 0.25;
-        const rotationZ = (Math.random() - 0.5) * 0.05;
-        const column = x < -3 ? 'left' : x > 3 ? 'right' : 'center';
+        const angle = (i / count) * Math.PI * 2 + (layerIdx * 0.4);
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius * 0.6;
+        const z = zPos + (Math.random() * 40 - 20);
 
-        const uniforms = {
-          uTexA: { value: textures[panelId % 6] },
-          uTexB: { value: textures[(panelId + 3) % 6] },
-          uProgress: { value: 0 },
-          uAberration: { value: 0.005 },
-          uOpacity: { value: 0 },
-          uTime: { value: 0 },
-          uDepth: { value: z },
-          uBorderWidth: { value: 0.012 },
-          uBorderColor: { value: new THREE.Color(CONFIG.borderColor) },
-          uResolution: { value: new THREE.Vector2(1024, 576) },
-        };
+        const geometry = new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH, 32, 32);
+        
+        const texA = createProceduralTexture(i, 'A');
+        const texB = createProceduralTexture(i, 'B');
 
         const material = new THREE.ShaderMaterial({
           vertexShader,
           fragmentShader,
-          transparent: true,
+          uniforms: {
+            uTexA: { value: texA },
+            uTexB: { value: texB },
+            uProgress: { value: 0.0 },
+            uAberration: { value: CONFIG.aberrationMax },
+            uOpacity: { value: 0.9 },
+            uTime: { value: 0 },
+            uDepth: { value: z },
+            uBorderWidth: { value: 0.015 },
+            uBorderColor: { value: new THREE.Color(CONFIG.borderColor) },
+            uResolution: { value: new THREE.Vector2(1024, 576) }
+          },
           side: THREE.DoubleSide,
-          uniforms,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
         });
 
-        const mesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH),
-          material
-        );
-
+        const mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(x, y, z);
-        mesh.rotation.set(0, rotationY, rotationZ);
-        mesh.scale.setScalar(layerIndex === 0 ? 1.0 : 0.9);
+        
+        // Face slightly towards center or random orientation
+        mesh.lookAt(0, 0, z);
+        mesh.rotateZ((Math.random() - 0.5) * 0.3);
 
+        // Store initial transforms for animation reset
         mesh.userData = {
           baseX: x,
           baseY: y,
           baseZ: z,
-          column,
-          layerIndex,
-          panelIndex: panelId,
-          uniforms,
+          rotX: mesh.rotation.x,
+          rotY: mesh.rotation.y,
+          rotZ: mesh.rotation.z
         };
 
-        scene.add(mesh);
+        panelsGroup.add(mesh);
         panels.push(mesh);
-        uniformRegistry.set(panelId, uniforms);
-        panelId++;
       }
     });
 
-    /* Ambient Dust Points */
-    let dustGeo = new THREE.BufferGeometry();
-    let dustMaterial = new THREE.PointsMaterial({
-      color: 0x88eaff,
-      size: 1.2,
-      transparent: true,
-      opacity: 0.5,
-      sizeAttenuation: true,
-    });
-    let dust = new THREE.Points(dustGeo, dustMaterial);
-    scene.add(dust);
+    // Dust Particles Background Field
+    let particlesMesh = null;
+    function initParticles() {
+      if (particlesMesh) scene.remove(particlesMesh);
+      
+      const particleCount = CONFIG.particleCount;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
 
-    function rebuildParticles(count) {
-      scene.remove(dust);
-      dustGeo.dispose();
-      dustGeo = new THREE.BufferGeometry();
-      const pos = new Float32Array(count * 3);
-      for (let i = 0; i < count * 3; i += 3) {
-        pos[i] = (Math.random() - 0.5) * 90;
-        pos[i + 1] = (Math.random() - 0.5) * 60;
-        pos[i + 2] = -Math.random() * 750;
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 800;
+        positions[i + 1] = (Math.random() - 0.5) * 600;
+        positions[i + 2] = (Math.random() - 0.5) * 1500 - 200;
       }
-      dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      dust = new THREE.Points(dustGeo, dustMaterial);
-      scene.add(dust);
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 32; canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      grad.addColorStop(0, 'rgba(34, 211, 238, 1)');
+      grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 32, 32);
+
+      const texture = new THREE.CanvasTexture(canvas);
+
+      const material = new THREE.PointsMaterial({
+        size: 4,
+        map: texture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      particlesMesh = new THREE.Points(geometry, material);
+      scene.add(particlesMesh);
     }
-    rebuildParticles(CONFIG.particleCount);
+    initParticles();
 
-    /* Split Typography helpers */
-    function splitIntoLine(containerEl, text) {
-      containerEl.innerHTML = '';
-      const chars = [];
-      [...text].forEach((ch) => {
+    /* =========================================================
+       TYPOGRAPHY SPLIT & SETUP
+    ========================================================= */
+    function setupTypography() {
+      const l1Elem = document.getElementById('line-1');
+      const l2Elem = document.getElementById('line-2');
+      const subElem = document.getElementById('subtitle');
+
+      l1Elem.innerHTML = '';
+      l2Elem.innerHTML = '';
+      subElem.innerHTML = '';
+
+      CONFIG.titleLines[0].split('').forEach(char => {
         const span = document.createElement('span');
         span.className = 'char';
-        span.textContent = ch === ' ' ? '\u00A0' : ch;
-        containerEl.appendChild(span);
-        chars.push(span);
+        span.innerText = char === ' ' ? '\u00A0' : char;
+        l1Elem.appendChild(span);
       });
-      return chars;
+
+      CONFIG.titleLines[1].split('').forEach(char => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.innerText = char === ' ' ? '\u00A0' : char;
+        l2Elem.appendChild(span);
+      });
+
+      CONFIG.subtitle.split('').forEach(char => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.innerText = char === ' ' ? '\u00A0' : char;
+        subElem.appendChild(span);
+      });
     }
+    setupTypography();
 
-    const line1El = document.getElementById('line-1');
-    const line2El = document.getElementById('line-2');
-    const subtitleEl = document.getElementById('subtitle');
-
-    let titleChars = [];
-    let subtitleChars = [];
-
-    function updateTitleElements() {
-      titleChars = [
-        ...splitIntoLine(line1El, CONFIG.titleLines[0]),
-        ...splitIntoLine(line2El, CONFIG.titleLines[1]),
-      ];
-      subtitleChars = splitIntoLine(subtitleEl, CONFIG.subtitle);
-    }
-    updateTitleElements();
-
-    /* Build HUD tick rails */
-    function buildTicks(containerEl, count = 36) {
-      containerEl.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        const tick = document.createElement('div');
-        tick.className = 'tick';
-        containerEl.appendChild(tick);
-      }
-    }
-    buildTicks(document.getElementById('ticks-top'));
-    buildTicks(document.getElementById('ticks-bottom'));
-
-    /* Pointer Parallax */
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-    window.addEventListener('pointermove', (e) => {
-      const rect = container.getBoundingClientRect();
-      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        pointer.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        pointer.ty = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-      }
-    }, { passive: true });
-
-    const camBase = {
-      x: 0, y: 0, z: CONFIG.cameraStart,
-      rotX: 0, rotY: 0, rotZ: 0,
-    };
-
-    /* Telemetry Elements */
-    const fpsEl = document.getElementById('fps-readout');
-    const frameEl = document.getElementById('frame-readout');
-    const zEl = document.getElementById('z-readout');
-    const rollEl = document.getElementById('roll-readout');
-    const liveCamZ = document.getElementById('hud-cam-z-live');
-    const liveProgPct = document.getElementById('hud-progress-pct');
-    const scrubber = document.getElementById('timeline-scrubber');
-    const timelineTimeLbl = document.getElementById('timeline-time');
-
-    /* Animation Render Loop */
-    const clock = new THREE.Clock();
-    let fpsFrames = 0;
-    let fpsLast = 0;
-    let rafId = 0;
-    let startTime = performance.now();
+    /* =========================================================
+       MASTER GSAP TIMELINE CONTROLLER
+    ========================================================= */
+    let masterTimeline = null;
     let isPlaying = true;
 
-    function tick() {
-      rafId = requestAnimationFrame(tick);
-      const t = clock.getElapsedTime();
+    const timelineState = {
+      progress: 0,
+      cameraZ: CONFIG.cameraStart,
+      shaderProgress: 0.0,
+      aberrationSpike: CONFIG.aberrationMax
+    };
 
-      /* Pointer smooth interpolation */
-      pointer.x += (pointer.tx - pointer.x) * 0.05;
-      pointer.y += (pointer.ty - pointer.y) * 0.05;
+    function buildMasterTimeline() {
+      if (masterTimeline) masterTimeline.kill();
 
-      /* Apply camera position & parallax intensity */
-      camera.position.x = camBase.x + pointer.x * 1.2 * CONFIG.parallaxFactor;
-      camera.position.y = camBase.y - pointer.y * 0.9 * CONFIG.parallaxFactor;
-      camera.position.z = camBase.z;
-      camera.rotation.x = camBase.rotX - pointer.y * 0.06 * CONFIG.parallaxFactor;
-      camera.rotation.y = camBase.rotY + pointer.x * 0.1 * CONFIG.parallaxFactor;
-      camera.rotation.z = camBase.rotZ;
+      masterTimeline = gsap.timeline({
+        paused: false,
+        onUpdate: () => {
+          camera.position.z = timelineState.cameraZ;
+          
+          // Update shader uniforms
+          panels.forEach(p => {
+            p.material.uniforms.uProgress.value = timelineState.shaderProgress;
+            p.material.uniforms.uAberration.value = timelineState.aberrationSpike;
+          });
 
-      /* Update Shader Uniform Time */
-      uniformRegistry.forEach((u) => { u.uTime.value = t; });
+          // Update UI scrubber and readouts
+          const progressPct = (masterTimeline.progress() * 100).toFixed(0);
+          document.getElementById('timeline-scrubber').value = masterTimeline.time();
+          document.getElementById('timeline-time').innerText = masterTimeline.time().toFixed(2) + 's';
+          document.getElementById('hud-progress-pct').innerText = progressPct + '%';
+          document.getElementById('hud-cam-z-live').innerText = camera.position.z.toFixed(1);
+          document.getElementById('z-readout').innerText = camera.position.z.toFixed(2);
+        }
+      });
 
-      /* Rotate particles */
-      dust.rotation.z = t * 0.005;
+      // 1. HUD Fade In & Frame Assembly
+      masterTimeline.to('#loader', { opacity: 0, duration: 0.4, onComplete: () => document.getElementById('loader').style.display = 'none' }, 0);
+      
+      masterTimeline.to('.svg-frame', { opacity: 1, duration: 0.8 }, 0.2);
+      masterTimeline.to('.svg-frame path', { strokeDashoffset: 0, duration: 1.2, ease: 'power2.out' }, 0.2);
+      masterTimeline.to('.hud-bracket-elem', { opacity: 1, scale: 1, duration: 0.6, stagger: 0.1 }, 0.4);
+      masterTimeline.to('#hud-grid-elem', { opacity: 1, duration: 0.8 }, 0.6);
+      masterTimeline.to('.hud-telemetry-elem, .tick-rail', { opacity: 1, duration: 0.8 }, 0.5);
 
-      /* Calculate Readouts */
-      fpsFrames++;
-      if (t - fpsLast > 0.5) {
-        fpsEl.textContent = String(Math.round(fpsFrames / (t - fpsLast)));
-        fpsFrames = 0;
-        fpsLast = t;
-      }
-      zEl.textContent = camera.position.z.toFixed(2);
-      liveCamZ.textContent = camera.position.z.toFixed(1);
-      rollEl.textContent = `${(camera.rotation.z * 180 / Math.PI).toFixed(2)}°`;
+      // 2. Camera Fly-Through & Shader Transition
+      masterTimeline.to(timelineState, {
+        cameraZ: CONFIG.cameraMid,
+        shaderProgress: 0.5,
+        aberrationSpike: CONFIG.aberrationMax * 2,
+        duration: 2.2,
+        ease: 'power2.inOut',
+        onStart: () => sound.playSwoosh()
+      }, 0.5);
 
-      const elapsed = (performance.now() - startTime) / 1000;
-      const frames = Math.floor(elapsed * 60);
-      const hh = String(Math.floor(frames / 216000)).padStart(2, '0');
-      const mm = String(Math.floor(frames / 3600) % 60).padStart(2, '0');
-      const ss = String(Math.floor(frames / 60) % 60).padStart(2, '0');
-      const ff = String(frames % 60).padStart(2, '0');
-      frameEl.textContent = `${hh}:${mm}:${ss}:${ff}`;
+      masterTimeline.to(timelineState, {
+        cameraZ: CONFIG.cameraEnd,
+        shaderProgress: 1.0,
+        aberrationSpike: CONFIG.aberrationMax,
+        duration: 1.8,
+        ease: 'power3.out',
+        onStart: () => sound.playGlitch()
+      }, 2.7);
 
-      /* Sync Scrubber if timeline playing */
-      if (masterTl && isPlaying) {
-        const time = masterTl.time();
-        scrubber.value = time.toFixed(2);
-        timelineTimeLbl.textContent = `${time.toFixed(2)}s`;
-        liveProgPct.textContent = `${Math.round((time / masterTl.duration()) * 100)}%`;
+      // 3. Staggered Headline Typography Reveal
+      masterTimeline.to('#headline .char', {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.03,
+        ease: 'back.out(1.7)'
+      }, 1.2);
+
+      masterTimeline.to('#subtitle', { opacity: 1, duration: 0.6 }, 2.0);
+      masterTimeline.to('#subtitle .char', {
+        opacity: 1,
+        duration: 0.4,
+        stagger: 0.02,
+        ease: 'power1.out'
+      }, 2.0);
+
+      // 4. Climax Pulse Scale
+      masterTimeline.to('#title-wrap', {
+        scale: 1.05,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power1.inOut'
+      }, 3.5);
+    }
+
+    buildMasterTimeline();
+
+    /* =========================================================
+       MOUSE PARALLAX & INTERACTION
+    ========================================================= */
+    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    /* =========================================================
+       ANIMATION LOOP
+    ========================================================= */
+    const clock = new THREE.Clock();
+    let frameCount = 0;
+    let lastFpsUpdate = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      // Smooth mouse interpolation
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+      // Apply parallax rotation to panels group
+      panelsGroup.rotation.y = mouse.x * 0.15 * CONFIG.parallaxFactor;
+      panelsGroup.rotation.x = -mouse.y * 0.15 * CONFIG.parallaxFactor;
+
+      // Update shader time uniforms
+      panels.forEach(p => {
+        p.material.uniforms.uTime.value = elapsedTime;
+      });
+
+      // Rotate dust particles slowly
+      if (particlesMesh) {
+        particlesMesh.rotation.y = elapsedTime * 0.02;
       }
 
       renderer.render(scene, camera);
+
+      // FPS Counter calculation
+      frameCount++;
+      if (elapsedTime - lastFpsUpdate >= 1.0) {
+        document.getElementById('fps-readout').innerText = frameCount;
+        frameCount = 0;
+        lastFpsUpdate = elapsedTime;
+        
+        // Live frame readout clock
+        const date = new Date();
+        const tc = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:${String(date.getSeconds()).padStart(2,'0')}:${Math.floor(date.getMilliseconds()/10)}`;
+        document.getElementById('frame-readout').innerText = tc;
+      }
     }
+
+    animate();
 
     /* =========================================================
-       GSAP TIMELINE ENGINE
+       UI EVENT LISTENERS & WIRING
     ========================================================= */
-    let masterTl;
+    lucide.createIcons();
 
-    function buildTimeline() {
-      if (masterTl) masterTl.kill();
-      gsap.killTweensOf('*');
-      startTime = performance.now();
+    // Sidebar Tab switching
+    const tabContentBtn = document.getElementById('tab-btn-content');
+    const tabSceneBtn = document.getElementById('tab-btn-scene');
+    const tabHudBtn = document.getElementById('tab-btn-hud');
 
-      /* Reset HUD state */
-      gsap.set('.svg-frame', { opacity: 0 });
-      gsap.set('.svg-frame path', { strokeDashoffset: 2000 });
-      gsap.set('.bracket', { opacity: 0 });
-      gsap.set('.grid-overlay', { opacity: 0 });
-      gsap.set('.tick-rail', { opacity: 0 });
-      gsap.set('.coord', { opacity: 0 });
-      gsap.set('.crosshair', { opacity: 0 });
-      gsap.set(titleChars, { yPercent: 100, opacity: 0 });
-      gsap.set(subtitleChars, { opacity: 0 });
-      gsap.set(subtitleEl, { letterSpacing: '0.05em' });
-      gsap.set('#title-wrap', { scale: 1 });
-      gsap.set('#hud', { opacity: 1 });
+    const tabContentPage = document.getElementById('tab-content-page');
+    const tabScenePage = document.getElementById('tab-scene-page');
+    const tabHudPage = document.getElementById('tab-hud-page');
 
-      /* Reset Panels */
-      panels.forEach((p) => {
-        p.position.set(p.userData.baseX, p.userData.baseY, p.userData.baseZ);
-        p.rotation.set(0, p.rotation.y, p.rotation.z);
-        p.scale.setScalar(p.userData.layerIndex === 0 ? 0.8 : 0.9);
-        p.userData.uniforms.uProgress.value = 0;
-        p.userData.uniforms.uAberration.value = 0.005;
-        p.userData.uniforms.uOpacity.value = 0;
-        p.userData.uniforms.uBorderColor.value.set(CONFIG.borderColor);
-      });
+    function switchTab(active) {
+      tabContentBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
+      tabSceneBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
+      tabHudBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
 
-      /* Reset Camera */
-      Object.assign(camBase, {
-        x: 0, y: 0, z: CONFIG.cameraStart,
-        rotX: 0, rotY: 0, rotZ: 0,
-      });
+      tabContentPage.classList.add('hidden');
+      tabScenePage.classList.add('hidden');
+      tabHudPage.classList.add('hidden');
 
-      masterTl = gsap.timeline({
-        defaults: { ease: 'power3.out' },
-        onStart: () => {
-          sound.playSwoosh();
-        }
-      });
-
-      /* PHASE 1: Vector Frame & Text Reveal (0.0s - 1.2s) */
-      masterTl
-        .to('.svg-frame', { opacity: 1, duration: 0.1 }, 0)
-        .to('.svg-frame path', {
-          strokeDashoffset: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-          stagger: 0.08,
-        }, 0)
-        .to('.bracket', { opacity: 1, duration: 0.6, stagger: 0.06 }, 0.05)
-        .to('.grid-overlay', { opacity: 1, duration: 0.7 }, 0.1)
-        .to('.tick-rail', { opacity: 1, duration: 0.6, stagger: 0.1 }, 0.15)
-        .to('.coord', { opacity: 1, duration: 0.5, stagger: 0.08 }, 0.2)
-        .to('.crosshair', { opacity: 1, duration: 0.4 }, 0.25);
-
-      /* Camera dolly start -> mid */
-      masterTl.to(camBase, {
-        z: CONFIG.cameraMid,
-        duration: 1.0,
-        ease: 'power2.out',
-      }, 0.2);
-
-      /* Fade in mesh panels */
-      panels.forEach((p, idx) => {
-        const isCentral = p.userData.column === 'center';
-        const targetScale = isCentral ? 1.0 : 0.95;
-
-        masterTl.to(p.scale, {
-          x: targetScale,
-          y: targetScale,
-          duration: 0.9,
-          ease: 'power2.out',
-        }, 0.4 + idx * 0.015);
-
-        masterTl.to(p.userData.uniforms.uOpacity, {
-          value: 1,
-          duration: 0.8,
-          ease: 'power2.out',
-        }, 0.4 + idx * 0.025);
-      });
-
-      /* Headline character slide */
-      masterTl.to(titleChars, {
-        yPercent: 0,
-        opacity: 1,
-        duration: 0.7,
-        ease: 'power3.out',
-        stagger: 0.03,
-      }, 0.6);
-
-      /* PHASE 2: Split Parallax & Texture Shader Crossfade (1.2s - 3.2s) */
-      masterTl.to(camBase, {
-        rotX: -0.05,
-        rotY: 0.08,
-        duration: 1.0,
-        ease: 'power2.inOut',
-      }, 1.2);
-
-      panels.forEach((p) => {
-        const col = p.userData.column;
-        const xOffset = col === 'left' ? -2.4 : col === 'right' ? 2.4 : 0;
-        masterTl.to(p.position, {
-          x: p.userData.baseX + xOffset,
-          duration: 1.6,
-          ease: 'power2.inOut',
-        }, 1.4);
-      });
-
-      panels.forEach((p, i) => {
-        masterTl.to(p.userData.uniforms.uProgress, {
-          value: 1,
-          duration: 1.0,
-          ease: 'power2.inOut',
-        }, 1.6 + i * 0.02);
-      });
-
-      masterTl.to(subtitleChars, {
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.015,
-        ease: 'power2.out',
-      }, 2.0);
-
-      masterTl.to(subtitleEl, {
-        letterSpacing: '0.2em',
-        duration: 1.2,
-        ease: 'power2.inOut',
-      }, 2.0);
-
-      /* PHASE 3: Climax Zoom & Outro Lockup (3.2s - 5.0s) */
-      masterTl.to(camBase, {
-        z: CONFIG.cameraEnd,
-        duration: 1.2,
-        ease: 'expo.inOut',
-        onStart: () => sound.playGlitch()
-      }, 3.2);
-
-      /* Aberration FX Spike */
-      panels.forEach((p) => {
-        masterTl.to(p.userData.uniforms.uAberration, {
-          value: CONFIG.aberrationMax,
-          duration: 0.2,
-          ease: 'power4.out',
-        }, 3.5);
-        masterTl.to(p.userData.uniforms.uAberration, {
-          value: 0,
-          duration: 0.8,
-          ease: 'power2.in',
-        }, 3.7);
-      });
-
-      masterTl.to(camBase, {
-        rotX: 0,
-        rotY: 0,
-        duration: 1.2,
-        ease: 'power2.inOut',
-      }, 3.6);
-
-      panels.forEach((p) => {
-        masterTl.to(p.position, {
-          x: p.userData.baseX,
-          duration: 0.9,
-          ease: 'power2.out',
-        }, 4.0);
-      });
-
-      masterTl.to('#title-wrap', {
-        scale: 0.92,
-        duration: 1.0,
-        ease: 'power2.inOut',
-      }, 4.0);
-
-      masterTl.to('#hud', {
-        opacity: 0.45,
-        duration: 0.5,
-        ease: 'power2.out',
-      }, 4.5);
-
-      return masterTl;
+      if (active === 'content') {
+        tabContentBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
+        tabContentPage.classList.remove('hidden');
+      } else if (active === 'scene') {
+        tabSceneBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
+        tabScenePage.classList.remove('hidden');
+      } else if (active === 'hud') {
+        tabHudBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
+        tabHudPage.classList.remove('hidden');
+      }
     }
 
-    /* Resize Listener */
-    function onResize() {
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    }
-    window.addEventListener('resize', onResize);
+    tabContentBtn.addEventListener('click', () => switchTab('content'));
+    tabSceneBtn.addEventListener('click', () => switchTab('scene'));
+    tabHudBtn.addEventListener('click', () => switchTab('hud'));
 
-    /* =========================================================
-       UI CONTROLS & INTERACTION LISTENERS
-    ========================================================= */
+    // Play / Pause Top Bar
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const lblPlayPause = document.getElementById('lbl-play-pause');
+    const iconPlayPause = document.getElementById('icon-play-pause');
 
-    /* Tab Switching */
-    const tabBtns = {
-      content: document.getElementById('tab-btn-content'),
-      scene: document.getElementById('tab-btn-scene'),
-      hud: document.getElementById('tab-btn-hud'),
-    };
-    const tabPages = {
-      content: document.getElementById('tab-content-page'),
-      scene: document.getElementById('tab-scene-page'),
-      hud: document.getElementById('tab-hud-page'),
-    };
-
-    function switchTab(activeKey) {
-      Object.keys(tabBtns).forEach((key) => {
-        if (key === activeKey) {
-          tabBtns[key].classList.add('border-cyan-400', 'text-cyan-400');
-          tabBtns[key].classList.remove('border-transparent', 'text-gray-400');
-          tabPages[key].classList.remove('hidden');
-        } else {
-          tabBtns[key].classList.remove('border-cyan-400', 'text-cyan-400');
-          tabBtns[key].classList.add('border-transparent', 'text-gray-400');
-          tabPages[key].classList.add('hidden');
-        }
-      });
-    }
-
-    tabBtns.content.addEventListener('click', () => switchTab('content'));
-    tabBtns.scene.addEventListener('click', () => switchTab('scene'));
-    tabBtns.hud.addEventListener('click', () => switchTab('hud'));
-
-    /* Apply Headline Text */
-    const line1Input = document.getElementById('input-line-1');
-    const line2Input = document.getElementById('input-line-2');
-    const subtitleInput = document.getElementById('input-subtitle');
-    const applyTextBtn = document.getElementById('btn-apply-text');
-
-    function applyTextAndReplay() {
-      CONFIG.titleLines = [line1Input.value || '', line2Input.value || ''];
-      CONFIG.subtitle = subtitleInput.value || '';
-      updateTitleElements();
-      buildTimeline();
-      masterTl.play(0);
-      isPlaying = true;
-      updatePlayPauseUI();
-    }
-
-    applyTextBtn.addEventListener('click', applyTextAndReplay);
-
-    /* Preset Buttons */
-    document.querySelectorAll('.preset-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        line1Input.value = btn.dataset.l1;
-        line2Input.value = btn.dataset.l2;
-        subtitleInput.value = btn.dataset.sub;
-        applyTextAndReplay();
-      });
-    });
-
-    /* Play/Pause & Replay Buttons */
-    const playPauseBtn = document.getElementById('btn-play-pause');
-    const playPauseIcon = document.getElementById('icon-play-pause');
-    const playPauseLbl = document.getElementById('lbl-play-pause');
-    const replayBtn = document.getElementById('btn-replay');
-
-    function updatePlayPauseUI() {
+    btnPlayPause.addEventListener('click', () => {
+      isPlaying = !isPlaying;
       if (isPlaying) {
-        playPauseLbl.textContent = 'PAUSE';
-        playPauseIcon.setAttribute('data-lucide', 'pause');
+        masterTimeline.play();
+        lblPlayPause.innerText = 'PAUSE';
+        iconPlayPause.setAttribute('data-lucide', 'pause');
       } else {
-        playPauseLbl.textContent = 'PLAY';
-        playPauseIcon.setAttribute('data-lucide', 'play');
+        masterTimeline.pause();
+        lblPlayPause.innerText = 'PLAY';
+        iconPlayPause.setAttribute('data-lucide', 'play');
       }
       lucide.createIcons();
-    }
-
-    playPauseBtn.addEventListener('click', () => {
-      if (!masterTl) return;
-      if (isPlaying) {
-        masterTl.pause();
-        isPlaying = false;
-      } else {
-        masterTl.play();
-        isPlaying = true;
-      }
-      updatePlayPauseUI();
     });
 
-    replayBtn.addEventListener('click', () => {
-      buildTimeline();
-      masterTl.play(0);
+    // Replay Button
+    document.getElementById('btn-replay').addEventListener('click', () => {
+      masterTimeline.restart();
       isPlaying = true;
-      updatePlayPauseUI();
+      lblPlayPause.innerText = 'PAUSE';
+      iconPlayPause.setAttribute('data-lucide', 'pause');
+      lucide.createIcons();
+      sound.playSwoosh();
     });
 
-    /* Timeline Scrubber */
-    scrubber.addEventListener('input', (e) => {
-      if (!masterTl) return;
-      const time = parseFloat(e.target.value);
-      masterTl.pause();
-      masterTl.time(time);
-      isPlaying = false;
-      updatePlayPauseUI();
-      timelineTimeLbl.textContent = `${time.toFixed(2)}s`;
-      liveProgPct.textContent = `${Math.round((time / masterTl.duration()) * 100)}%`;
-    });
+    // Sound Toggle
+    const btnSoundToggle = document.getElementById('btn-sound-toggle');
+    const lblSound = document.getElementById('lbl-sound');
+    const iconSound = document.getElementById('icon-sound');
 
-    /* Audio Synth Toggle */
-    const soundBtn = document.getElementById('btn-sound-toggle');
-    const soundIcon = document.getElementById('icon-sound');
-    const soundLbl = document.getElementById('lbl-sound');
-
-    soundBtn.addEventListener('click', () => {
+    btnSoundToggle.addEventListener('click', () => {
       sound.init();
       sound.enabled = !sound.enabled;
       if (sound.enabled) {
-        soundLbl.textContent = 'SFX ON';
-        soundLbl.classList.replace('text-gray-400', 'text-cyan-400');
-        soundIcon.setAttribute('data-lucide', 'volume-2');
-        soundIcon.classList.replace('text-gray-400', 'text-cyan-400');
+        lblSound.innerText = 'SFX ON';
+        iconSound.setAttribute('data-lucide', 'volume-2');
+        iconSound.className = 'w-3.5 h-3.5 text-cyan-400';
         sound.playSwoosh();
       } else {
-        soundLbl.textContent = 'SFX OFF';
-        soundLbl.classList.replace('text-cyan-400', 'text-gray-400');
-        soundIcon.setAttribute('data-lucide', 'volume-x');
-        soundIcon.classList.replace('text-cyan-400', 'text-gray-400');
+        lblSound.innerText = 'SFX OFF';
+        iconSound.setAttribute('data-lucide', 'volume-x');
+        iconSound.className = 'w-3.5 h-3.5 text-gray-400';
       }
       lucide.createIcons();
     });
 
-    /* Scene Controls Sliders */
-    const sliderCamStart = document.getElementById('slider-cam-start');
-    const sliderCamEnd = document.getElementById('slider-cam-end');
-    const sliderParallax = document.getElementById('slider-parallax');
-    const sliderParticles = document.getElementById('slider-particles');
-    const pickerBorder = document.getElementById('picker-border');
-    const sliderAberration = document.getElementById('slider-aberration');
+    // Timeline Scrubber
+    const scrubber = document.getElementById('timeline-scrubber');
+    scrubber.max = 5.0;
+    scrubber.addEventListener('input', (e) => {
+      const targetTime = parseFloat(e.target.value);
+      masterTimeline.pause();
+      masterTimeline.time(targetTime);
+      isPlaying = false;
+      lblPlayPause.innerText = 'PLAY';
+      iconPlayPause.setAttribute('data-lucide', 'play');
+      lucide.createIcons();
+    });
 
+    // Apply Custom Text
+    document.getElementById('btn-apply-text').addEventListener('click', () => {
+      CONFIG.titleLines[0] = document.getElementById('input-line-1').value || 'MAXING &';
+      CONFIG.titleLines[1] = document.getElementById('input-line-2').value || 'TRANSACTIONS';
+      CONFIG.subtitle = document.getElementById('input-subtitle').value || 'NO PLUGINS REQUIRED';
+      setupTypography();
+      masterTimeline.restart();
+    });
+
+    // Preset Theme Buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget;
+        CONFIG.titleLines[0] = target.getAttribute('data-l1');
+        CONFIG.titleLines[1] = target.getAttribute('data-l2');
+        CONFIG.subtitle = target.getAttribute('data-sub');
+
+        document.getElementById('input-line-1').value = CONFIG.titleLines[0];
+        document.getElementById('input-line-2').value = CONFIG.titleLines[1];
+        document.getElementById('input-subtitle').value = CONFIG.subtitle;
+
+        setupTypography();
+        masterTimeline.restart();
+      });
+    });
+
+    // Sliders & 3D Pipeline Controls
+    const sliderCamStart = document.getElementById('slider-cam-start');
+    const valCamStart = document.getElementById('val-cam-start');
     sliderCamStart.addEventListener('input', (e) => {
       CONFIG.cameraStart = parseFloat(e.target.value);
-      document.getElementById('val-cam-start').textContent = CONFIG.cameraStart;
-      buildTimeline();
+      valCamStart.innerText = CONFIG.cameraStart;
+      timelineState.cameraZ = CONFIG.cameraStart;
+      buildMasterTimeline();
     });
 
+    const sliderCamEnd = document.getElementById('slider-cam-end');
+    const valCamEnd = document.getElementById('val-cam-end');
     sliderCamEnd.addEventListener('input', (e) => {
       CONFIG.cameraEnd = parseFloat(e.target.value);
-      document.getElementById('val-cam-end').textContent = CONFIG.cameraEnd;
-      buildTimeline();
+      valCamEnd.innerText = CONFIG.cameraEnd;
+      buildMasterTimeline();
     });
 
+    const sliderParallax = document.getElementById('slider-parallax');
+    const valParallax = document.getElementById('val-parallax');
     sliderParallax.addEventListener('input', (e) => {
       CONFIG.parallaxFactor = parseFloat(e.target.value);
-      document.getElementById('val-parallax').textContent = `${CONFIG.parallaxFactor.toFixed(1)}x`;
+      valParallax.innerText = CONFIG.parallaxFactor.toFixed(1) + 'x';
     });
 
-    sliderParticles.addEventListener('input', (e) => {
-      CONFIG.particleCount = parseInt(e.target.value);
-      document.getElementById('val-particles').textContent = CONFIG.particleCount;
-      rebuildParticles(CONFIG.particleCount);
-    });
-
+    const pickerBorder = document.getElementById('picker-border');
     pickerBorder.addEventListener('input', (e) => {
       CONFIG.borderColor = e.target.value;
-      panels.forEach(p => p.userData.uniforms.uBorderColor.value.set(CONFIG.borderColor));
+      const col = new THREE.Color(CONFIG.borderColor);
+      panels.forEach(p => {
+        p.material.uniforms.uBorderColor.value = col;
+      });
     });
 
+    const sliderParticles = document.getElementById('slider-particles');
+    const valParticles = document.getElementById('val-particles');
+    sliderParticles.addEventListener('input', (e) => {
+      CONFIG.particleCount = parseInt(e.target.value);
+      valParticles.innerText = CONFIG.particleCount;
+      initParticles();
+    });
+
+    const sliderAberration = document.getElementById('slider-aberration');
+    const valAberration = document.getElementById('val-aberration');
     sliderAberration.addEventListener('input', (e) => {
       CONFIG.aberrationMax = parseFloat(e.target.value);
-      document.getElementById('val-aberration').textContent = CONFIG.aberrationMax.toFixed(3);
+      valAberration.innerText = CONFIG.aberrationMax.toFixed(3);
     });
 
-    /* HUD Toggle Checkboxes */
+    // HUD Toggles
     document.getElementById('chk-hud-frame').addEventListener('change', (e) => {
       document.getElementById('svg-frame-elem').style.display = e.target.checked ? 'block' : 'none';
+      document.querySelectorAll('.hud-bracket-elem').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
     });
 
     document.getElementById('chk-hud-grid').addEventListener('change', (e) => {
@@ -1461,85 +1370,52 @@
     });
 
     document.getElementById('chk-hud-telemetry').addEventListener('change', (e) => {
-      document.querySelectorAll('.hud-telemetry-elem').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
+      document.querySelectorAll('.hud-telemetry-elem, .tick-rail').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
     });
 
     document.getElementById('chk-hud-crosshair').addEventListener('change', (e) => {
       document.getElementById('hud-crosshair-elem').style.display = e.target.checked ? 'block' : 'none';
     });
 
-    /* Code Modal & Inspector */
-    const modal = document.getElementById('code-modal');
-    const codeArea = document.getElementById('code-snippet-area');
-
-    document.getElementById('btn-code-modal').addEventListener('click', () => {
-      codeArea.value = `<!-- Epic 3D Hero Opener Configuration Export -->
-<script type="module">
-import * as THREE from 'three';
-import gsap from 'gsap';
-
-// Configured values from dashboard:
-const CONFIG = ${JSON.stringify(CONFIG, null, 2)};
-
-// Init WebGL Scene, Camera & GSAP Timeline...
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
-camera.position.z = ${CONFIG.cameraStart};
-
-// Shader Material Setup
-const fragmentShader = \`${fragmentShader}\`;
-const vertexShader = \`${vertexShader}\`;
-
-// Render Loop
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
-<\/script>`;
-      modal.classList.remove('hidden');
+    // Fullscreen Toggle
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
     });
 
-    const closeModal = () => modal.classList.add('hidden');
+    // Code Modal
+    const codeModal = document.getElementById('code-modal');
+    document.getElementById('btn-code-modal').addEventListener('click', () => {
+      document.getElementById('code-snippet-area').value = document.documentElement.outerHTML;
+      codeModal.classList.remove('hidden');
+    });
+
+    const closeModal = () => codeModal.classList.add('hidden');
     document.getElementById('btn-close-modal').addEventListener('click', closeModal);
     document.getElementById('btn-close-modal-2').addEventListener('click', closeModal);
 
     document.getElementById('btn-copy-code').addEventListener('click', () => {
-      codeArea.select();
-      document.execCommand('copy');
-      alert('Code template copied to clipboard!');
-    });
-
-    /* Fullscreen Toggle */
-    document.getElementById('btn-fullscreen').addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        document.exitFullscreen().catch(() => {});
-      }
-    });
-
-    /* Boot sequence */
-    function boot() {
+      const area = document.getElementById('code-snippet-area');
+      area.select();
+      navigator.clipboard.writeText(area.value);
+      const btn = document.getElementById('btn-copy-code');
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> COPIED TO CLIPBOARD';
       lucide.createIcons();
-      tick();
-      buildTimeline();
-
-      const loader = document.getElementById('loader');
       setTimeout(() => {
-        loader.classList.add('opacity-0');
-        setTimeout(() => loader.remove(), 500);
-      }, 300);
+        btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY HTML & JS';
+        lucide.createIcons();
+      }, 2000);
+    });
 
-      setTimeout(() => masterTl.play(0), 500);
-    }
-
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(boot);
-    } else {
-      window.addEventListener('load', boot);
-    }
+    // Window Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
   </script>
 </body>
 </html>
-```
