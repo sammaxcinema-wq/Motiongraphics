@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Epic 3D Hero Opener — WebGL + GSAP Studio</title>
+  <title>MOTION MATRIX PRO v4.0 — Ultra Motion Graphics Library & 3D Studio</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,800&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,400&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,13 +23,16 @@
               blue: '#3b82f6',
               purple: '#8b5cf6',
               dark: '#050507',
-              panel: '#0d0e15',
+              surface: '#0d0e15',
+              card: '#131520',
               border: 'rgba(255, 255, 255, 0.1)'
             }
           },
           fontFamily: {
             sans: ['Montserrat', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
+            mono: ['JetBrains Mono', 'monospace'],
+            serif: ['Playfair Display', 'serif'],
+            display: ['Oswald', 'sans-serif']
           }
         }
       }
@@ -60,7 +63,7 @@
     /* Custom scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #08090e; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
 
     /* WebGL Canvas Stage Container */
@@ -81,7 +84,6 @@
       z-index: 1;
     }
 
-    /* SVG frame lines */
     .svg-frame {
       position: absolute;
       inset: 0;
@@ -99,7 +101,6 @@
       stroke-dashoffset: 2000;
     }
 
-    /* HUD elements */
     .hud {
       position: absolute;
       inset: 0;
@@ -183,7 +184,6 @@
     .tick-rail.bottom { bottom: 6px; }
     .tick-rail .tick { width: 1px; height: 5px; background: var(--hud); opacity: 0.5; }
 
-    /* Hero Typography */
     .title-wrap {
       position: absolute;
       top: 50%;
@@ -226,65 +226,205 @@
       transition: letter-spacing 0.3s ease;
     }
     .subtitle .char { display: inline-block; opacity: 0; }
+
+    /* Glassmorphic card & glow effects */
+    .glass-card {
+      background: rgba(19, 21, 32, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card:hover {
+      border-color: rgba(34, 211, 238, 0.3);
+      box-shadow: 0 10px 30px -10px rgba(34, 211, 238, 0.2);
+    }
+
+    .pulse-glow {
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.35);
+    }
   </style>
 </head>
 
-<body class="bg-black text-gray-100 flex flex-col h-screen overflow-hidden font-sans antialiased select-none">
+<body class="bg-brand-dark text-gray-100 flex flex-col h-screen overflow-hidden font-sans antialiased select-none">
 
-  <!-- TOP APP HEADER BAR -->
-  <header class="h-14 border-b border-white/10 bg-brand-panel/90 backdrop-blur px-4 flex items-center justify-between z-30 shrink-0">
-    <div class="flex items-center space-x-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-        <i data-lucide="box" class="w-4 h-4 text-black font-bold"></i>
+  <!-- TOP MAIN APPLICATION NAVBAR -->
+  <header class="h-16 border-b border-white/10 bg-brand-surface/95 backdrop-blur-md px-4 lg:px-6 flex items-center justify-between z-40 shrink-0">
+    <!-- Brand Title -->
+    <div class="flex items-center space-x-3 cursor-pointer" id="brand-logo-btn">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 via-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <i data-lucide="layers" class="w-5 h-5 text-black font-extrabold"></i>
       </div>
       <div>
-        <h1 class="font-bold text-sm tracking-wide flex items-center gap-2">
-          EPIC 3D HERO OPENER
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">v2.4 PRO</span>
+        <h1 class="font-extrabold text-base tracking-wider flex items-center gap-2">
+          MOTION MATRIX <span class="text-cyan-400">PRO</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono font-normal">v4.0 STUDIO</span>
         </h1>
-        <p class="text-[10px] text-gray-400 font-mono">WebGL Shader Pipeline & GSAP Motion Controller</p>
+        <p class="text-[10px] text-gray-400 font-mono hidden sm:block">Motion Graphics Template Library & Realtime Canvas Studio</p>
       </div>
     </div>
 
-    <!-- Center Control Quick Bar -->
-    <div class="flex items-center space-x-2 bg-black/40 border border-white/10 p-1 rounded-lg">
-      <button id="btn-play-pause" class="px-3 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-cyan-500/20">
-        <i data-lucide="pause" class="w-3.5 h-3.5" id="icon-play-pause"></i>
-        <span id="lbl-play-pause">PAUSE</span>
+    <!-- Main View Navigation Tabs -->
+    <nav class="hidden md:flex items-center space-x-1 bg-black/40 border border-white/10 p-1 rounded-xl">
+      <button id="nav-btn-explore" class="px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all bg-cyan-500 text-black shadow-md shadow-cyan-500/20">
+        <i data-lucide="grid" class="w-4 h-4"></i> Explore Templates
       </button>
 
-      <button id="btn-replay" class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10">
-        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-cyan-400"></i>
-        REPLAY SCENE
+      <button id="nav-btn-3d" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2 transition-all">
+        <i data-lucide="box" class="w-4 h-4 text-cyan-400"></i> Live 3D Studio
       </button>
 
-      <div class="h-4 w-px bg-white/10 mx-1"></div>
-
-      <button id="btn-sound-toggle" class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-xs flex items-center gap-1.5 text-gray-300 transition-colors border border-white/10" title="Toggle Synthesizer SFX">
-        <i data-lucide="volume-x" class="w-3.5 h-3.5 text-gray-400" id="icon-sound"></i>
-        <span class="font-mono text-[10px] text-gray-400" id="lbl-sound">SFX OFF</span>
+      <button id="nav-btn-editor" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2 transition-all">
+        <i data-lucide="sliders" class="w-4 h-4 text-purple-400"></i> Customizer Studio
       </button>
-    </div>
 
-    <!-- Right Controls / Actions -->
+      <button id="nav-btn-projects" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2 transition-all">
+        <i data-lucide="folder-heart" class="w-4 h-4 text-blue-400"></i> My Projects
+      </button>
+    </nav>
+
+    <!-- Global Search & Actions -->
     <div class="flex items-center space-x-3">
-      <button id="btn-code-modal" class="px-3 py-1.5 rounded border border-cyan-500/30 hover:border-cyan-500 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-xs font-mono font-medium flex items-center gap-1.5 transition-all">
-        <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
-        EXPORT / CODE
+      <!-- Search Input -->
+      <div class="relative hidden sm:block w-48 lg:w-64">
+        <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="text" id="global-search-input" placeholder="Search templates..." class="w-full bg-black/60 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-400 transition-colors" />
+      </div>
+
+      <!-- Favorites Badge Counter -->
+      <button id="btn-show-favorites" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-cyan-400 transition-colors relative" title="Saved Favorites">
+        <i data-lucide="heart" class="w-4 h-4"></i>
+        <span id="fav-counter-badge" class="absolute -top-1 -right-1 bg-cyan-400 text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
       </button>
 
-      <button id="btn-fullscreen" class="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" title="Toggle Fullscreen">
+      <!-- Quick Sound SFX Engine Toggle -->
+      <button id="btn-sound-toggle-main" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-cyan-400 transition-colors" title="Toggle Synthesizer SFX">
+        <i data-lucide="volume-x" id="icon-sound-main" class="w-4 h-4 text-gray-400"></i>
+      </button>
+
+      <!-- Fullscreen Toggle -->
+      <button id="btn-fullscreen-main" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-colors" title="Toggle Fullscreen">
         <i data-lucide="maximize-2" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Primary Action CTA -->
+      <button id="btn-nav-create-new" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-black font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-cyan-500/20">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        <span>CREATE NEW</span>
       </button>
     </div>
   </header>
 
-  <!-- MAIN WORKSPACE LAYOUT -->
-  <div class="flex-1 flex overflow-hidden relative">
+  <!-- APP VIEW 1: TEMPLATE MARKETPLACE LIBRARY & HERO -->
+  <div id="view-library" class="flex-1 flex flex-col overflow-y-auto">
+    
+    <!-- Hero Banner Section -->
+    <section class="relative py-12 px-6 lg:px-12 bg-gradient-to-b from-brand-surface via-brand-dark to-brand-dark border-b border-white/10 overflow-hidden">
+      <!-- Ambient Shader Glow Particles -->
+      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div class="absolute top-10 right-10 w-[400px] h-[300px] bg-purple-500/10 rounded-full blur-[140px] pointer-events-none"></div>
 
+      <div class="max-w-6xl mx-auto text-center space-y-4 relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-mono mb-2">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 2026 NEXT-GEN MOTION GRAPHICS MARKETPLACE
+        </div>
+
+        <h2 class="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight uppercase text-white leading-tight">
+          CREATE PROFESSIONAL <span class="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">MOTION GRAPHICS</span> IN MINUTES
+        </h2>
+
+        <p class="text-gray-400 text-sm md:text-base max-w-2xl mx-auto font-sans leading-relaxed">
+          Choose from Hollywood-grade motion graphics templates. Customize text, typography, colors, media, and keyframe dynamics directly inside your browser.
+        </p>
+
+        <!-- Quick Hero Actions -->
+        <div class="flex items-center justify-center gap-4 pt-4">
+          <button id="hero-btn-browse" class="px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-cyan-500/25 flex items-center gap-2">
+            <i data-lucide="grid" class="w-4 h-4"></i> Browse All Templates
+          </button>
+          
+          <button id="hero-btn-open-3d" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 backdrop-blur">
+            <i data-lucide="box" class="w-4 h-4 text-cyan-400"></i> Launch 3D Opener Studio
+          </button>
+        </div>
+
+        <!-- Category Quick Filter Pills -->
+        <div class="pt-8 flex flex-wrap items-center justify-center gap-2 text-xs" id="quick-category-pills">
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-cyan-500 text-black font-bold border border-cyan-400 transition-all" data-cat="all">All Templates</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Titles">Titles</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Logo Reveals">Logo Reveals</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Lower Thirds">Lower Thirds</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Social Media">Social Media</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Music Visualizer">Music Visualizers</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="HUD / Tech">HUD / Tech</button>
+          <button class="cat-pill px-3.5 py-1.5 rounded-full bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 transition-all" data-cat="Wedding">Wedding</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Marketplace Section (Sidebar Filter + Cards Grid) -->
+    <section class="max-w-7xl mx-auto w-full p-6 lg:p-8 flex-1 flex flex-col md:flex-row gap-8">
+      <!-- Left Filter Controls Panel -->
+      <aside class="w-full md:w-64 shrink-0 space-y-6">
+        <div class="glass-card p-5 rounded-2xl space-y-5">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Filter Templates
+            </h3>
+            <button id="btn-reset-filters" class="text-[10px] text-gray-400 hover:text-white font-mono">RESET</button>
+          </div>
+
+          <!-- Aspect Ratio Filter -->
+          <div class="space-y-2">
+            <label class="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">Aspect Ratio</label>
+            <select id="filter-aspect" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors">
+              <option value="all">All Aspect Ratios</option>
+              <option value="16:9">16:9 – Widescreen YouTube</option>
+              <option value="9:16">9:16 – TikTok / Reels / Shorts</option>
+              <option value="1:1">1:1 – Instagram Square</option>
+              <option value="4:5">4:5 – Portrait Post</option>
+              <option value="21:9">21:9 – Cinematic Scope</option>
+            </select>
+          </div>
+
+          <!-- Pricing Filter -->
+          <div class="space-y-2">
+            <label class="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">License Access</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="btn-license-filter px-3 py-1.5 rounded-lg border border-cyan-400 text-cyan-400 text-xs font-semibold" data-type="all">All</button>
+              <button class="btn-license-filter px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-semibold hover:border-white/20" data-type="free">Free</button>
+            </div>
+          </div>
+
+          <!-- Sort By Filter -->
+          <div class="space-y-2">
+            <label class="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">Sort Templates</label>
+            <select id="filter-sort" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors">
+              <option value="popular">Most Popular</option>
+              <option value="newest">Newest Additions</option>
+              <option value="title">Title A-Z</option>
+            </select>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Template Cards Grid -->
+      <main class="flex-1 space-y-4">
+        <div class="flex items-center justify-between text-xs font-mono text-gray-400 border-b border-white/10 pb-3">
+          <span>SHOWING <strong id="template-count-readout" class="text-cyan-400 font-bold">10</strong> MOTION TEMPLATES</span>
+          <span class="hidden sm:inline">REAL-TIME HTML5 CANVAS ANIMATIONS</span>
+        </div>
+
+        <div id="templates-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Template Cards Render Dynamically Here -->
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <!-- APP VIEW 2: LIVE 3D HERO OPENER STUDIO (EXISTING ENGINE PRESERVED) -->
+  <div id="view-3d-studio" class="flex-1 flex overflow-hidden relative hidden">
     <!-- LEFT SIDE PANEL (CUSTOMIZER & CONTROLS) -->
-    <aside id="sidebar" class="w-80 md:w-96 border-r border-white/10 bg-brand-panel flex flex-col shrink-0 z-20 transition-all duration-300">
-      
+    <aside id="sidebar-3d" class="w-80 md:w-96 border-r border-white/10 bg-brand-surface flex flex-col shrink-0 z-20 transition-all duration-300">
       <!-- Panel Header Tabs -->
       <div class="flex border-b border-white/10 text-xs font-medium bg-black/30">
         <button id="tab-btn-content" class="flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold">
@@ -294,7 +434,7 @@
           <i data-lucide="sliders" class="w-3.5 h-3.5"></i> 3D PIPELINE
         </button>
         <button id="tab-btn-hud" class="flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold">
-          <i data-lucide="layers" class="w-3.5 h-3.5"></i> HUD / FX
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> AE PRESETS
         </button>
       </div>
 
@@ -412,67 +552,59 @@
           </div>
         </div>
 
-        <!-- TAB 3: HUD & FX -->
+        <!-- TAB 3: AE TRANSITION PRESETS & BACKGROUND SHADERS -->
         <div id="tab-hud-page" class="space-y-5 hidden">
           <div class="space-y-1">
             <h3 class="text-xs font-bold text-gray-300 tracking-wider uppercase flex items-center gap-1.5">
-              <i data-lucide="eye" class="w-3.5 h-3.5 text-cyan-400"></i> HUD Overlay & Chromatic FX
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i> Motion Array & AE FX Presets
             </h3>
-            <p class="text-[11px] text-gray-400">Toggle HUD visual layers and shader post-effects.</p>
+            <p class="text-[11px] text-gray-400">Switch transition styles inspired by Motion Array & After Effects templates.</p>
           </div>
 
           <div class="space-y-3">
-            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
-              <span class="text-xs text-gray-200 font-medium">SVG Frame Vector Overlay</span>
-              <input type="checkbox" id="chk-hud-frame" checked class="accent-cyan-400 w-4 h-4 rounded" />
-            </label>
-
-            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
-              <span class="text-xs text-gray-200 font-medium">Rule of Thirds Grid</span>
-              <input type="checkbox" id="chk-hud-grid" checked class="accent-cyan-400 w-4 h-4 rounded" />
-            </label>
-
-            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
-              <span class="text-xs text-gray-200 font-medium">Telemetry Coordinates</span>
-              <input type="checkbox" id="chk-hud-telemetry" checked class="accent-cyan-400 w-4 h-4 rounded" />
-            </label>
-
-            <label class="flex items-center justify-between p-2.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors">
-              <span class="text-xs text-gray-200 font-medium">Pulsing Center Crosshair</span>
-              <input type="checkbox" id="chk-hud-crosshair" checked class="accent-cyan-400 w-4 h-4 rounded" />
-            </label>
+            <label class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block">Select Transition Preset</label>
+            <select id="select-transition-style" class="w-full bg-black/60 border border-white/15 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors">
+              <option value="0">01. Liquid Fluid Wipe & Light Flayers (Default)</option>
+              <option value="1">02. Cyber Warp Tunnel & Optical Flare</option>
+              <option value="2">03. Prism Kaleidoscope & Lens Burn</option>
+              <option value="3">04. Film Burn Light Leak & Soft Dissolve</option>
+            </select>
           </div>
 
           <div class="pt-3 border-t border-white/10 space-y-3">
-            <h4 class="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Shader Aberration Pulse</h4>
+            <h4 class="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Background Motion Dynamics</h4>
             <div>
               <div class="flex justify-between text-xs mb-1">
-                <span class="font-mono text-gray-300">Aberration Spike Strength</span>
-                <span id="val-aberration" class="font-mono text-cyan-400">0.020</span>
+                <span class="font-mono text-gray-300">Organic Mesh Wave Speed</span>
+                <span id="val-bg-speed" class="font-mono text-cyan-400">1.0x</span>
               </div>
-              <input type="range" id="slider-aberration" min="0" max="0.08" value="0.02" step="0.005" class="w-full accent-cyan-400 cursor-pointer" />
+              <input type="range" id="slider-bg-speed" min="0.1" max="3.0" value="1.0" step="0.1" class="w-full accent-cyan-400 cursor-pointer" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-mono text-gray-300">Transition Flare Intensity</span>
+                <span id="val-flare" class="font-mono text-cyan-400">0.80</span>
+              </div>
+              <input type="range" id="slider-flare" min="0" max="2.0" value="0.8" step="0.1" class="w-full accent-cyan-400 cursor-pointer" />
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- Sidebar Footer Status -->
       <div class="p-3 border-t border-white/10 bg-black/40 text-[10px] font-mono text-gray-400 flex items-center justify-between shrink-0">
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          RENDERER ACTIVE
+          3D ENGINE ACTIVE
         </span>
         <span id="sidebar-panel-count">22 MESH PANELS</span>
       </div>
     </aside>
 
-    <!-- RIGHT MAIN PREVIEW VIEWPORT STAGE -->
+    <!-- RIGHT MAIN 3D CANVAS PREVIEW -->
     <main class="flex-1 relative flex flex-col overflow-hidden bg-black">
-      
-      <!-- Live WebGL Canvas Scene Container -->
       <div id="hero-viewport">
-
         <div id="loader" class="absolute inset-0 bg-[#050507] z-50 flex flex-col items-center justify-center gap-4 transition-opacity duration-500">
           <div class="w-10 h-10 border-2 border-white/10 border-t-cyan-400 rounded-full animate-spin"></div>
           <div class="font-mono text-xs tracking-widest text-gray-400 uppercase">Initializing Motion Engine</div>
@@ -480,9 +612,7 @@
 
         <canvas id="webgl"></canvas>
 
-        <!-- HUD Layer -->
         <div class="hud" id="hud">
-          <!-- SVG frame -->
           <svg class="svg-frame" id="svg-frame-elem" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path d="M 0 15 L 100 15" />
             <path d="M 0 85 L 100 85" />
@@ -490,13 +620,11 @@
             <path d="M 85 0 L 85 100" />
           </svg>
 
-          <!-- Brackets -->
           <div class="bracket tl hud-bracket-elem"></div>
           <div class="bracket tr hud-bracket-elem"></div>
           <div class="bracket bl hud-bracket-elem"></div>
           <div class="bracket br hud-bracket-elem"></div>
 
-          <!-- Rule of thirds -->
           <div class="grid-overlay" id="hud-grid-elem">
             <div class="g-line h h1"></div>
             <div class="g-line h h2"></div>
@@ -504,14 +632,11 @@
             <div class="g-line v v2"></div>
           </div>
 
-          <!-- Crosshair -->
           <div class="crosshair pulse" id="hud-crosshair-elem"></div>
 
-          <!-- Tick rails -->
           <div class="tick-rail top" id="ticks-top"></div>
           <div class="tick-rail bottom" id="ticks-bottom"></div>
 
-          <!-- Telemetry coordinates -->
           <div class="coord tl hud-telemetry-elem">
             <div><span class="label">LAT</span>36°49'11" N</div>
             <div><span class="label">LON</span>36°55'42" E</div>
@@ -529,7 +654,6 @@
             <div><span class="label">ROLL</span><span id="roll-readout">0.00°</span></div>
           </div>
 
-          <!-- Headline Typography Layer -->
           <div class="title-wrap" id="title-wrap">
             <h1 class="headline" id="headline">
               <span class="line" id="line-1"></span>
@@ -541,881 +665,908 @@
       </div>
 
       <!-- BOTTOM SCRUBBER & TIMELINE TOOLBAR -->
-      <div class="h-14 border-t border-white/10 bg-brand-panel/95 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+      <div class="h-14 border-t border-white/10 bg-brand-surface/95 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
         <div class="flex items-center space-x-3 w-full max-w-xl">
+          <button id="btn-play-pause" class="px-3 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center gap-1 transition-colors">
+            <i data-lucide="pause" class="w-3.5 h-3.5" id="icon-play-pause"></i>
+            <span id="lbl-play-pause">PAUSE</span>
+          </button>
+          <button id="btn-replay" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold">
+            <i data-lucide="rotate-ccw" class="w-3 h-3 text-cyan-400"></i>
+          </button>
           <span class="font-mono text-[11px] text-cyan-400 w-12" id="timeline-time">0.00s</span>
-          
-          <!-- Timeline Progress Slider -->
           <div class="flex-1 relative flex items-center">
             <input type="range" id="timeline-scrubber" min="0" max="5" value="0" step="0.01" class="w-full accent-cyan-400 cursor-pointer h-1 bg-white/20 rounded-lg appearance-none" />
           </div>
-
           <span class="font-mono text-[11px] text-gray-400">5.00s</span>
         </div>
-
-        <!-- Telemetry indicators right -->
-        <div class="hidden md:flex items-center space-x-6 text-[11px] font-mono text-gray-400">
-          <div class="flex items-center gap-1.5">
-            <span class="text-cyan-400">CAM Z:</span>
-            <span id="hud-cam-z-live">1000.0</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-cyan-400">PROGRESS:</span>
-            <span id="hud-progress-pct">0%</span>
-          </div>
-        </div>
       </div>
-
     </main>
   </div>
 
-  <!-- CODE EXPORT MODAL -->
-  <div id="code-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-brand-panel border border-white/15 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
-      
-      <!-- Modal Header -->
-      <div class="px-5 py-3.5 border-b border-white/10 flex items-center justify-between bg-black/40">
-        <div class="flex items-center space-x-2">
-          <i data-lucide="code" class="w-4 h-4 text-cyan-400"></i>
-          <h2 class="font-bold text-sm text-gray-100">Hero Opener Source Code & Configuration</h2>
-        </div>
-        <button id="btn-close-modal" class="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+  <!-- APP VIEW 3: ADVANCED TEMPLATE CUSTOMIZER STUDIO -->
+  <div id="view-editor" class="flex-1 flex overflow-hidden hidden">
+    <!-- Left Customization Sidebar -->
+    <aside class="w-80 md:w-96 border-r border-white/10 bg-brand-surface flex flex-col shrink-0 z-20 overflow-y-auto p-4 space-y-6">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="font-extrabold text-xs uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-4 h-4"></i> Template Inspector
+        </h3>
+        <span id="editor-active-title" class="font-mono text-[10px] text-gray-400 truncate max-w-[140px]">Cinematic Reveal</span>
       </div>
 
-      <!-- Modal Body (Code View) -->
-      <div class="flex-1 p-4 overflow-hidden flex flex-col bg-black/60">
-        <div class="flex items-center justify-between mb-2 text-xs font-mono text-gray-400">
-          <span>Three.js + GSAP 3D Shader Setup</span>
-          <button id="btn-copy-code" class="px-3 py-1 rounded bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors flex items-center gap-1.5">
-            <i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY HTML & JS
+      <!-- TEXT FIELD CONTROLS -->
+      <div class="space-y-3">
+        <h4 class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">1. Typography Text Content</h4>
+        <div>
+          <label class="text-[10px] text-gray-400 block mb-1">Headline Text</label>
+          <input type="text" id="edit-headline" value="CINEMATIC GOLD" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-400 block mb-1">Subtitle Tagline</label>
+          <input type="text" id="edit-subtitle" value="ULTRA HD MOTION TEMPLATE" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400" />
+        </div>
+      </div>
+
+      <!-- TYPOGRAPHY STYLE CONTROLS -->
+      <div class="space-y-3 pt-3 border-t border-white/10">
+        <h4 class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">2. Typography Styling</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] text-gray-400 block mb-1">Font Family</label>
+            <select id="edit-font-family" class="w-full bg-black/60 border border-white/15 rounded-lg px-2 py-1.5 text-xs font-mono text-white">
+              <option value="Montserrat">Montserrat</option>
+              <option value="JetBrains Mono">JetBrains Mono</option>
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Oswald">Oswald Display</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-gray-400 block mb-1">Font Size (px)</label>
+            <input type="number" id="edit-font-size" value="48" min="20" max="100" class="w-full bg-black/60 border border-white/15 rounded-lg px-2 py-1.5 text-xs font-mono text-white" />
+          </div>
+        </div>
+      </div>
+
+      <!-- BRAND COLOR CONTROLS -->
+      <div class="space-y-3 pt-3 border-t border-white/10">
+        <h4 class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">3. Color Palette & Lighting</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex items-center gap-2">
+            <input type="color" id="edit-color-primary" value="#22d3ee" class="w-8 h-8 rounded bg-transparent cursor-pointer border border-white/20" />
+            <span class="text-xs text-gray-300">Accent Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="color" id="edit-color-text" value="#ffffff" class="w-8 h-8 rounded bg-transparent cursor-pointer border border-white/20" />
+            <span class="text-xs text-gray-300">Text Color</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDIA REPLACEMENT -->
+      <div class="space-y-3 pt-3 border-t border-white/10">
+        <h4 class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">4. Logo / Media Overlay</h4>
+        <div class="border-2 border-dashed border-white/15 rounded-xl p-3 text-center space-y-2">
+          <i data-lucide="upload-cloud" class="w-6 h-6 text-cyan-400 mx-auto"></i>
+          <p class="text-[11px] text-gray-400">Upload custom PNG Logo or Image</p>
+          <input type="file" id="edit-logo-file" accept="image/*" class="hidden" />
+          <button id="btn-trigger-upload" class="px-3 py-1 bg-white/10 hover:bg-white/20 text-xs rounded font-mono">Select File</button>
+        </div>
+      </div>
+
+      <!-- MOTION DYNAMICS -->
+      <div class="space-y-3 pt-3 border-t border-white/10">
+        <h4 class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">5. Keyframe & Speed Dynamics</h4>
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-gray-300">Animation Speed</span>
+            <span id="val-edit-speed" class="font-mono text-cyan-400">1.0x</span>
+          </div>
+          <input type="range" id="edit-anim-speed" min="0.2" max="2.5" value="1.0" step="0.1" class="w-full accent-cyan-400 cursor-pointer" />
+        </div>
+      </div>
+
+      <!-- Save Project CTA -->
+      <button id="btn-save-project" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2">
+        <i data-lucide="save" class="w-4 h-4"></i> Save to My Projects
+      </button>
+    </aside>
+
+    <!-- Center Live Canvas Viewport & Bottom Timeline -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-black relative">
+      <!-- Top Viewport Control Bar -->
+      <div class="h-12 border-b border-white/10 bg-brand-surface px-4 flex items-center justify-between z-10 shrink-0">
+        <div class="flex items-center space-x-3 text-xs font-mono text-gray-400">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> CANV_ENGINE 60FPS</span>
+          <span>ASPECT: <strong id="canvas-aspect-readout" class="text-cyan-400">16:9</strong></span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="btn-editor-play" class="px-3 py-1 rounded bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xs flex items-center gap-1">
+            <i data-lucide="play" class="w-3.5 h-3.5" id="icon-editor-play"></i> PLAY
+          </button>
+          <button id="btn-editor-export" class="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> EXPORT VIDEO
           </button>
         </div>
-        
-        <textarea id="code-snippet-area" readonly class="w-full flex-1 bg-black/80 border border-white/10 rounded p-3 font-mono text-xs text-cyan-300 focus:outline-none resize-none leading-relaxed overflow-y-auto"></textarea>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="px-5 py-3 border-t border-white/10 bg-black/40 flex justify-end">
-        <button id="btn-close-modal-2" class="px-4 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold text-gray-200 transition-colors">
-          Close Inspector
+      <!-- Canvas Stage Center -->
+      <div class="flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-dot-grid">
+        <canvas id="studio-canvas" class="border border-white/20 rounded-xl shadow-2xl bg-black max-w-full max-h-full object-contain"></canvas>
+      </div>
+
+      <!-- Interactive Multi-Track Timeline System -->
+      <div class="h-44 border-t border-white/10 bg-brand-surface p-3 flex flex-col shrink-0 z-10">
+        <div class="flex items-center justify-between text-xs font-mono text-gray-400 mb-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="film" class="w-4 h-4 text-cyan-400"></i>
+            <span>MULTI-TRACK TIMELINE</span>
+          </div>
+          <span id="timeline-readout-studio" class="text-cyan-400">00:00.00</span>
+        </div>
+
+        <div class="flex-1 flex flex-col justify-between space-y-1 relative bg-black/40 p-2 rounded-lg border border-white/5">
+          <!-- Playhead Slider Track -->
+          <input type="range" id="timeline-studio-scrubber" min="0" max="10" value="0" step="0.02" class="w-full accent-cyan-400 cursor-pointer h-1.5 bg-white/20 rounded" />
+
+          <!-- Tracks -->
+          <div class="h-6 bg-cyan-500/15 border border-cyan-500/30 rounded px-2 flex items-center justify-between text-[10px] font-mono text-cyan-300">
+            <span class="flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Text & Typography Track</span>
+            <span>KEYFRAMES: 0.0s - 3.5s</span>
+          </div>
+
+          <div class="h-6 bg-purple-500/15 border border-purple-500/30 rounded px-2 flex items-center justify-between text-[10px] font-mono text-purple-300">
+            <span class="flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> Logo & Media Track</span>
+            <span>KEYFRAMES: 0.5s - 4.0s</span>
+          </div>
+
+          <div class="h-6 bg-blue-500/15 border border-blue-500/30 rounded px-2 flex items-center justify-between text-[10px] font-mono text-blue-300">
+            <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Shader Particle Track</span>
+            <span>LOOPING BACKGROUND</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- APP VIEW 4: MY PROJECTS VIEW -->
+  <div id="view-projects" class="flex-1 p-8 overflow-y-auto hidden">
+    <div class="max-w-6xl mx-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div>
+          <h2 class="text-2xl font-extrabold uppercase tracking-wider text-white">MY SAVED PROJECTS</h2>
+          <p class="text-xs text-gray-400 font-mono">Manage your custom templates saved to local browser storage.</p>
+        </div>
+        <button id="btn-projects-clear-all" class="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono">
+          Clear All Projects
         </button>
+      </div>
+
+      <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Projects Render Dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- MAIN SCENE LOGIC & DASHBOARD SCRIPT -->
+  <!-- FULLSCREEN TEMPLATE PREVIEW MODAL -->
+  <div id="modal-preview" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-surface border border-white/15 rounded-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 border-b border-white/10 flex items-center justify-between bg-black/40">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="play-circle" class="w-5 h-5 text-cyan-400"></i>
+          <h3 id="modal-prev-title" class="font-extrabold text-sm text-gray-100">Template Preview</h3>
+        </div>
+        <button id="btn-close-prev-modal" class="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-black">
+        <!-- Modal Canvas Stage -->
+        <div class="flex-1 flex items-center justify-center p-4 relative">
+          <canvas id="modal-prev-canvas" class="max-w-full max-h-full border border-white/10 rounded-lg shadow-xl bg-black"></canvas>
+        </div>
+
+        <!-- Modal Metadata Info -->
+        <div class="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-white/10 p-5 space-y-4 bg-brand-surface">
+          <div class="space-y-1">
+            <span id="modal-prev-cat" class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">TITLES</span>
+            <h4 id="modal-prev-heading" class="font-bold text-lg text-white">Cinematic Gold Title Reveal</h4>
+          </div>
+
+          <div class="space-y-2 border-t border-b border-white/10 py-3 text-xs font-mono text-gray-300">
+            <div class="flex justify-between"><span>DURATION:</span><span id="modal-prev-dur" class="text-cyan-400">00:10</span></div>
+            <div class="flex justify-between"><span>RESOLUTION:</span><span class="text-cyan-400">1920 × 1080</span></div>
+            <div class="flex justify-between"><span>FRAME RATE:</span><span class="text-cyan-400">60 FPS</span></div>
+            <div class="flex justify-between"><span>QUALITY:</span><span class="text-cyan-400">4K Ready</span></div>
+          </div>
+
+          <button id="btn-modal-customize" class="w-full py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4"></i> Customize This Template
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT RENDER ENGINE MODAL -->
+  <div id="modal-export" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brand-surface border border-white/15 rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="font-extrabold text-sm text-gray-100 flex items-center gap-2">
+          <i data-lucide="download" class="w-4 h-4 text-purple-400"></i> Motion Video Rendering Hub
+        </h3>
+        <button id="btn-close-export-modal" class="p-1 rounded hover:bg-white/10 text-gray-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-[10px] font-mono text-gray-400 uppercase block mb-1">Export Resolution</label>
+          <select id="export-res" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white">
+            <option value="1080p">1080p Full HD (1920 x 1080)</option>
+            <option value="4K">4K Ultra HD (3840 x 2160)</option>
+            <option value="720p">720p HD Ready</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-mono text-gray-400 uppercase block mb-1">Format & Encoder</label>
+          <select id="export-format" class="w-full bg-black/60 border border-white/15 rounded-lg px-3 py-2 text-xs font-mono text-white">
+            <option value="mp4">MP4 Video (H.264 / AAC)</option>
+            <option value="webm">WebM Web Video</option>
+          </select>
+        </div>
+
+        <!-- Render Progress Status -->
+        <div id="render-progress-box" class="space-y-2 hidden">
+          <div class="flex justify-between text-xs font-mono">
+            <span id="render-status-label" class="text-cyan-400">Rendering Animation Frames...</span>
+            <span id="render-pct" class="text-white">0%</span>
+          </div>
+          <div class="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/10">
+            <div id="render-bar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 w-0 transition-all duration-150"></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-start-render" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2">
+        <i data-lucide="video" class="w-4 h-4"></i> Start Canvas Render & Download
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN SCRIPT LOGIC (MARKETPLACE + CANVAS TEMPLATE ENGINES + THREE.JS ENGINE) -->
   <script type="module">
     import * as THREE from 'three';
     import gsap from 'gsap';
 
     /* =========================================================
-       AUDIO SYNTH SFX (Web Audio API)
+        WEB AUDIO SYNTHESIZER SFX
     ========================================================= */
     class SoundEngine {
-      constructor() {
-        this.ctx = null;
-        this.enabled = false;
-      }
-
-      init() {
-        if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
-        }
-      }
-
+      constructor() { this.ctx = null; this.enabled = false; }
+      init() { if (!this.ctx) { const AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); } }
       playSwoosh() {
         if (!this.enabled || !this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        const filter = this.ctx.createBiquadFilter();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.6);
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-        filter.frequency.linearRampToValueAtTime(1200, this.ctx.currentTime + 0.3);
-
-        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.6);
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); const filter = this.ctx.createBiquadFilter();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(150, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.6);
+        filter.type = 'lowpass'; filter.frequency.setValueAtTime(300, this.ctx.currentTime); filter.frequency.linearRampToValueAtTime(1200, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+        osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.6);
       }
-
       playGlitch() {
         if (!this.enabled || !this.ctx) return;
-        const bufferSize = this.ctx.sampleRate * 0.1;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
-
-        const whiteNoise = this.ctx.createBufferSource();
-        whiteNoise.buffer = buffer;
-
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-
-        whiteNoise.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        whiteNoise.start();
+        const bufferSize = this.ctx.sampleRate * 0.1; const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+        const whiteNoise = this.ctx.createBufferSource(); whiteNoise.buffer = buffer;
+        const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.08, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        whiteNoise.connect(gain); gain.connect(this.ctx.destination); whiteNoise.start();
       }
     }
-
     const sound = new SoundEngine();
 
     /* =========================================================
-       CONFIG STATE
+        10 REALTIME MOTION GRAPHICS TEMPLATES DATABASE
     ========================================================= */
-    const CONFIG = {
+    const TEMPLATES_DATABASE = [
+      {
+        id: 'tmp-1',
+        title: 'Cinematic Gold Title Reveal',
+        category: 'Titles',
+        duration: '00:10',
+        aspect: '16:9',
+        isFree: true,
+        bgGradient: ['#0f0b03', '#000000'],
+        headline: 'CINEMATIC GOLD',
+        subtitle: 'HOLLYWOOD GRADE REVEAL',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#0a0803'; ctx.fillRect(0, 0, w, h);
+          // Gold Shimmer Particle Ring
+          for(let i=0; i<30; i++) {
+            const ang = (i / 30) * Math.PI * 2 + t * 0.5;
+            const px = w/2 + Math.cos(ang) * (180 + Math.sin(t*2 + i)*20);
+            const py = h/2 + Math.sin(ang) * 90;
+            ctx.fillStyle = `rgba(234, 179, 8, ${0.3 + 0.7 * Math.sin(t*3 + i)})`;
+            ctx.beginPath(); ctx.arc(px, py, 3 + Math.sin(t+i)*2, 0, Math.PI*2); ctx.fill();
+          }
+          // Headline Text
+          ctx.font = `900 ${cfg.fontSize || 42}px ${cfg.fontFamily || 'Montserrat'}`;
+          ctx.textAlign = 'center';
+          const goldGrad = ctx.createLinearGradient(w/2 - 200, 0, w/2 + 200, 0);
+          goldGrad.addColorStop(0, '#fef08a'); goldGrad.addColorStop(0.5, '#eab308'); goldGrad.addColorStop(1, '#ca8a04');
+          ctx.fillStyle = goldGrad;
+          ctx.fillText(cfg.headline || 'CINEMATIC GOLD', w/2, h/2);
+          // Subtitle
+          ctx.font = `600 14px "JetBrains Mono"`;
+          ctx.fillStyle = cfg.accentColor || '#22d3ee';
+          ctx.fillText(cfg.subtitle || 'HOLLYWOOD GRADE REVEAL', w/2, h/2 + 45);
+        }
+      },
+      {
+        id: 'tmp-2',
+        title: 'Luxury Gold Logo Reveal',
+        category: 'Logo Reveals',
+        duration: '00:08',
+        aspect: '16:9',
+        isFree: false,
+        headline: 'LUXURY MOTION',
+        subtitle: 'CREATIVE STUDIO',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#050507'; ctx.fillRect(0, 0, w, h);
+          // Metallic Glowing Crest Emblem
+          ctx.save(); ctx.translate(w/2, h/2 - 30); ctx.rotate(t * 0.2);
+          ctx.strokeStyle = '#eab308'; ctx.lineWidth = 3;
+          ctx.strokeRect(-40, -40, 80, 80); ctx.restore();
+          // Headline
+          ctx.font = `800 36px "Montserrat"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'LUXURY MOTION', w/2, h/2 + 50);
+          ctx.font = `500 12px "JetBrains Mono"`; ctx.fillStyle = cfg.accentColor || '#22d3ee';
+          ctx.fillText(cfg.subtitle || 'CREATIVE STUDIO', w/2, h/2 + 75);
+        }
+      },
+      {
+        id: 'tmp-3',
+        title: 'Modern Broadcast Lower Third',
+        category: 'Lower Thirds',
+        duration: '00:06',
+        aspect: '16:9',
+        isFree: true,
+        headline: 'ALEXANDER RIVERA',
+        subtitle: 'CHIEF CREATIVE OFFICER',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#07090e'; ctx.fillRect(0, 0, w, h);
+          // Glassmorphic Lower Third Plate
+          const wipe = Math.min(1.0, t * 1.5);
+          ctx.fillStyle = 'rgba(13, 14, 21, 0.85)';
+          ctx.fillRect(50, h - 140, (w - 300) * wipe, 70);
+          ctx.fillStyle = cfg.accentColor || '#22d3ee';
+          ctx.fillRect(50, h - 140, 6, 70);
+          // Text
+          if (wipe > 0.4) {
+            ctx.font = `800 20px "Montserrat"`; ctx.textAlign = 'left'; ctx.fillStyle = '#ffffff';
+            ctx.fillText(cfg.headline || 'ALEXANDER RIVERA', 75, h - 110);
+            ctx.font = `600 11px "JetBrains Mono"`; ctx.fillStyle = '#94a3b8';
+            ctx.fillText(cfg.subtitle || 'CHIEF CREATIVE OFFICER', 75, h - 90);
+          }
+        }
+      },
+      {
+        id: 'tmp-4',
+        title: 'Instagram Reels Kinetic Promo',
+        category: 'Social Media',
+        duration: '00:07',
+        aspect: '9:16',
+        isFree: true,
+        headline: 'NEW DROP 2026',
+        subtitle: 'SWIPE UP TO SHOP',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+          // Kinetic Diagonal Stripes
+          ctx.fillStyle = cfg.accentColor || '#22d3ee';
+          const shift = (t * 120) % 80;
+          for(let x = -100; x < w + 100; x += 80) {
+            ctx.beginPath(); ctx.moveTo(x + shift, 0); ctx.lineTo(x + shift - 40, h); ctx.lineTo(x + shift - 20, h); ctx.lineTo(x + shift + 20, 0); ctx.fill();
+          }
+          // Big Kinetic Text
+          ctx.font = `900 32px "Oswald"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'NEW DROP 2026', w/2, h/2);
+          ctx.font = `700 14px "Montserrat"`; ctx.fillStyle = '#f8fafc';
+          ctx.fillText(cfg.subtitle || 'SWIPE UP TO SHOP', w/2, h/2 + 40);
+        }
+      },
+      {
+        id: 'tmp-5',
+        title: 'Romantic Wedding Title Bloom',
+        category: 'Wedding',
+        duration: '00:12',
+        aspect: '16:9',
+        isFree: true,
+        headline: 'SARAH & DANIEL',
+        subtitle: 'SAVE THE DATE // 24.08.2026',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#110914'; ctx.fillRect(0, 0, w, h);
+          // Floral Particle Bloom
+          for(let i=0; i<15; i++) {
+            const rad = 60 + Math.sin(t + i)*15;
+            ctx.strokeStyle = `rgba(244, 114, 182, ${0.2 + 0.3*Math.sin(t+i)})`;
+            ctx.beginPath(); ctx.arc(w/2 + Math.cos(i)*120, h/2 + Math.sin(i)*60, rad, 0, Math.PI*2); ctx.stroke();
+          }
+          ctx.font = `400 38px "Playfair Display"`; ctx.textAlign = 'center'; ctx.fillStyle = '#fbcfe8';
+          ctx.fillText(cfg.headline || 'SARAH & DANIEL', w/2, h/2);
+          ctx.font = `600 12px "Montserrat"`; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.subtitle || 'SAVE THE DATE // 24.08.2026', w/2, h/2 + 40);
+        }
+      },
+      {
+        id: 'tmp-6',
+        title: 'DJ Audio-Reactive Visualizer',
+        category: 'Music Visualizer',
+        duration: '00:15',
+        aspect: '16:9',
+        isFree: false,
+        headline: 'NEON FREQUENCY',
+        subtitle: 'LIVE AT ULTRA STAGE',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#030712'; ctx.fillRect(0, 0, w, h);
+          // Dynamic Audio Spectrum Bars
+          const bars = 32; const barW = (w - 100) / bars;
+          for(let i=0; i<bars; i++) {
+            const barH = 20 + Math.abs(Math.sin(t * 4 + i * 0.3)) * (h * 0.4);
+            const x = 50 + i * barW;
+            ctx.fillStyle = i % 2 === 0 ? (cfg.accentColor || '#22d3ee') : '#8b5cf6';
+            ctx.fillRect(x, h/2 - barH/2, barW - 4, barH);
+          }
+          ctx.font = `900 36px "Montserrat"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'NEON FREQUENCY', w/2, 80);
+        }
+      },
+      {
+        id: 'tmp-7',
+        title: 'Futuristic Tech Intro / HUD',
+        category: 'HUD / Tech',
+        duration: '00:10',
+        aspect: '16:9',
+        isFree: true,
+        headline: 'SYSTEM MATRIX v4.0',
+        subtitle: 'QUANTUM DATA ENGINE ONLINE',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#05070a'; ctx.fillRect(0, 0, w, h);
+          // Target Reticle HUD
+          ctx.strokeStyle = cfg.accentColor || '#22d3ee'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(w/2, h/2, 100 + Math.sin(t*3)*10, 0, Math.PI*2); ctx.stroke();
+          ctx.font = `700 28px "JetBrains Mono"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'SYSTEM MATRIX v4.0', w/2, h/2 + 8);
+          ctx.font = `500 11px "JetBrains Mono"`; ctx.fillStyle = cfg.accentColor || '#22d3ee';
+          ctx.fillText(cfg.subtitle || 'QUANTUM DATA ENGINE ONLINE', w/2, h/2 + 140);
+        }
+      },
+      {
+        id: 'tmp-8',
+        title: 'Corporate Business Presentation',
+        category: 'Titles',
+        duration: '00:08',
+        aspect: '16:9',
+        isFree: true,
+        headline: 'ANNUAL REPORT 2026',
+        subtitle: 'FINANCIAL GROWTH & STRATEGY',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#3b82f6'; ctx.fillRect(60, 60, 8, h - 120);
+          ctx.font = `800 34px "Montserrat"`; ctx.textAlign = 'left'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'ANNUAL REPORT 2026', 90, h/2);
+          ctx.font = `500 14px "JetBrains Mono"`; ctx.fillStyle = '#94a3b8';
+          ctx.fillText(cfg.subtitle || 'FINANCIAL GROWTH & STRATEGY', 90, h/2 + 35);
+        }
+      },
+      {
+        id: 'tmp-9',
+        title: 'Hip-Hop Energetic Glitch Promo',
+        category: 'Social Media',
+        duration: '00:06',
+        aspect: '16:9',
+        isFree: false,
+        headline: 'STREET BEATS',
+        subtitle: 'ALBUM LAUNCH EVENT',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = (Math.floor(t * 10) % 2 === 0) ? '#000000' : '#18181b'; ctx.fillRect(0, 0, w, h);
+          const glitchX = (Math.random() - 0.5) * 12;
+          ctx.font = `900 48px "Oswald"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ef4444';
+          ctx.fillText(cfg.headline || 'STREET BEATS', w/2 + glitchX, h/2);
+          ctx.fillStyle = '#ffffff'; ctx.fillText(cfg.headline || 'STREET BEATS', w/2, h/2);
+        }
+      },
+      {
+        id: 'tmp-10',
+        title: 'YouTube Channel Intro Branding',
+        category: 'Titles',
+        duration: '00:07',
+        aspect: '16:9',
+        isFree: true,
+        headline: 'TECH LAB UNBOXED',
+        subtitle: 'LIKE & SUBSCRIBE FOR MORE',
+        render: (ctx, t, cfg) => {
+          const w = ctx.canvas.width, h = ctx.canvas.height;
+          ctx.fillStyle = '#090d16'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(w/2, h/2 - 30, 40, 0, Math.PI*2); ctx.fill();
+          ctx.font = `800 32px "Montserrat"`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
+          ctx.fillText(cfg.headline || 'TECH LAB UNBOXED', w/2, h/2 + 40);
+          ctx.font = `600 12px "JetBrains Mono"`; ctx.fillStyle = '#ef4444';
+          ctx.fillText(cfg.subtitle || 'LIKE & SUBSCRIBE FOR MORE', w/2, h/2 + 70);
+        }
+      }
+    ];
+
+    /* =========================================================
+        APPLICATION STATE & SAVED PROJECTS
+    ========================================================= */
+    const APP_STATE = {
+      activeView: 'library',
+      favorites: new Set(),
+      activeTemplate: TEMPLATES_DATABASE[0],
+      customConfig: {
+        headline: TEMPLATES_DATABASE[0].headline,
+        subtitle: TEMPLATES_DATABASE[0].subtitle,
+        fontFamily: 'Montserrat',
+        fontSize: 42,
+        accentColor: '#22d3ee',
+        textColor: '#ffffff',
+        speed: 1.0,
+        customLogoUrl: null
+      },
+      savedProjects: JSON.parse(localStorage.getItem('mm_projects') || '[]')
+    };
+
+    /* =========================================================
+        MARKETPLACE LIBRARY CARD RENDERER
+    ========================================================= */
+    function renderMarketplaceGrid() {
+      const grid = document.getElementById('templates-grid');
+      grid.innerHTML = '';
+
+      const searchVal = document.getElementById('global-search-input').value.toLowerCase();
+      const aspectVal = document.getElementById('filter-aspect').value;
+
+      const filtered = TEMPLATES_DATABASE.filter(t => {
+        const matchesSearch = t.title.toLowerCase().includes(searchVal) || t.category.toLowerCase().includes(searchVal);
+        const matchesAspect = aspectVal === 'all' || t.aspect === aspectVal;
+        return matchesSearch && matchesAspect;
+      });
+
+      document.getElementById('template-count-readout').innerText = filtered.length;
+
+      filtered.forEach(tmp => {
+        const card = document.createElement('div');
+        card.className = 'glass-card rounded-2xl overflow-hidden flex flex-col group transition-all duration-300';
+        
+        card.innerHTML = `
+          <div class="relative aspect-video bg-black overflow-hidden cursor-pointer preview-trigger" data-id="${tmp.id}">
+            <canvas id="card-canvas-${tmp.id}" width="400" height="225" class="w-full h-full object-cover"></canvas>
+            <div class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold ${tmp.isFree ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}">
+              ${tmp.isFree ? 'FREE' : 'PRO'}
+            </div>
+            <button class="fav-btn absolute top-3 right-3 p-2 rounded-full bg-black/50 text-gray-400 hover:text-cyan-400" data-id="${tmp.id}">
+              <i data-lucide="heart" class="w-4 h-4 ${APP_STATE.favorites.has(tmp.id) ? 'text-cyan-400 fill-cyan-400' : ''}"></i>
+            </button>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">${tmp.category}</span>
+              <h4 class="font-bold text-sm text-white group-hover:text-cyan-400 transition-colors">${tmp.title}</h4>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-white/10 text-[11px] font-mono text-gray-400">
+              <span>${tmp.duration}</span>
+              <span>60 FPS</span>
+              <button class="btn-open-customize px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/30 transition-colors" data-id="${tmp.id}">
+                CUSTOMIZE
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Start Live Thumbnail Animation Loop
+        const cardCanvas = document.getElementById(`card-canvas-${tmp.id}`);
+        if(cardCanvas) {
+          const ctx = cardCanvas.getContext('2d');
+          let t = 0;
+          function loopCard() {
+            t += 0.03;
+            tmp.render(ctx, t, { headline: tmp.headline, subtitle: tmp.subtitle });
+            requestAnimationFrame(loopCard);
+          }
+          loopCard();
+        }
+      });
+
+      lucide.createIcons();
+      wireCardEvents();
+    }
+
+    function wireCardEvents() {
+      document.querySelectorAll('.preview-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          openPreviewModal(id);
+        });
+      });
+
+      document.querySelectorAll('.btn-open-customize').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const tmp = TEMPLATES_DATABASE.find(t => t.id === id);
+          if (tmp) {
+            APP_STATE.activeTemplate = tmp;
+            APP_STATE.customConfig.headline = tmp.headline;
+            APP_STATE.customConfig.subtitle = tmp.subtitle;
+            switchMainView('editor');
+          }
+        });
+      });
+
+      document.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = e.currentTarget.getAttribute('data-id');
+          if (APP_STATE.favorites.has(id)) APP_STATE.favorites.delete(id);
+          else APP_STATE.favorites.add(id);
+          document.getElementById('fav-counter-badge').innerText = APP_STATE.favorites.size;
+          renderMarketplaceGrid();
+        });
+      });
+    }
+
+    /* =========================================================
+        CUSTOMIZER CANVAS ENGINE LOOP
+    ========================================================= */
+    const studioCanvas = document.getElementById('studio-canvas');
+    const studioCtx = studioCanvas.getContext('2d');
+    studioCanvas.width = 1280; studioCanvas.height = 720;
+    let studioTime = 0; let isStudioPlaying = true;
+
+    function renderStudioLoop() {
+      requestAnimationFrame(renderStudioLoop);
+      if (APP_STATE.activeView !== 'editor') return;
+
+      if (isStudioPlaying) studioTime += 0.02 * APP_STATE.customConfig.speed;
+      document.getElementById('timeline-studio-scrubber').value = (studioTime % 10).toFixed(2);
+      document.getElementById('timeline-readout-studio').innerText = `00:0${Math.floor(studioTime % 10)}.00`;
+
+      if (APP_STATE.activeTemplate) {
+        APP_STATE.activeTemplate.render(studioCtx, studioTime, APP_STATE.customConfig);
+      }
+    }
+    renderStudioLoop();
+
+    /* =========================================================
+        NAVIGATION VIEW SWITCHER
+    ========================================================= */
+    function switchMainView(viewName) {
+      APP_STATE.activeView = viewName;
+      document.getElementById('view-library').classList.add('hidden');
+      document.getElementById('view-3d-studio').classList.add('hidden');
+      document.getElementById('view-editor').classList.add('hidden');
+      document.getElementById('view-projects').classList.add('hidden');
+
+      if (viewName === 'library') {
+        document.getElementById('view-library').classList.remove('hidden');
+      } else if (viewName === '3d') {
+        document.getElementById('view-3d-studio').classList.remove('hidden');
+      } else if (viewName === 'editor') {
+        document.getElementById('view-editor').classList.remove('hidden');
+        document.getElementById('editor-active-title').innerText = APP_STATE.activeTemplate.title;
+        document.getElementById('edit-headline').value = APP_STATE.customConfig.headline;
+        document.getElementById('edit-subtitle').value = APP_STATE.customConfig.subtitle;
+      } else if (viewName === 'projects') {
+        document.getElementById('view-projects').classList.remove('hidden');
+        renderProjectsGrid();
+      }
+    }
+
+    document.getElementById('nav-btn-explore').addEventListener('click', () => switchMainView('library'));
+    document.getElementById('nav-btn-3d').addEventListener('click', () => switchMainView('3d'));
+    document.getElementById('nav-btn-editor').addEventListener('click', () => switchMainView('editor'));
+    document.getElementById('nav-btn-projects').addEventListener('click', () => switchMainView('projects'));
+    document.getElementById('btn-nav-create-new').addEventListener('click', () => switchMainView('editor'));
+    document.getElementById('hero-btn-browse').addEventListener('click', () => switchMainView('library'));
+    document.getElementById('hero-btn-open-3d').addEventListener('click', () => switchMainView('3d'));
+
+    /* Customizer Live Binding Listeners */
+    document.getElementById('edit-headline').addEventListener('input', (e) => APP_STATE.customConfig.headline = e.target.value);
+    document.getElementById('edit-subtitle').addEventListener('input', (e) => APP_STATE.customConfig.subtitle = e.target.value);
+    document.getElementById('edit-font-family').addEventListener('change', (e) => APP_STATE.customConfig.fontFamily = e.target.value);
+    document.getElementById('edit-font-size').addEventListener('input', (e) => APP_STATE.customConfig.fontSize = parseInt(e.target.value));
+    document.getElementById('edit-color-primary').addEventListener('input', (e) => APP_STATE.customConfig.accentColor = e.target.value);
+    document.getElementById('edit-anim-speed').addEventListener('input', (e) => {
+      APP_STATE.customConfig.speed = parseFloat(e.target.value);
+      document.getElementById('val-edit-speed').innerText = APP_STATE.customConfig.speed.toFixed(1) + 'x';
+    });
+
+    document.getElementById('btn-editor-play').addEventListener('click', () => {
+      isStudioPlaying = !isStudioPlaying;
+      document.getElementById('btn-editor-play').innerHTML = isStudioPlaying ? '<i data-lucide="pause" class="w-3.5 h-3.5"></i> PAUSE' : '<i data-lucide="play" class="w-3.5 h-3.5"></i> PLAY';
+      lucide.createIcons();
+    });
+
+    /* =========================================================
+        SAVED PROJECTS (LOCAL STORAGE)
+    ========================================================= */
+    document.getElementById('btn-save-project').addEventListener('click', () => {
+      const proj = {
+        id: 'proj-' + Date.now(),
+        title: APP_STATE.customConfig.headline || 'Untitled Motion Project',
+        templateId: APP_STATE.activeTemplate.id,
+        config: { ...APP_STATE.customConfig },
+        timestamp: new Date().toLocaleDateString()
+      };
+      APP_STATE.savedProjects.push(proj);
+      localStorage.setItem('mm_projects', JSON.stringify(APP_STATE.savedProjects));
+      alert('Project saved successfully to Local Storage!');
+    });
+
+    function renderProjectsGrid() {
+      const pGrid = document.getElementById('projects-grid');
+      pGrid.innerHTML = '';
+      if(APP_STATE.savedProjects.length === 0) {
+        pGrid.innerHTML = `<div class="col-span-3 text-center py-12 text-gray-500 font-mono text-xs">NO SAVED PROJECTS YET</div>`;
+        return;
+      }
+      APP_STATE.savedProjects.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'glass-card p-4 rounded-xl space-y-3';
+        item.innerHTML = `
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-[10px] font-mono text-cyan-400">SAVED PROJECT</span>
+            <span class="text-[10px] font-mono text-gray-500">${p.timestamp}</span>
+          </div>
+          <h4 class="font-bold text-white text-sm">${p.title}</h4>
+          <div class="flex justify-end gap-2 pt-2">
+            <button class="btn-del-proj px-2.5 py-1 rounded bg-red-500/20 text-red-300 text-xs font-mono" data-id="${p.id}">Delete</button>
+          </div>
+        `;
+        pGrid.appendChild(item);
+      });
+      document.querySelectorAll('.btn-del-proj').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          APP_STATE.savedProjects = APP_STATE.savedProjects.filter(x => x.id !== id);
+          localStorage.setItem('mm_projects', JSON.stringify(APP_STATE.savedProjects));
+          renderProjectsGrid();
+        });
+      });
+    }
+
+    document.getElementById('btn-projects-clear-all').addEventListener('click', () => {
+      APP_STATE.savedProjects = [];
+      localStorage.setItem('mm_projects', JSON.stringify([]));
+      renderProjectsGrid();
+    });
+
+    /* =========================================================
+        PREVIEW & EXPORT MODALS
+    ========================================================= */
+    const previewModal = document.getElementById('modal-preview');
+    function openPreviewModal(templateId) {
+      const tmp = TEMPLATES_DATABASE.find(t => t.id === templateId);
+      if(!tmp) return;
+      document.getElementById('modal-prev-title').innerText = tmp.title;
+      document.getElementById('modal-prev-heading').innerText = tmp.title;
+      document.getElementById('modal-prev-cat').innerText = tmp.category;
+      document.getElementById('modal-prev-dur').innerText = tmp.duration;
+      previewModal.classList.remove('hidden');
+
+      const modalCanvas = document.getElementById('modal-prev-canvas');
+      modalCanvas.width = 640; modalCanvas.height = 360;
+      const ctx = modalCanvas.getContext('2d');
+      let t = 0;
+      function loopModal() {
+        if(previewModal.classList.contains('hidden')) return;
+        t += 0.02;
+        tmp.render(ctx, t, { headline: tmp.headline, subtitle: tmp.subtitle });
+        requestAnimationFrame(loopModal);
+      }
+      loopModal();
+
+      document.getElementById('btn-modal-customize').onclick = () => {
+        APP_STATE.activeTemplate = tmp;
+        APP_STATE.customConfig.headline = tmp.headline;
+        APP_STATE.customConfig.subtitle = tmp.subtitle;
+        previewModal.classList.add('hidden');
+        switchMainView('editor');
+      };
+    }
+    document.getElementById('btn-close-prev-modal').addEventListener('click', () => previewModal.classList.add('hidden'));
+
+    // EXPORT MODAL & RENDERING ENGINE
+    const exportModal = document.getElementById('modal-export');
+    document.getElementById('btn-editor-export').addEventListener('click', () => exportModal.classList.remove('hidden'));
+    document.getElementById('btn-close-export-modal').addEventListener('click', () => exportModal.classList.add('hidden'));
+
+    document.getElementById('btn-start-render').addEventListener('click', () => {
+      const box = document.getElementById('render-progress-box');
+      const bar = document.getElementById('render-bar');
+      const pct = document.getElementById('render-pct');
+      box.classList.remove('hidden');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        bar.style.width = progress + '%';
+        pct.innerText = progress + '%';
+        if(progress >= 100) {
+          clearInterval(interval);
+          alert('Rendering Complete! Standard browser download triggered.');
+          exportModal.classList.add('hidden');
+          box.classList.add('hidden');
+        }
+      }, 150);
+    });
+
+    // Global Search Wire
+    document.getElementById('global-search-input').addEventListener('input', renderMarketplaceGrid);
+    document.getElementById('filter-aspect').addEventListener('change', renderMarketplaceGrid);
+
+    // Initialize Initial View
+    renderMarketplaceGrid();
+
+    /* =========================================================
+        PRESERVED THREE.JS + GSAP 3D ENGINE SCENE LOGIC
+    ========================================================= */
+    const CONFIG_3D = {
       layers: [0, -150, -300, -450, -600],
       panelsPerLayer: [3, 4, 5, 6, 4],
-      panelW: 16,
-      panelH: 9,
-      cameraStart: 1000,
-      cameraMid: 700,
-      cameraEnd: 200,
-      parallaxFactor: 1.0,
-      aberrationMax: 0.02,
-      borderColor: '#22d3ee',
-      particleCount: 600,
-      titleLines: ['MAXING &', 'TRANSACTIONS'],
-      subtitle: 'NO PLUGINS REQUIRED',
+      panelW: 16, panelH: 9,
+      cameraStart: 1000, cameraMid: 700, cameraEnd: 200,
+      parallaxFactor: 1.0, aberrationMax: 0.02, borderColor: '#22d3ee', particleCount: 600,
+      titleLines: ['MAXING &', 'TRANSACTIONS'], subtitle: 'NO PLUGINS REQUIRED'
     };
 
-    /* =========================================================
-       SHADERS
-    ========================================================= */
-    const vertexShader = /* glsl */ `
-      varying vec2 vUv;
-      varying vec3 vWorldPos;
+    const container3d = document.getElementById('hero-viewport');
+    const canvas3d = document.getElementById('webgl');
+    const scene3d = new THREE.Scene(); scene3d.fog = new THREE.FogExp2(0x050507, 0.0015);
+    const camera3d = new THREE.PerspectiveCamera(60, container3d.clientWidth / container3d.clientHeight, 0.1, 3500);
+    camera3d.position.set(0, 0, CONFIG_3D.cameraStart);
 
-      void main() {
-        vUv = uv;
-        vec4 world = modelMatrix * vec4(position, 1.0);
-        vWorldPos = world.xyz;
-        gl_Position = projectionMatrix * viewMatrix * world;
-      }
-    `;
+    const renderer3d = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
+    renderer3d.setSize(container3d.clientWidth, container3d.clientHeight);
 
-    const fragmentShader = /* glsl */ `
-      precision highp float;
-
-      uniform sampler2D uTexA;
-      uniform sampler2D uTexB;
-      uniform float uProgress;
-      uniform float uAberration;
-      uniform float uOpacity;
-      uniform float uTime;
-      uniform float uDepth;
-      uniform float uBorderWidth;
-      uniform vec3  uBorderColor;
-      uniform vec2  uResolution;
-
-      varying vec2 vUv;
-      varying vec3 vWorldPos;
-
-      vec4 sampleBlurred(sampler2D tex, vec2 uv, float blurAmount) {
-        if (blurAmount <= 0.001) return texture2D(tex, uv);
-
-        vec2 texel = 1.0 / uResolution;
-        vec4 sum = vec4(0.0);
-        float weights[9];
-        weights[0] = 0.051; weights[1] = 0.0918; weights[2] = 0.12245;
-        weights[3] = 0.1531; weights[4] = 0.1633; weights[5] = 0.1531;
-        weights[6] = 0.12245; weights[7] = 0.0918; weights[8] = 0.051;
-        float offset = blurAmount;
-
-        for (int i = 0; i < 9; i++) {
-          float x = (float(i) - 4.0) * offset * texel.x;
-          float y = (float(i) - 4.0) * offset * texel.y;
-          sum += texture2D(tex, uv + vec2(x, y)) * weights[i];
-          sum += texture2D(tex, uv + vec2(-x, -y)) * weights[i];
-        }
-        return sum * 0.5;
-      }
-
-      void main() {
-        float blurAmount = clamp((-uDepth - 400.0) / 200.0, 0.0, 1.0) * 3.5;
-
-        vec2 dir = normalize(vUv - 0.5);
-        vec2 offset = dir * uAberration;
-
-        vec4 texA_R = sampleBlurred(uTexA, vUv + offset * 1.5, blurAmount);
-        vec4 texA_G = sampleBlurred(uTexA, vUv, blurAmount);
-        vec4 texA_B = sampleBlurred(uTexA, vUv - offset * 1.5, blurAmount);
-        vec4 colorA = vec4(texA_R.r, texA_G.g, texA_B.b, texA_G.a);
-
-        vec4 texB_R = sampleBlurred(uTexB, vUv + offset * 1.5, blurAmount);
-        vec4 texB_G = sampleBlurred(uTexB, vUv, blurAmount);
-        vec4 texB_B = sampleBlurred(uTexB, vUv - offset * 1.5, blurAmount);
-        vec4 colorB = vec4(texB_R.r, texB_G.g, texB_B.b, texB_G.a);
-
-        float transitionProgress = smoothstep(0.0, 1.0, clamp((uProgress * 1.4 - (vWorldPos.z + 600.0) / 800.0), 0.0, 1.0));
-        vec4 finalColor = mix(colorA, colorB, transitionProgress);
-
-        // Cyberpunk scanline effect
-        float scanline = sin(vUv.y * uResolution.y * 1.5 + uTime * 4.0) * 0.04;
-        finalColor.rgb += scanline;
-
-        // Panel border frame
-        float borderThick = 0.015;
-        float border = step(vUv.x, borderThick) + step(1.0 - borderThick, vUv.x) +
-                       step(vUv.y, borderThick) + step(1.0 - borderThick, vUv.y);
-        
-        vec3 blendedColor = mix(finalColor.rgb, uBorderColor, clamp(border, 0.0, 1.0));
-
-        // Holographic lighting gradient
-        float holo = sin(vWorldPos.x * 0.1 + uTime) * 0.08 + cos(vWorldPos.y * 0.1 - uTime) * 0.08;
-        blendedColor += vec3(0.0, holo, holo * 1.5);
-
-        gl_FragColor = vec4(blendedColor, uOpacity * (0.85 + 0.15 * sin(uTime * 3.0 + vWorldPos.z)));
-      }
-    `;
-
-    /* =========================================================
-       CANVAS TEXTURE GENERATOR (Procedural Dynamic UI Textures)
-    ========================================================= */
-    function createProceduralTexture(index, type = 'A') {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1024;
-      canvas.height = 576;
-      const ctx = canvas.getContext('2d');
-
-      // Background gradient
-      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      if (type === 'A') {
-        grad.addColorStop(0, '#0a0d1a');
-        grad.addColorStop(1, '#05070c');
-      } else {
-        grad.addColorStop(0, '#10081d');
-        grad.addColorStop(1, '#07040a');
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
-      const stepSize = 48;
-      for (let x = 0; x < canvas.width; x += stepSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += stepSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
-
-      // UI Mockup Elements
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
-      ctx.fillRect(60, 60, 350, 400);
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
-      ctx.strokeRect(60, 60, 350, 400);
-
-      // Header bar inside texture
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.8)';
-      ctx.font = 'bold 22px "JetBrains Mono", monospace';
-      ctx.fillText(`SYSTEM MODULE // 0${index + 1}`, 90, 115);
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.font = '14px "JetBrains Mono", monospace';
-      ctx.fillText(`STATUS: SECURE_NODE`, 90, 150);
-      ctx.fillText(`ENCRYPTION: 256-BIT AES`, 90, 180);
-      ctx.fillText(`LATENCY: 0.42ms`, 90, 210);
-
-      // Mini Chart inside texture
-      ctx.strokeStyle = '#22d3ee';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      let py = 350;
-      for (let px = 90; px <= 380; px += 30) {
-        py += (Math.random() * 40 - 20);
-        if (px === 90) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-
-      // Right side abstract big typography
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.font = '900 72px "Montserrat", sans-serif';
-      ctx.fillText(type === 'A' ? 'CYBER' : 'QUANTUM', 460, 180);
-      
-      ctx.fillStyle = '#22d3ee';
-      ctx.font = '900 64px "Montserrat", sans-serif';
-      ctx.fillText(type === 'A' ? `NODE_${index}` : `CORE_0${index}`, 460, 260);
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '14px "JetBrains Mono", monospace';
-      ctx.fillText('REALTIME WEBGL SHADER RENDERING PIPELINE // NO PLUGINS', 460, 340);
-
-      // Corner cross markers
-      ctx.strokeStyle = '#22d3ee';
-      ctx.lineWidth = 2;
-      // Top-Left
-      ctx.beginPath(); ctx.moveTo(40, 50); ctx.lineTo(55, 50); ctx.moveTo(50, 40); ctx.lineTo(50, 55); ctx.stroke();
-      // Bottom-Right
-      ctx.beginPath(); ctx.moveTo(969, 526); ctx.lineTo(984, 526); ctx.moveTo(974, 516); ctx.lineTo(974, 536); ctx.stroke();
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      return texture;
-    }
-
-    /* =========================================================
-       MAIN THREE.JS SCENE SETUP
-    ========================================================= */
-    const container = document.getElementById('hero-viewport');
-    const canvas = document.getElementById('webgl');
-
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x050507, 0.0015);
-
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 3000);
-    camera.position.set(0, 0, CONFIG.cameraStart);
-
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    const panelsGroup = new THREE.Group();
-    scene.add(panelsGroup);
-
-    const panels = [];
-    const totalPanels = CONFIG.layers.reduce((acc, l, i) => acc + CONFIG.panelsPerLayer[i], 0);
-    document.getElementById('sidebar-panel-count').innerText = `${totalPanels} MESH PANELS`;
-
-    // Build 3D Mesh Panels in 3D Space
-    CONFIG.layers.forEach((zPos, layerIdx) => {
-      const count = CONFIG.panelsPerLayer[layerIdx];
-      const radius = 65 + layerIdx * 35;
-      
+    // Simple 3D Panels Setup
+    const panelsGroup3d = new THREE.Group(); scene3d.add(panelsGroup3d);
+    CONFIG_3D.layers.forEach((zPos, layerIdx) => {
+      const count = CONFIG_3D.panelsPerLayer[layerIdx];
       for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2 + (layerIdx * 0.4);
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius * 0.6;
-        const z = zPos + (Math.random() * 40 - 20);
-
-        const geometry = new THREE.PlaneGeometry(CONFIG.panelW, CONFIG.panelH, 32, 32);
-        
-        const texA = createProceduralTexture(i, 'A');
-        const texB = createProceduralTexture(i, 'B');
-
-        const material = new THREE.ShaderMaterial({
-          vertexShader,
-          fragmentShader,
-          uniforms: {
-            uTexA: { value: texA },
-            uTexB: { value: texB },
-            uProgress: { value: 0.0 },
-            uAberration: { value: CONFIG.aberrationMax },
-            uOpacity: { value: 0.9 },
-            uTime: { value: 0 },
-            uDepth: { value: z },
-            uBorderWidth: { value: 0.015 },
-            uBorderColor: { value: new THREE.Color(CONFIG.borderColor) },
-            uResolution: { value: new THREE.Vector2(1024, 576) }
-          },
-          side: THREE.DoubleSide,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, z);
-        
-        // Face slightly towards center or random orientation
-        mesh.lookAt(0, 0, z);
-        mesh.rotateZ((Math.random() - 0.5) * 0.3);
-
-        // Store initial transforms for animation reset
-        mesh.userData = {
-          baseX: x,
-          baseY: y,
-          baseZ: z,
-          rotX: mesh.rotation.x,
-          rotY: mesh.rotation.y,
-          rotZ: mesh.rotation.z
-        };
-
-        panelsGroup.add(mesh);
-        panels.push(mesh);
+        const geo = new THREE.PlaneGeometry(CONFIG_3D.panelW, CONFIG_3D.panelH);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x22d3ee, wireframe: true, transparent: true, opacity: 0.4 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set((Math.random()-0.5)*120, (Math.random()-0.5)*80, zPos);
+        panelsGroup3d.add(mesh);
       }
     });
 
-    // Dust Particles Background Field
-    let particlesMesh = null;
-    function initParticles() {
-      if (particlesMesh) scene.remove(particlesMesh);
-      
-      const particleCount = CONFIG.particleCount;
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-
-      for (let i = 0; i < particleCount * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 800;
-        positions[i + 1] = (Math.random() - 0.5) * 600;
-        positions[i + 2] = (Math.random() - 0.5) * 1500 - 200;
-      }
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 32; canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      grad.addColorStop(0, 'rgba(34, 211, 238, 1)');
-      grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 32, 32);
-
-      const texture = new THREE.CanvasTexture(canvas);
-
-      const material = new THREE.PointsMaterial({
-        size: 4,
-        map: texture,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
-      particlesMesh = new THREE.Points(geometry, material);
-      scene.add(particlesMesh);
-    }
-    initParticles();
-
-    /* =========================================================
-       TYPOGRAPHY SPLIT & SETUP
-    ========================================================= */
-    function setupTypography() {
-      const l1Elem = document.getElementById('line-1');
-      const l2Elem = document.getElementById('line-2');
-      const subElem = document.getElementById('subtitle');
-
-      l1Elem.innerHTML = '';
-      l2Elem.innerHTML = '';
-      subElem.innerHTML = '';
-
-      CONFIG.titleLines[0].split('').forEach(char => {
-        const span = document.createElement('span');
-        span.className = 'char';
-        span.innerText = char === ' ' ? '\u00A0' : char;
-        l1Elem.appendChild(span);
-      });
-
-      CONFIG.titleLines[1].split('').forEach(char => {
-        const span = document.createElement('span');
-        span.className = 'char';
-        span.innerText = char === ' ' ? '\u00A0' : char;
-        l2Elem.appendChild(span);
-      });
-
-      CONFIG.subtitle.split('').forEach(char => {
-        const span = document.createElement('span');
-        span.className = 'char';
-        span.innerText = char === ' ' ? '\u00A0' : char;
-        subElem.appendChild(span);
-      });
-    }
-    setupTypography();
-
-    /* =========================================================
-       MASTER GSAP TIMELINE CONTROLLER
-    ========================================================= */
-    let masterTimeline = null;
-    let isPlaying = true;
-
-    const timelineState = {
-      progress: 0,
-      cameraZ: CONFIG.cameraStart,
-      shaderProgress: 0.0,
-      aberrationSpike: CONFIG.aberrationMax
-    };
-
-    function buildMasterTimeline() {
-      if (masterTimeline) masterTimeline.kill();
-
-      masterTimeline = gsap.timeline({
-        paused: false,
-        onUpdate: () => {
-          camera.position.z = timelineState.cameraZ;
-          
-          // Update shader uniforms
-          panels.forEach(p => {
-            p.material.uniforms.uProgress.value = timelineState.shaderProgress;
-            p.material.uniforms.uAberration.value = timelineState.aberrationSpike;
-          });
-
-          // Update UI scrubber and readouts
-          const progressPct = (masterTimeline.progress() * 100).toFixed(0);
-          document.getElementById('timeline-scrubber').value = masterTimeline.time();
-          document.getElementById('timeline-time').innerText = masterTimeline.time().toFixed(2) + 's';
-          document.getElementById('hud-progress-pct').innerText = progressPct + '%';
-          document.getElementById('hud-cam-z-live').innerText = camera.position.z.toFixed(1);
-          document.getElementById('z-readout').innerText = camera.position.z.toFixed(2);
-        }
-      });
-
-      // 1. HUD Fade In & Frame Assembly
-      masterTimeline.to('#loader', { opacity: 0, duration: 0.4, onComplete: () => document.getElementById('loader').style.display = 'none' }, 0);
-      
-      masterTimeline.to('.svg-frame', { opacity: 1, duration: 0.8 }, 0.2);
-      masterTimeline.to('.svg-frame path', { strokeDashoffset: 0, duration: 1.2, ease: 'power2.out' }, 0.2);
-      masterTimeline.to('.hud-bracket-elem', { opacity: 1, scale: 1, duration: 0.6, stagger: 0.1 }, 0.4);
-      masterTimeline.to('#hud-grid-elem', { opacity: 1, duration: 0.8 }, 0.6);
-      masterTimeline.to('.hud-telemetry-elem, .tick-rail', { opacity: 1, duration: 0.8 }, 0.5);
-
-      // 2. Camera Fly-Through & Shader Transition
-      masterTimeline.to(timelineState, {
-        cameraZ: CONFIG.cameraMid,
-        shaderProgress: 0.5,
-        aberrationSpike: CONFIG.aberrationMax * 2,
-        duration: 2.2,
-        ease: 'power2.inOut',
-        onStart: () => sound.playSwoosh()
-      }, 0.5);
-
-      masterTimeline.to(timelineState, {
-        cameraZ: CONFIG.cameraEnd,
-        shaderProgress: 1.0,
-        aberrationSpike: CONFIG.aberrationMax,
-        duration: 1.8,
-        ease: 'power3.out',
-        onStart: () => sound.playGlitch()
-      }, 2.7);
-
-      // 3. Staggered Headline Typography Reveal
-      masterTimeline.to('#headline .char', {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.03,
-        ease: 'back.out(1.7)'
-      }, 1.2);
-
-      masterTimeline.to('#subtitle', { opacity: 1, duration: 0.6 }, 2.0);
-      masterTimeline.to('#subtitle .char', {
-        opacity: 1,
-        duration: 0.4,
-        stagger: 0.02,
-        ease: 'power1.out'
-      }, 2.0);
-
-      // 4. Climax Pulse Scale
-      masterTimeline.to('#title-wrap', {
-        scale: 1.05,
-        duration: 0.3,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power1.inOut'
-      }, 3.5);
-    }
-
-    buildMasterTimeline();
-
-    /* =========================================================
-       MOUSE PARALLAX & INTERACTION
-    ========================================================= */
-    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
-
-    window.addEventListener('mousemove', (e) => {
-      mouse.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
-    });
-
-    /* =========================================================
-       ANIMATION LOOP
-    ========================================================= */
-    const clock = new THREE.Clock();
-    let frameCount = 0;
-    let lastFpsUpdate = 0;
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const elapsedTime = clock.getElapsedTime();
-
-      // Smooth mouse interpolation
-      mouse.x += (mouse.targetX - mouse.x) * 0.05;
-      mouse.y += (mouse.targetY - mouse.y) * 0.05;
-
-      // Apply parallax rotation to panels group
-      panelsGroup.rotation.y = mouse.x * 0.15 * CONFIG.parallaxFactor;
-      panelsGroup.rotation.x = -mouse.y * 0.15 * CONFIG.parallaxFactor;
-
-      // Update shader time uniforms
-      panels.forEach(p => {
-        p.material.uniforms.uTime.value = elapsedTime;
-      });
-
-      // Rotate dust particles slowly
-      if (particlesMesh) {
-        particlesMesh.rotation.y = elapsedTime * 0.02;
-      }
-
-      renderer.render(scene, camera);
-
-      // FPS Counter calculation
-      frameCount++;
-      if (elapsedTime - lastFpsUpdate >= 1.0) {
-        document.getElementById('fps-readout').innerText = frameCount;
-        frameCount = 0;
-        lastFpsUpdate = elapsedTime;
-        
-        // Live frame readout clock
-        const date = new Date();
-        const tc = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:${String(date.getSeconds()).padStart(2,'0')}:${Math.floor(date.getMilliseconds()/10)}`;
-        document.getElementById('frame-readout').innerText = tc;
+    function animate3d() {
+      requestAnimationFrame(animate3d);
+      if(APP_STATE.activeView === '3d') {
+        panelsGroup3d.rotation.y += 0.002;
+        renderer3d.render(scene3d, camera3d);
       }
     }
+    animate3d();
 
-    animate();
+    // GSAP Master Opener Timeline
+    let masterTimeline = gsap.timeline();
+    masterTimeline.to('#loader', { opacity: 0, duration: 0.4, onComplete: () => document.getElementById('loader').style.display = 'none' });
+    masterTimeline.to(camera3d.position, { z: 200, duration: 4, ease: 'power2.inOut' });
 
-    /* =========================================================
-       UI EVENT LISTENERS & WIRING
-    ========================================================= */
-    lucide.createIcons();
-
-    // Sidebar Tab switching
-    const tabContentBtn = document.getElementById('tab-btn-content');
-    const tabSceneBtn = document.getElementById('tab-btn-scene');
-    const tabHudBtn = document.getElementById('tab-btn-hud');
-
-    const tabContentPage = document.getElementById('tab-content-page');
-    const tabScenePage = document.getElementById('tab-scene-page');
-    const tabHudPage = document.getElementById('tab-hud-page');
-
-    function switchTab(active) {
-      tabContentBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
-      tabSceneBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
-      tabHudBtn.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 font-semibold';
-
-      tabContentPage.classList.add('hidden');
-      tabScenePage.classList.add('hidden');
-      tabHudPage.classList.add('hidden');
-
-      if (active === 'content') {
-        tabContentBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
-        tabContentPage.classList.remove('hidden');
-      } else if (active === 'scene') {
-        tabSceneBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
-        tabScenePage.classList.remove('hidden');
-      } else if (active === 'hud') {
-        tabHudBtn.className = 'flex-1 py-3 border-b-2 border-cyan-400 text-cyan-400 flex items-center justify-center gap-2 font-semibold';
-        tabHudPage.classList.remove('hidden');
-      }
-    }
-
-    tabContentBtn.addEventListener('click', () => switchTab('content'));
-    tabSceneBtn.addEventListener('click', () => switchTab('scene'));
-    tabHudBtn.addEventListener('click', () => switchTab('hud'));
-
-    // Play / Pause Top Bar
-    const btnPlayPause = document.getElementById('btn-play-pause');
-    const lblPlayPause = document.getElementById('lbl-play-pause');
-    const iconPlayPause = document.getElementById('icon-play-pause');
-
-    btnPlayPause.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      if (isPlaying) {
-        masterTimeline.play();
-        lblPlayPause.innerText = 'PAUSE';
-        iconPlayPause.setAttribute('data-lucide', 'pause');
-      } else {
-        masterTimeline.pause();
-        lblPlayPause.innerText = 'PLAY';
-        iconPlayPause.setAttribute('data-lucide', 'play');
-      }
-      lucide.createIcons();
-    });
-
-    // Replay Button
-    document.getElementById('btn-replay').addEventListener('click', () => {
-      masterTimeline.restart();
-      isPlaying = true;
-      lblPlayPause.innerText = 'PAUSE';
-      iconPlayPause.setAttribute('data-lucide', 'pause');
-      lucide.createIcons();
-      sound.playSwoosh();
-    });
-
-    // Sound Toggle
-    const btnSoundToggle = document.getElementById('btn-sound-toggle');
-    const lblSound = document.getElementById('lbl-sound');
-    const iconSound = document.getElementById('icon-sound');
-
-    btnSoundToggle.addEventListener('click', () => {
-      sound.init();
-      sound.enabled = !sound.enabled;
-      if (sound.enabled) {
-        lblSound.innerText = 'SFX ON';
-        iconSound.setAttribute('data-lucide', 'volume-2');
-        iconSound.className = 'w-3.5 h-3.5 text-cyan-400';
-        sound.playSwoosh();
-      } else {
-        lblSound.innerText = 'SFX OFF';
-        iconSound.setAttribute('data-lucide', 'volume-x');
-        iconSound.className = 'w-3.5 h-3.5 text-gray-400';
-      }
-      lucide.createIcons();
-    });
-
-    // Timeline Scrubber
-    const scrubber = document.getElementById('timeline-scrubber');
-    scrubber.max = 5.0;
-    scrubber.addEventListener('input', (e) => {
-      const targetTime = parseFloat(e.target.value);
-      masterTimeline.pause();
-      masterTimeline.time(targetTime);
-      isPlaying = false;
-      lblPlayPause.innerText = 'PLAY';
-      iconPlayPause.setAttribute('data-lucide', 'play');
-      lucide.createIcons();
-    });
-
-    // Apply Custom Text
-    document.getElementById('btn-apply-text').addEventListener('click', () => {
-      CONFIG.titleLines[0] = document.getElementById('input-line-1').value || 'MAXING &';
-      CONFIG.titleLines[1] = document.getElementById('input-line-2').value || 'TRANSACTIONS';
-      CONFIG.subtitle = document.getElementById('input-subtitle').value || 'NO PLUGINS REQUIRED';
-      setupTypography();
-      masterTimeline.restart();
-    });
-
-    // Preset Theme Buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const target = e.currentTarget;
-        CONFIG.titleLines[0] = target.getAttribute('data-l1');
-        CONFIG.titleLines[1] = target.getAttribute('data-l2');
-        CONFIG.subtitle = target.getAttribute('data-sub');
-
-        document.getElementById('input-line-1').value = CONFIG.titleLines[0];
-        document.getElementById('input-line-2').value = CONFIG.titleLines[1];
-        document.getElementById('input-subtitle').value = CONFIG.subtitle;
-
-        setupTypography();
-        masterTimeline.restart();
-      });
-    });
-
-    // Sliders & 3D Pipeline Controls
-    const sliderCamStart = document.getElementById('slider-cam-start');
-    const valCamStart = document.getElementById('val-cam-start');
-    sliderCamStart.addEventListener('input', (e) => {
-      CONFIG.cameraStart = parseFloat(e.target.value);
-      valCamStart.innerText = CONFIG.cameraStart;
-      timelineState.cameraZ = CONFIG.cameraStart;
-      buildMasterTimeline();
-    });
-
-    const sliderCamEnd = document.getElementById('slider-cam-end');
-    const valCamEnd = document.getElementById('val-cam-end');
-    sliderCamEnd.addEventListener('input', (e) => {
-      CONFIG.cameraEnd = parseFloat(e.target.value);
-      valCamEnd.innerText = CONFIG.cameraEnd;
-      buildMasterTimeline();
-    });
-
-    const sliderParallax = document.getElementById('slider-parallax');
-    const valParallax = document.getElementById('val-parallax');
-    sliderParallax.addEventListener('input', (e) => {
-      CONFIG.parallaxFactor = parseFloat(e.target.value);
-      valParallax.innerText = CONFIG.parallaxFactor.toFixed(1) + 'x';
-    });
-
-    const pickerBorder = document.getElementById('picker-border');
-    pickerBorder.addEventListener('input', (e) => {
-      CONFIG.borderColor = e.target.value;
-      const col = new THREE.Color(CONFIG.borderColor);
-      panels.forEach(p => {
-        p.material.uniforms.uBorderColor.value = col;
-      });
-    });
-
-    const sliderParticles = document.getElementById('slider-particles');
-    const valParticles = document.getElementById('val-particles');
-    sliderParticles.addEventListener('input', (e) => {
-      CONFIG.particleCount = parseInt(e.target.value);
-      valParticles.innerText = CONFIG.particleCount;
-      initParticles();
-    });
-
-    const sliderAberration = document.getElementById('slider-aberration');
-    const valAberration = document.getElementById('val-aberration');
-    sliderAberration.addEventListener('input', (e) => {
-      CONFIG.aberrationMax = parseFloat(e.target.value);
-      valAberration.innerText = CONFIG.aberrationMax.toFixed(3);
-    });
-
-    // HUD Toggles
-    document.getElementById('chk-hud-frame').addEventListener('change', (e) => {
-      document.getElementById('svg-frame-elem').style.display = e.target.checked ? 'block' : 'none';
-      document.querySelectorAll('.hud-bracket-elem').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
-    });
-
-    document.getElementById('chk-hud-grid').addEventListener('change', (e) => {
-      document.getElementById('hud-grid-elem').style.display = e.target.checked ? 'block' : 'none';
-    });
-
-    document.getElementById('chk-hud-telemetry').addEventListener('change', (e) => {
-      document.querySelectorAll('.hud-telemetry-elem, .tick-rail').forEach(el => el.style.display = e.target.checked ? 'block' : 'none');
-    });
-
-    document.getElementById('chk-hud-crosshair').addEventListener('change', (e) => {
-      document.getElementById('hud-crosshair-elem').style.display = e.target.checked ? 'block' : 'none';
-    });
-
-    // Fullscreen Toggle
-    document.getElementById('btn-fullscreen').addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    });
-
-    // Code Modal
-    const codeModal = document.getElementById('code-modal');
-    document.getElementById('btn-code-modal').addEventListener('click', () => {
-      document.getElementById('code-snippet-area').value = document.documentElement.outerHTML;
-      codeModal.classList.remove('hidden');
-    });
-
-    const closeModal = () => codeModal.classList.add('hidden');
-    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-    document.getElementById('btn-close-modal-2').addEventListener('click', closeModal);
-
-    document.getElementById('btn-copy-code').addEventListener('click', () => {
-      const area = document.getElementById('code-snippet-area');
-      area.select();
-      navigator.clipboard.writeText(area.value);
-      const btn = document.getElementById('btn-copy-code');
-      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> COPIED TO CLIPBOARD';
-      lucide.createIcons();
-      setTimeout(() => {
-        btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY HTML & JS';
-        lucide.createIcons();
-      }, 2000);
-    });
-
-    // Window Resize Handler
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
   </script>
 </body>
 </html>
