@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MOTION MATRIX PRO v4.5 — Ultra 3D Editorial Studio</title>
+<title>MOTION MATRIX PRO v4.6 — Ultra 3D + Green Screen Studio</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -98,9 +98,9 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
     <div>
       <h1 class="font-extrabold text-base tracking-wider flex items-center gap-2">
         MOTION MATRIX <span class="text-amber-500">PRO</span>
-        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-mono">v4.5 ULTRA 3D</span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-mono">v4.6 GS</span>
       </h1>
-      <p class="text-[10px] text-gray-400 font-mono hidden sm:block">Editorial Motion Graphics Studio · 3D Engine</p>
+      <p class="text-[10px] text-gray-400 font-mono hidden sm:block">Editorial Motion Graphics · 3D + Chroma Key</p>
     </div>
   </div>
 
@@ -197,13 +197,13 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
     <div class="absolute top-10 right-10 w-[400px] h-[300px] bg-red-500/8 rounded-full blur-[140px] pointer-events-none"></div>
     <div class="max-w-6xl mx-auto text-center space-y-4 relative z-10">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-mono mb-2">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> EDITORIAL MOTION GRAPHICS STUDIO · 3D ULTRA ENGINE · 2026
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> EDITORIAL MOTION STUDIO · 3D ULTRA · CHROMA KEY READY · 2026
       </div>
       <h2 class="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight uppercase text-white leading-tight">
         WHERE EDITING MEETS <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 bg-clip-text text-transparent">CRAFT</span>
       </h2>
       <p class="text-gray-400 text-sm md:text-base max-w-2xl mx-auto italic font-serif">
-        "Editing is like cooking — patience, layers, taste." Now rendered in 3D Ultra.
+        "Editing is like cooking — patience, layers, taste." Now with 3D + Green Screen output.
       </p>
       <div class="flex items-center justify-center gap-3 pt-3 flex-wrap">
         <button id="hero-btn-browse" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs tracking-wider uppercase shadow-lg shadow-amber-500/25 flex items-center gap-2">
@@ -299,7 +299,7 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
     <main class="flex-1 space-y-4">
       <div class="flex items-center justify-between text-xs font-mono text-gray-400 border-b border-white/10 pb-3">
         <span>SHOWING <strong id="template-count-readout" class="text-amber-400 font-bold">0</strong> MOTION TEMPLATES</span>
-        <span class="hidden sm:inline">LIVE HTML5 CANVAS · 3D ULTRA</span>
+        <span class="hidden sm:inline">LIVE HTML5 CANVAS · 3D · CHROMA READY</span>
       </div>
       <div id="templates-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
@@ -575,7 +575,7 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
     </details>
 
     <details open class="glass-card rounded-lg p-3">
-      <summary class="text-[10px] font-mono text-amber-400 uppercase">3. Colors</summary>
+      <summary class="text-[10px] font-mono text-amber-400 uppercase">3. Colors & Chroma</summary>
       <div class="grid grid-cols-2 gap-2 mt-3">
         <div class="flex items-center gap-2">
           <input type="color" id="edit-color-primary" value="#d97706" class="w-8 h-8 rounded border border-white/20 bg-transparent" />
@@ -594,6 +594,12 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
           <span class="text-[10px] text-gray-300">Background</span>
         </div>
       </div>
+      <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer mt-3 pt-3 border-t border-white/10">
+        <input type="checkbox" id="edit-greenscreen" class="accent-emerald-500" />
+        <i data-lucide="monitor" class="w-3 h-3 text-emerald-400"></i>
+        <span>Green Screen (Chroma Key)</span>
+        <span class="ml-auto font-mono text-[9px] text-emerald-400/70">#00b140</span>
+      </label>
     </details>
 
     <details class="glass-card rounded-lg p-3">
@@ -640,6 +646,7 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
       <div class="flex items-center space-x-3 text-xs font-mono text-gray-400">
         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> CANVAS 60FPS</span>
         <span>ASPECT: <strong id="canvas-aspect-readout" class="text-amber-400">16:9</strong></span>
+        <span id="gs-indicator" class="hidden px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold">● CHROMA</span>
       </div>
       <div class="flex items-center space-x-2">
         <button id="btn-editor-play" class="px-3 py-1 rounded bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center gap-1">
@@ -668,6 +675,9 @@ details:not([open]) > summary::after { content:'+'; float:right; font-size:14px;
         </div>
         <div class="h-6 bg-orange-500/15 border border-orange-500/30 rounded px-2 flex items-center justify-between text-[10px] font-mono text-orange-300">
           <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Shader Particle Track</span><span>LOOPING</span>
+        </div>
+        <div class="h-6 bg-emerald-500/15 border border-emerald-500/30 rounded px-2 flex items-center justify-between text-[10px] font-mono text-emerald-300">
+          <span class="flex items-center gap-1"><i data-lucide="monitor" class="w-3 h-3"></i> Chroma Key BG</span><span>#00b140</span>
         </div>
       </div>
     </div>
@@ -699,21 +709,16 @@ class Camera3D {
   constructor() { this.fov = 500; this.rotX = 0; this.rotY = 0; this.rotZ = 0; this.cx = 0; this.cy = 0; this.cz = 900; }
   project(x, y, z) {
     let px = x, py = y, pz = z;
-    // rotate Y
     const cy = Math.cos(this.rotY), sy = Math.sin(this.rotY);
     let nx = px * cy - pz * sy; let nz = px * sy + pz * cy;
     px = nx; pz = nz;
-    // rotate X
     const cx = Math.cos(this.rotX), sx = Math.sin(this.rotX);
     let ny = py * cx - pz * sx; nz = py * sx + pz * cx;
     py = ny; pz = nz;
-    // rotate Z
     const cz = Math.cos(this.rotZ), sz = Math.sin(this.rotZ);
     nx = px * cz - py * sz; ny = px * sz + py * cz;
     px = nx; py = ny;
-    // translate
     const tx = px, ty = py, tz = pz + this.cz;
-    // perspective
     const scale = this.fov / Math.max(0.01, tz);
     return { x: this.cx + tx * scale, y: this.cy + ty * scale, z: tz, scale, visible: tz > 20 };
   }
@@ -736,12 +741,12 @@ function box3D(c, cam, cx, cy, cz, w, h, d, color, strokeCol, opacity) {
     [-hw,-hh,hd],[hw,-hh,hd],[hw,hh,hd],[-hw,hh,hd]
   ].map(([x,y,z]) => cam.project(cx+x, cy+y, cz+z));
   const faces = [
-    { idx:[0,1,2,3], shade:0.55 }, // back
-    { idx:[4,5,6,7], shade:1.15 }, // front
-    { idx:[0,4,7,3], shade:0.85 }, // left
-    { idx:[1,5,6,2], shade:0.7 },  // right
-    { idx:[3,2,6,7], shade:1.05 }, // top
-    { idx:[0,1,5,4], shade:0.5 }   // bottom
+    { idx:[0,1,2,3], shade:0.55 },
+    { idx:[4,5,6,7], shade:1.15 },
+    { idx:[0,4,7,3], shade:0.85 },
+    { idx:[1,5,6,2], shade:0.7 },
+    { idx:[3,2,6,7], shade:1.05 },
+    { idx:[0,1,5,4], shade:0.5 }
   ];
   faces.sort((a,b) => {
     const za = a.idx.reduce((s,i)=>s+corners[i].z,0)/4;
@@ -751,9 +756,8 @@ function box3D(c, cam, cx, cy, cz, w, h, d, color, strokeCol, opacity) {
   faces.forEach(f => {
     const avgZ = f.idx.reduce((s,i)=>s+corners[i].z,0)/4;
     if (avgZ < 20) return;
-    const shade = f.shade;
     const pts = f.idx.map(i => corners[i]);
-    face(c, pts, color(shade, opacity), strokeCol, 1);
+    face(c, pts, color(f.shade, opacity), strokeCol, 1);
   });
 }
 
@@ -793,6 +797,20 @@ function shadeColor(hex, factor, alpha) {
   return `rgba(${rr},${gg},${bb},${alpha==null?1:alpha})`;
 }
 
+/* ============================================================
+   GREEN SCREEN (CHROMA KEY) LOGIC
+   ============================================================ */
+const CHROMA = '#00b140';
+function bgFor(c, cfg, w, h, drawBgFn) {
+  if (cfg && cfg.greenScreen) {
+    c.fillStyle = CHROMA;
+    c.fillRect(0, 0, w, h);
+    return true; // caller should skip decorative background layers
+  }
+  if (typeof drawBgFn === 'function') drawBgFn(c, w, h);
+  return false;
+}
+
 /* SOUND ENGINE */
 class SoundEngine {
   constructor() { this.ctx = null; this.enabled = false; }
@@ -822,170 +840,170 @@ class SoundEngine {
 }
 const sound = new SoundEngine();
 
-/* 30 TEMPLATES (24 originals + t25 + t26–t30 with ULTRA 3D) */
+/* 30 TEMPLATES (all now GS-aware) */
 const DB = [
   { id:'t1', title:'Cinematic Gold Title Reveal', category:'Titles', style:'Cinematic', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'12.4 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:98, addedAt:20240101, headline:'CINEMATIC GOLD', subtitle:'HOLLYWOOD GRADE REVEAL',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0a0803';c.fillRect(0,0,w,h);
-      for(let i=0;i<30;i++){const a=(i/30)*Math.PI*2+t*0.5,x=w/2+Math.cos(a)*(180+Math.sin(t*2+i)*20),y=h/2+Math.sin(a)*90;c.fillStyle=`rgba(234,179,8,${0.3+0.7*Math.sin(t*3+i)})`;c.beginPath();c.arc(x,y,3+Math.sin(t+i)*2,0,Math.PI*2);c.fill();}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0a0803';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<30;i++){const a=(i/30)*Math.PI*2+t*0.5,x=w/2+Math.cos(a)*(180+Math.sin(t*2+i)*20),y=h/2+Math.sin(a)*90;c.fillStyle=`rgba(234,179,8,${0.3+0.7*Math.sin(t*3+i)})`;c.beginPath();c.arc(x,y,3+Math.sin(t+i)*2,0,Math.PI*2);c.fill();}
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||42}px ${cfg.fontFamily||'Montserrat'}`;
       const g=c.createLinearGradient(w/2-200,0,w/2+200,0);g.addColorStop(0,'#fef08a');g.addColorStop(.5,'#eab308');g.addColorStop(1,'#ca8a04');c.fillStyle=g;
       c.fillText(cfg.headline||'CINEMATIC GOLD',w/2,h/2);
       c.font='600 14px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'HOLLYWOOD GRADE REVEAL',w/2,h/2+45);}
   },
   { id:'t2', title:'Epic Hollywood Opener', category:'Titles', style:'Cinematic', duration:'00:08', aspect:'21:9', resolution:'2560 × 1080', fps:60, fileSize:'18.2 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:96, addedAt:20240105, headline:'THE LAST HORIZON', subtitle:'COMING THIS SUMMER',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#000';c.fillRect(0,0,w,h);
-      c.fillStyle='#000';c.fillRect(0,0,w,h*0.1);c.fillRect(0,h*0.9,w,h*0.1);
-      for(let i=0;i<6;i++){const x=((t*80+i*200)%(w+300))-150;const g=c.createLinearGradient(x,0,x+300,0);g.addColorStop(0,'rgba(217,119,6,0)');g.addColorStop(.5,`rgba(217,119,6,${.3+.2*Math.sin(t+i)})`);g.addColorStop(1,'rgba(217,119,6,0)');c.fillStyle=g;c.fillRect(x,h*0.1,300,h*0.8);}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#000';cc.fillRect(0,0,ww,hh);});
+      if(!gs){c.fillStyle='#000';c.fillRect(0,0,w,h*0.1);c.fillRect(0,h*0.9,w,h*0.1);
+      for(let i=0;i<6;i++){const x=((t*80+i*200)%(w+300))-150;const g=c.createLinearGradient(x,0,x+300,0);g.addColorStop(0,'rgba(217,119,6,0)');g.addColorStop(.5,`rgba(217,119,6,${.3+.2*Math.sin(t+i)})`);g.addColorStop(1,'rgba(217,119,6,0)');c.fillStyle=g;c.fillRect(x,h*0.1,300,h*0.8);}}
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||54}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'THE LAST HORIZON',w/2,h/2);
       c.font='500 14px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'COMING THIS SUMMER',w/2,h/2+50);}
   },
   { id:'t3', title:'Modern Typography Intro', category:'Titles', style:'Modern', duration:'00:08', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'5.0 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:76, addedAt:20240110, headline:'STAY FOCUSED', subtitle:'LESS IS MORE',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#f5f5f4';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#f5f5f4';cc.fillRect(0,0,ww,hh);});
       const words=(cfg.headline||'STAY FOCUSED').split(' ');const idx=Math.floor(t*1.5)%words.length;
-      c.fillStyle='#1c1917';c.font=`${cfg.fontWeight||300} ${cfg.fontSize||64}px ${cfg.fontFamily||'Playfair Display'}`;c.textAlign='center';c.fillText(words[idx],w/2,h/2);
-      c.fillStyle=cfg.accentColor||'#d97706';const bar=(t*100)%w;c.fillRect(0,h/2+30,bar,2);
-      c.font='600 10px "JetBrains Mono"';c.fillStyle='#78716c';c.fillText(cfg.subtitle||'LESS IS MORE',w/2,h*0.85);}
+      c.fillStyle=gs?'#f4ede3':'#1c1917';c.font=`${cfg.fontWeight||300} ${cfg.fontSize||64}px ${cfg.fontFamily||'Playfair Display'}`;c.textAlign='center';c.fillText(words[idx],w/2,h/2);
+      if(!gs){c.fillStyle=cfg.accentColor||'#d97706';const bar=(t*100)%w;c.fillRect(0,h/2+30,bar,2);}
+      c.font='600 10px "JetBrains Mono"';c.fillStyle=gs?'#f4ede3':'#78716c';c.fillText(cfg.subtitle||'LESS IS MORE',w/2,h*0.85);}
   },
   { id:'t4', title:'Neon Cyberpunk Titles', category:'Titles', style:'Neon', duration:'00:09', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'8.4 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:91, addedAt:20240115, headline:'NEON CITY 2089', subtitle:'A CYBER FUTURE',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0a0014';c.fillRect(0,0,w,h);
-      c.strokeStyle='rgba(239,68,68,0.4)';c.lineWidth=1;
-      for(let i=0;i<20;i++){const y=h*0.55+(i*20+(t*40)%20);c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0a0014';cc.fillRect(0,0,ww,hh);});
+      if(!gs){c.strokeStyle='rgba(239,68,68,0.4)';c.lineWidth=1;
+      for(let i=0;i<20;i++){const y=h*0.55+(i*20+(t*40)%20);c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}}
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||52}px ${cfg.fontFamily||'Oswald'}`;
       c.shadowColor=cfg.accentColor||'#d97706';c.shadowBlur=25;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'NEON CITY 2089',w/2,h*0.42);
       c.shadowBlur=0;c.fillStyle='#ef4444';c.fillText(cfg.headline||'NEON CITY 2089',w/2+2,h*0.42);
       c.font='600 14px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'A CYBER FUTURE',w/2,h*0.52);}
   },
   { id:'t5', title:'Luxury Gold Logo Reveal', category:'Logo Reveals', style:'Luxury', duration:'00:08', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'8.9 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:95, addedAt:20240120, headline:'LUXURY MOTION', subtitle:'CREATIVE STUDIO',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#141210';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#141210';cc.fillRect(0,0,ww,hh);});
       c.save();c.translate(w/2,h/2-30);c.rotate(t*0.2);c.strokeStyle='#eab308';c.lineWidth=3;c.strokeRect(-40,-40,80,80);c.restore();
       c.textAlign='center';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||36}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'LUXURY MOTION',w/2,h/2+50);
       c.font='500 12px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'CREATIVE STUDIO',w/2,h/2+75);}
   },
   { id:'t6', title:'Futuristic Digital Logo', category:'Logo Reveals', style:'Futuristic', duration:'00:07', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'7.3 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:82, addedAt:20240125, headline:'DIGITAL CORE', subtitle:'NEXT GEN SYSTEMS',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#02040a';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#02040a';cc.fillRect(0,0,ww,hh);});
       c.strokeStyle=cfg.accentColor||'#d97706';c.lineWidth=2;
       for(let i=0;i<5;i++){const r=40+i*25+Math.sin(t*2+i)*10;c.beginPath();c.arc(w/2,h/2-20,r,0,Math.PI*2);c.stroke();}
       c.textAlign='center';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||34}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'DIGITAL CORE',w/2,h/2+100);
       c.font='600 12px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'NEXT GEN SYSTEMS',w/2,h/2+125);}
   },
   { id:'t7', title:'Particle Explosion Logo', category:'Logo Reveals', style:'Modern', duration:'00:06', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'6.1 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:88, addedAt:20240201, headline:'EXPLOSIVE', subtitle:'BRAND REVEAL',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#000';c.fillRect(0,0,w,h);
-      for(let i=0;i<80;i++){const a=(i/80)*Math.PI*2;const r=(t*80)%400;const x=w/2+Math.cos(a)*r;const y=h/2+Math.sin(a)*r;const alpha=Math.max(0,1-r/400);c.fillStyle=`rgba(217,119,6,${alpha})`;c.beginPath();c.arc(x,y,2+Math.sin(t+i)*2,0,Math.PI*2);c.fill();}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#000';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<80;i++){const a=(i/80)*Math.PI*2;const r=(t*80)%400;const x=w/2+Math.cos(a)*r;const y=h/2+Math.sin(a)*r;const alpha=Math.max(0,1-r/400);c.fillStyle=`rgba(217,119,6,${alpha})`;c.beginPath();c.arc(x,y,2+Math.sin(t+i)*2,0,Math.PI*2);c.fill();}
       c.textAlign='center';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||40}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'EXPLOSIVE',w/2,h/2);
       c.font='600 12px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'BRAND REVEAL',w/2,h/2+35);}
   },
   { id:'t8', title:'Minimal Clean Logo', category:'Logo Reveals', style:'Minimal', duration:'00:05', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'3.4 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:70, addedAt:20240205, headline:'SIMPLE', subtitle:'STUDIO',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#f4ede3';c.fillRect(0,0,w,h);
-      const s=Math.min(1,t);c.strokeStyle='#141210';c.lineWidth=2;c.strokeRect(w/2-40*s,h/2-90,80*s,80*s);
-      c.textAlign='center';c.font=`${cfg.fontWeight||400} ${cfg.fontSize||28}px ${cfg.fontFamily||'Playfair Display'}`;c.fillStyle='#141210';c.fillText(cfg.headline||'SIMPLE',w/2,h/2+50);
-      c.font='400 10px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'STUDIO',w/2,h/2+70);}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#f4ede3';cc.fillRect(0,0,ww,hh);});
+      const s=Math.min(1,t);c.strokeStyle=gs?'#f4ede3':'#141210';c.lineWidth=2;c.strokeRect(w/2-40*s,h/2-90,80*s,80*s);
+      c.textAlign='center';c.font=`${cfg.fontWeight||400} ${cfg.fontSize||28}px ${cfg.fontFamily||'Playfair Display'}`;c.fillStyle=gs?'#f4ede3':'#141210';c.fillText(cfg.headline||'SIMPLE',w/2,h/2+50);
+      c.font='400 10px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');c.fillText(cfg.subtitle||'STUDIO',w/2,h/2+70);}
   },
   { id:'t9', title:'Modern News Lower Third', category:'Lower Thirds', style:'Modern', duration:'00:06', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'4.1 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:82, addedAt:20240210, headline:'ALEXANDER RIVERA', subtitle:'CHIEF CREATIVE OFFICER',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0d0b09';c.fillRect(0,0,w,h);
-      const wipe=Math.min(1,t*1.5);c.fillStyle='rgba(28,25,23,0.85)';c.fillRect(50,h-140,(w-300)*wipe,70);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0d0b09';cc.fillRect(0,0,ww,hh);});
+      const wipe=Math.min(1,t*1.5);c.fillStyle=gs?'rgba(0,0,0,0.55)':'rgba(28,25,23,0.85)';c.fillRect(50,h-140,(w-300)*wipe,70);
       c.fillStyle=cfg.accentColor||'#d97706';c.fillRect(50,h-140,6,70);
       if(wipe>0.4){c.textAlign='left';c.font=`800 ${cfg.fontSize||20}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'ALEXANDER RIVERA',75,h-110);
-        c.font='600 11px "JetBrains Mono"';c.fillStyle='#a8a29e';c.fillText(cfg.subtitle||'CHIEF CREATIVE OFFICER',75,h-90);}}
+        c.font='600 11px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':'#a8a29e';c.fillText(cfg.subtitle||'CHIEF CREATIVE OFFICER',75,h-90);}}
   },
   { id:'t10', title:'Corporate Lower Third', category:'Lower Thirds', style:'Corporate', duration:'00:06', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'3.8 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:74, addedAt:20240215, headline:'JANE DOE', subtitle:'SENIOR MANAGER',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#1c1917';c.fillRect(0,0,w,h);
-      const wipe=Math.min(1,t*1.2);c.fillStyle='#292524';c.fillRect(60,h-130,(w-300)*wipe,60);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#1c1917';cc.fillRect(0,0,ww,hh);});
+      const wipe=Math.min(1,t*1.2);c.fillStyle=gs?'rgba(0,0,0,0.5)':'#292524';c.fillRect(60,h-130,(w-300)*wipe,60);
       c.fillStyle=cfg.accentColor||'#d97706';c.fillRect(60,h-130,4,60);
       if(wipe>0.5){c.textAlign='left';c.font=`700 ${cfg.fontSize||18}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'JANE DOE',85,h-102);
-        c.font='500 10px "JetBrains Mono"';c.fillStyle='#a8a29e';c.fillText(cfg.subtitle||'SENIOR MANAGER',85,h-85);}}
+        c.font='500 10px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':'#a8a29e';c.fillText(cfg.subtitle||'SENIOR MANAGER',85,h-85);}}
   },
   { id:'t11', title:'Sports Broadcast Lower Third', category:'Lower Thirds', style:'Sports', duration:'00:05', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'4.4 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:85, addedAt:20240220, headline:'PLAYER NAME', subtitle:'TEAM · #24',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#000';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#000';cc.fillRect(0,0,ww,hh);});
       const wipe=Math.min(1,t*2);c.fillStyle='#dc2626';c.fillRect(60,h-140,(w-200)*wipe,80);
       c.fillStyle='#f4ede3';c.fillRect(60,h-140,60,80);
       if(wipe>0.5){c.textAlign='left';c.font=`900 ${cfg.fontSize||22}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle='#f4ede3';c.fillText(cfg.headline||'PLAYER NAME',130,h-108);
         c.font='700 11px "JetBrains Mono"';c.fillStyle='#fca5a5';c.fillText(cfg.subtitle||'TEAM · #24',130,h-85);}}
   },
   { id:'t12', title:'Instagram Promo Reel', category:'Social Media', style:'Modern', duration:'00:05', aspect:'9:16', resolution:'1080 × 1920', fps:60, fileSize:'4.2 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:89, addedAt:20240225, headline:'NEW COLLECTION', subtitle:'SWIPE UP TO SHOP',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,'#d97706');g.addColorStop(1,'#ef4444');c.fillStyle=g;c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{const g=cc.createLinearGradient(0,0,ww,hh);g.addColorStop(0,'#d97706');g.addColorStop(1,'#ef4444');cc.fillStyle=g;cc.fillRect(0,0,ww,hh);});
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||48}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle='#f4ede3';c.fillText(cfg.headline||'NEW COLLECTION',w/2,h/2);
       c.font='700 14px Montserrat';c.fillStyle='#fef3c7';c.fillText(cfg.subtitle||'SWIPE UP TO SHOP',w/2,h/2+45);}
   },
   { id:'t13', title:'TikTok Dynamic Promo', category:'Social Media', style:'Neon', duration:'00:04', aspect:'9:16', resolution:'1080 × 1920', fps:60, fileSize:'3.6 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:92, addedAt:20240301, headline:'VIRAL DROP', subtitle:'LINK IN BIO',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#141210';c.fillRect(0,0,w,h);
-      c.fillStyle=cfg.accentColor||'#d97706';const shift=(t*200)%120;
-      for(let x=-100;x<w+100;x+=120){c.beginPath();c.moveTo(x+shift,0);c.lineTo(x+shift-60,h);c.lineTo(x+shift-30,h);c.lineTo(x+shift+30,0);c.fill();}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#141210';cc.fillRect(0,0,ww,hh);});
+      if(!gs){c.fillStyle=cfg.accentColor||'#d97706';const shift=(t*200)%120;
+      for(let x=-100;x<w+100;x+=120){c.beginPath();c.moveTo(x+shift,0);c.lineTo(x+shift-60,h);c.lineTo(x+shift-30,h);c.lineTo(x+shift+30,0);c.fill();}}
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||52}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'VIRAL DROP',w/2,h/2);
-      c.font='700 14px Montserrat';c.fillStyle='#fef3c7';c.fillText(cfg.subtitle||'LINK IN BIO',w/2,h/2+45);}
+      c.font='700 14px Montserrat';c.fillStyle=gs?'#fef3c7':'#fef3c7';c.fillText(cfg.subtitle||'LINK IN BIO',w/2,h/2+45);}
   },
   { id:'t14', title:'Social Media Sale', category:'Social Media', style:'Modern', duration:'00:05', aspect:'1:1', resolution:'1080 × 1080', fps:60, fileSize:'3.9 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:78, addedAt:20240305, headline:'50% OFF', subtitle:'LIMITED TIME ONLY',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#1c1917';c.fillRect(0,0,w,h);
-      c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||64}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.headline||'50% OFF',w/2,h/2);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#1c1917';cc.fillRect(0,0,ww,hh);});
+      c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||64}px ${cfg.fontFamily||'Oswald'}`;c.fillStyle=gs?'#f4ede3':(cfg.accentColor||'#d97706');c.fillText(cfg.headline||'50% OFF',w/2,h/2);
       c.font='700 14px Montserrat';c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.subtitle||'LIMITED TIME ONLY',w/2,h/2+50);}
   },
   { id:'t15', title:'DJ Audio Visualizer', category:'Music Visualizers', style:'Music', duration:'00:15', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'14.2 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:89, addedAt:20240310, headline:'NEON FREQUENCY', subtitle:'LIVE AT ULTRA STAGE',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0d0b09';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0d0b09';cc.fillRect(0,0,ww,hh);});
       const bars=32,bw=(w-100)/bars;
-      for(let i=0;i<bars;i++){const bh=20+Math.abs(Math.sin(t*4+i*0.3))*(h*0.4);const x=50+i*bw;c.fillStyle=i%2===0?(cfg.accentColor||'#d97706'):'#ef4444';c.fillRect(x,h/2-bh/2,bw-4,bh);}
+      for(let i=0;i<bars;i++){const bh=20+Math.abs(Math.sin(t*4+i*0.3))*(h*0.4);const x=50+i*bw;c.fillStyle=i%2===0?(cfg.accentColor||'#d97706'):(gs?'#f4ede3':'#ef4444');c.fillRect(x,h/2-bh/2,bw-4,bh);}
       c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||36}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'NEON FREQUENCY',w/2,80);}
   },
   { id:'t16', title:'Neon Music Spectrum', category:'Music Visualizers', style:'Neon', duration:'00:12', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'10.5 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:86, addedAt:20240315, headline:'SOUND WAVE', subtitle:'FEEL THE BEAT',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#141210';c.fillRect(0,0,w,h);
-      c.strokeStyle=cfg.accentColor||'#d97706';c.lineWidth=2;c.beginPath();
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#141210';cc.fillRect(0,0,ww,hh);});
+      c.strokeStyle=gs?'#f4ede3':(cfg.accentColor||'#d97706');c.lineWidth=2;c.beginPath();
       for(let x=0;x<w;x+=4){const y=h/2+Math.sin(x*0.02+t*4)*60*Math.sin(x*0.005+t);if(x===0)c.moveTo(x,y);else c.lineTo(x,y);}
       c.stroke();
       c.textAlign='center';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||40}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'SOUND WAVE',w/2,120);
-      c.font='600 12px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'FEEL THE BEAT',w/2,150);}
+      c.font='600 12px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');c.fillText(cfg.subtitle||'FEEL THE BEAT',w/2,150);}
   },
   { id:'t17', title:'Hip-Hop Promo', category:'Music Visualizers', style:'Neon', duration:'00:06', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'5.8 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:87, addedAt:20240320, headline:'STREET BEATS', subtitle:'ALBUM LAUNCH',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle=(Math.floor(t*10)%2===0)?'#000':'#18181b';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle=(Math.floor(t*10)%2===0)?'#000':'#18181b';cc.fillRect(0,0,ww,hh);});
       const gx=(Math.random()-0.5)*12;c.textAlign='center';c.font=`${cfg.fontWeight||900} ${cfg.fontSize||48}px ${cfg.fontFamily||'Oswald'}`;
       c.fillStyle='#ef4444';c.fillText(cfg.headline||'STREET BEATS',w/2+gx,h/2);
       c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'STREET BEATS',w/2,h/2);}
   },
-  { id:'t18', title:'AI Technology HUD', category:'HUD / Tech', style:'Futuristic', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'9.6 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:93, addedAt:20240325, headline:'SYSTEM MATRIX v4.4', subtitle:'EDITORIAL ENGINE ONLINE',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0d0b09';c.fillRect(0,0,w,h);
-      c.strokeStyle=cfg.accentColor||'#d97706';c.lineWidth=1.5;c.beginPath();c.arc(w/2,h/2,100+Math.sin(t*3)*10,0,Math.PI*2);c.stroke();
+  { id:'t18', title:'AI Technology HUD', category:'HUD / Tech', style:'Futuristic', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'9.6 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:93, addedAt:20240325, headline:'SYSTEM MATRIX v4.6', subtitle:'EDITORIAL ENGINE ONLINE',
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0d0b09';cc.fillRect(0,0,ww,hh);});
+      c.strokeStyle=gs?'#f4ede3':(cfg.accentColor||'#d97706');c.lineWidth=1.5;c.beginPath();c.arc(w/2,h/2,100+Math.sin(t*3)*10,0,Math.PI*2);c.stroke();
       c.beginPath();c.arc(w/2,h/2,140+Math.cos(t*2)*15,0,Math.PI*1.6);c.stroke();
-      c.textAlign='center';c.font=`${cfg.fontWeight||700} ${cfg.fontSize||28}px ${cfg.fontFamily||'JetBrains Mono'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'SYSTEM MATRIX v4.4',w/2,h/2+8);
-      c.font='500 11px "JetBrains Mono"';c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.subtitle||'EDITORIAL ENGINE ONLINE',w/2,h/2+140);}
+      c.textAlign='center';c.font=`${cfg.fontWeight||700} ${cfg.fontSize||28}px ${cfg.fontFamily||'JetBrains Mono'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'SYSTEM MATRIX v4.6',w/2,h/2+8);
+      c.font='500 11px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');c.fillText(cfg.subtitle||'EDITORIAL ENGINE ONLINE',w/2,h/2+140);}
   },
   { id:'t19', title:'Futuristic Interface Intro', category:'HUD / Tech', style:'Futuristic', duration:'00:08', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'8.1 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:79, addedAt:20240401, headline:'INTERFACE', subtitle:'LOADING...',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#0d0b09';c.fillRect(0,0,w,h);
-      for(let i=0;i<8;i++){c.strokeStyle=`rgba(217,119,6,${0.1+0.05*Math.sin(t+i)})`;c.strokeRect(i*30+t*20,i*20,w-i*60,h-i*40);}
-      c.textAlign='center';c.font=`${cfg.fontWeight||800} 36px ${cfg.fontFamily||'JetBrains Mono'}`;c.fillStyle=cfg.accentColor||'#d97706';c.fillText(cfg.headline||'INTERFACE',w/2,h/2);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0d0b09';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<8;i++){c.strokeStyle=`rgba(217,119,6,${0.1+0.05*Math.sin(t+i)})`;c.strokeRect(i*30+t*20,i*20,w-i*60,h-i*40);}
+      c.textAlign='center';c.font=`${cfg.fontWeight||800} 36px ${cfg.fontFamily||'JetBrains Mono'}`;c.fillStyle=gs?'#f4ede3':(cfg.accentColor||'#d97706');c.fillText(cfg.headline||'INTERFACE',w/2,h/2);
       c.font='600 12px "JetBrains Mono"';c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.subtitle||'LOADING...',w/2,h/2+35);}
   },
   { id:'t20', title:'Sci-Fi Data Visualization', category:'HUD / Tech', style:'Futuristic', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'9.3 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:84, addedAt:20240405, headline:'DATA MATRIX', subtitle:'ANALYZING...',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#000';c.fillRect(0,0,w,h);
-      for(let i=0;i<40;i++){const x=(i*47+t*30)%w;const y=(i*63)%h;const h2=10+Math.abs(Math.sin(t*3+i))*40;c.fillStyle=i%3===0?(cfg.accentColor||'#d97706'):'rgba(239,68,68,0.6)';c.fillRect(x,y,3,h2);}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#000';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<40;i++){const x=(i*47+t*30)%w;const y=(i*63)%h;const h2=10+Math.abs(Math.sin(t*3+i))*40;c.fillStyle=i%3===0?(cfg.accentColor||'#d97706'):'rgba(239,68,68,0.6)';c.fillRect(x,y,3,h2);}
       c.textAlign='center';c.font=`${cfg.fontWeight||800} 40px ${cfg.fontFamily||'JetBrains Mono'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'DATA MATRIX',w/2,h/2);}
   },
   { id:'t21', title:'Elegant Wedding Titles', category:'Wedding', style:'Wedding', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'8.7 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:90, addedAt:20240410, headline:'SARAH & DANIEL', subtitle:'SAVE THE DATE',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#1a0f11';c.fillRect(0,0,w,h);
-      for(let i=0;i<15;i++){const rad=60+Math.sin(t+i)*15;c.strokeStyle=`rgba(251,191,36,${0.2+0.3*Math.sin(t+i)})`;c.beginPath();c.arc(w/2+Math.cos(i)*120,h/2+Math.sin(i)*60,rad,0,Math.PI*2);c.stroke();}
-      c.textAlign='center';c.font=`${cfg.fontWeight||400} ${cfg.fontSize||38}px ${cfg.fontFamily||'Playfair Display'}`;c.fillStyle=cfg.textColor||'#fde68a';c.fillText(cfg.headline||'SARAH & DANIEL',w/2,h/2);
-      c.font='600 12px Montserrat';c.fillStyle=cfg.accentColor||'#f4ede3';c.fillText(cfg.subtitle||'SAVE THE DATE',w/2,h/2+40);}
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#1a0f11';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<15;i++){const rad=60+Math.sin(t+i)*15;c.strokeStyle=`rgba(251,191,36,${0.2+0.3*Math.sin(t+i)})`;c.beginPath();c.arc(w/2+Math.cos(i)*120,h/2+Math.sin(i)*60,rad,0,Math.PI*2);c.stroke();}
+      c.textAlign='center';c.font=`${cfg.fontWeight||400} ${cfg.fontSize||38}px ${cfg.fontFamily||'Playfair Display'}`;c.fillStyle=gs?'#fde68a':(cfg.textColor||'#fde68a');c.fillText(cfg.headline||'SARAH & DANIEL',w/2,h/2);
+      c.font='600 12px Montserrat';c.fillStyle=gs?'#f4ede3':(cfg.accentColor||'#f4ede3');c.fillText(cfg.subtitle||'SAVE THE DATE',w/2,h/2+40);}
   },
   { id:'t22', title:'Romantic Photo Slideshow', category:'Wedding', style:'Wedding', duration:'00:15', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'16.5 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:75, addedAt:20240415, headline:'MEMORIES', subtitle:'A JOURNEY TOGETHER',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#1a1a1a';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#1a1a1a';cc.fillRect(0,0,ww,hh);});
       const idx=Math.floor(t*0.5)%3;const zoom=1+Math.sin(t*0.3)*0.1;
       c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-w/2,-h/2);
       c.fillStyle=['#44403c','#57534e','#78716c'][idx];c.fillRect(w*0.15,h*0.15,w*0.7,h*0.7);c.restore();
       c.textAlign='center';c.font=`${cfg.fontWeight||600} ${cfg.fontSize||36}px ${cfg.fontFamily||'Playfair Display'}`;c.fillStyle=cfg.textColor||'#fef3c7';c.fillText(cfg.headline||'MEMORIES',w/2,h*0.85);}
   },
   { id:'t23', title:'Business Presentation Opener', category:'Corporate', style:'Corporate', duration:'00:08', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'5.3 MB', compatibility:'HTML5 Canvas', isFree:true, trending:false, popularity:74, addedAt:20240420, headline:'ANNUAL REPORT 2026', subtitle:'FINANCIAL GROWTH',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#141210';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#141210';cc.fillRect(0,0,ww,hh);});
       c.fillStyle=cfg.accentColor||'#d97706';c.fillRect(60,60,8,h-120);
       c.textAlign='left';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||34}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'ANNUAL REPORT 2026',90,h/2);
-      c.font='500 14px "JetBrains Mono"';c.fillStyle='#a8a29e';c.fillText(cfg.subtitle||'FINANCIAL GROWTH',90,h/2+35);}
+      c.font='500 14px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':'#a8a29e';c.fillText(cfg.subtitle||'FINANCIAL GROWTH',90,h/2+35);}
   },
   { id:'t24', title:'Corporate Product Promo', category:'Corporate', style:'Corporate', duration:'00:09', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'6.8 MB', compatibility:'HTML5 Canvas', isFree:false, trending:true, popularity:81, addedAt:20240425, headline:'NEW PRODUCT', subtitle:'AVAILABLE NOW',
-    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;c.fillStyle='#292524';c.fillRect(0,0,w,h);
+    render:(c,t,cfg)=>{const w=c.canvas.width,h=c.canvas.height;const gs=bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#292524';cc.fillRect(0,0,ww,hh);});
       const s=80+Math.sin(t*2)*10;c.fillStyle=cfg.accentColor||'#d97706';c.beginPath();c.arc(w/2,h/2-40,s,0,Math.PI*2);c.fill();
       c.textAlign='center';c.font=`${cfg.fontWeight||800} ${cfg.fontSize||30}px ${cfg.fontFamily||'Montserrat'}`;c.fillStyle=cfg.textColor||'#f4ede3';c.fillText(cfg.headline||'NEW PRODUCT',w/2,h/2+80);
-      c.font='600 12px "JetBrains Mono"';c.fillStyle='#a8a29e';c.fillText(cfg.subtitle||'AVAILABLE NOW',w/2,h/2+105);}
+      c.font='600 12px "JetBrains Mono"';c.fillStyle=gs?'#fef3c7':'#a8a29e';c.fillText(cfg.subtitle||'AVAILABLE NOW',w/2,h/2+105);}
   },
   { id:'t25', title:'Editorial Quote Card', category:'Titles', style:'Luxury', duration:'00:08', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'4.2 MB', compatibility:'HTML5 Canvas', isFree:true, trending:true, popularity:94, addedAt:20250101, headline:'Editing is like Cooking', subtitle:'PATIENCE · LAYERS · TASTE',
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      c.fillStyle = '#f4ede3'; c.fillRect(0,0,w,h);
-      for(let i=0;i<220;i++){
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#f4ede3';cc.fillRect(0,0,ww,hh);});
+      if(!gs)for(let i=0;i<220;i++){
         const x=(i*137.5)%w, y=(i*89.3)%h;
         c.fillStyle = `rgba(20,18,16,${0.02 + Math.random()*0.015})`;
         c.fillRect(x,y,1.2,1.2);
@@ -1004,7 +1022,7 @@ const DB = [
       const reveal = Math.min(1, Math.max(0, (t-0.4)*1.8));
       const dy = (1-reveal)*20;
       c.textAlign = 'center';
-      c.fillStyle = '#141210';
+      c.fillStyle = gs ? '#f4ede3' : '#141210';
       const size = Math.min(cfg.fontSize || 56, Math.floor(w*0.065));
       c.font = `italic ${cfg.fontWeight || 600} ${size}px ${cfg.fontFamily || 'Playfair Display'}`;
       c.globalAlpha = reveal;
@@ -1027,7 +1045,7 @@ const DB = [
       c.fillRect(w/2 - lineW/2, h*0.55, lineW, 2);
 
       c.font = '500 11px "JetBrains Mono"';
-      c.fillStyle = '#78716c';
+      c.fillStyle = gs ? '#fef3c7' : '#78716c';
       c.globalAlpha = Math.max(0, Math.min(1, (t-1.2)*1.5));
       c.fillText((cfg.subtitle || 'PATIENCE · LAYERS · TASTE').toUpperCase(), w/2, h*0.62);
       c.globalAlpha = 1;
@@ -1036,35 +1054,32 @@ const DB = [
     }
   },
 
-  /* ========= ULTRA 3D TEMPLATES t26–t30 ========= */
+  /* ========= ULTRA 3D TEMPLATES t26–t30 (all GS-aware) ========= */
 
   { id:'t26', title:"Chef's Cut Editorial 3D", category:'Titles', style:'Luxury', duration:'00:09', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'7.8 MB', compatibility:'HTML5 Canvas 3D', isFree:true, trending:true, popularity:97, addedAt:20260201, headline:"EDITING IS COOKING", subtitle:"RAW FOOTAGE · SEASONING · PLATING",
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      const bg=c.createLinearGradient(0,0,w,h);
-      bg.addColorStop(0,'#1c1917'); bg.addColorStop(1,'#292524');
-      c.fillStyle=bg; c.fillRect(0,0,w,h);
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{
+        const bg=cc.createLinearGradient(0,0,ww,hh);
+        bg.addColorStop(0,'#1c1917'); bg.addColorStop(1,'#292524');
+        cc.fillStyle=bg; cc.fillRect(0,0,ww,hh);
+      });
       const cam = new Camera3D();
       cam.cx = w/2; cam.cy = h/2;
       cam.cz = 900 - t*40;
       cam.rotX = -0.25 + Math.sin(t*0.4)*0.05;
       cam.rotY = -0.4 + t*0.35;
       cam.rotZ = 0;
-      // depth particles
-      particles3D(c, cam, t, 60, a => shadeColor(cfg.accentColor||'#d97706', 1.2, a*0.5), 500, 1200);
-      // 3D stacked slabs
+      if(!gs) particles3D(c, cam, t, 60, a => shadeColor(cfg.accentColor||'#d97706', 1.2, a*0.5), 500, 1200);
       const slabs = 4;
       for(let i=0;i<slabs;i++){
         const reveal = Math.max(0, Math.min(1, (t*1.2)-(i*0.25)));
         const y = -60 + i*70;
         const z = -i*120;
-        const sc = reveal;
-        if(sc<=0) continue;
-        const col = shadeColor(cfg.accentColor||'#d97706', 0.6 + i*0.15, 1);
-        box3D(c, cam, 0, y*(1 - (1-sc)*0.5), z, 380, 40, 40, 
+        if(reveal<=0) continue;
+        box3D(c, cam, 0, y*(1 - (1-reveal)*0.5), z, 380, 40, 40,
           (f, a) => shadeColor(cfg.accentColor||'#d97706', f, 0.85*a),
           'rgba(244,237,227,0.3)', 1);
-        // cut marks
         for(let k=1;k<3;k++){
           const px = -190 + k*127;
           const p1 = cam.project(px, y-20, z+20);
@@ -1075,7 +1090,6 @@ const DB = [
           }
         }
       }
-      // headline overlay
       const reveal=Math.max(0,Math.min(1,(t-0.6)*1.8));
       const dy=(1-reveal)*16;
       c.textAlign='center';
@@ -1086,7 +1100,7 @@ const DB = [
       if(reveal>0.5){
         c.globalAlpha=Math.min(1,(reveal-0.5)*2.5);
         c.font='600 12px "JetBrains Mono"';
-        c.fillStyle=cfg.accentColor||'#d97706';
+        c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');
         c.fillText((cfg.subtitle||'RAW FOOTAGE · SEASONING · PLATING').toUpperCase(), w/2, h*0.83+dy);
       }
       c.globalAlpha=1;
@@ -1099,26 +1113,25 @@ const DB = [
   { id:'t27', title:'Animated Infographics 3D', category:'HUD / Tech', style:'Corporate', duration:'00:10', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'8.4 MB', compatibility:'HTML5 Canvas 3D', isFree:true, trending:true, popularity:96, addedAt:20260226, headline:'ANNUAL GROWTH', subtitle:'DATA DRIVEN · 2026',
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      c.fillStyle='#141210'; c.fillRect(0,0,w,h);
-      // 3D grid floor
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#141210';cc.fillRect(0,0,ww,hh);});
       const cam = new Camera3D();
       cam.cx = w/2; cam.cy = h*0.72;
       cam.cz = 900 - t*20;
       cam.rotX = -0.55;
       cam.rotY = -0.3 + t*0.15;
-      // depth grid lines
-      c.strokeStyle='rgba(244,237,227,0.05)'; c.lineWidth=1;
-      for(let i=-6;i<=6;i++){
-        const p1 = cam.project(i*80, 150, -400);
-        const p2 = cam.project(i*80, 150, 200);
-        if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
+      if(!gs){
+        c.strokeStyle='rgba(244,237,227,0.05)'; c.lineWidth=1;
+        for(let i=-6;i<=6;i++){
+          const p1 = cam.project(i*80, 150, -400);
+          const p2 = cam.project(i*80, 150, 200);
+          if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
+        }
+        for(let z=-400;z<=200;z+=80){
+          const p1 = cam.project(-500, 150, z);
+          const p2 = cam.project(500, 150, z);
+          if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
+        }
       }
-      for(let z=-400;z<=200;z+=80){
-        const p1 = cam.project(-500, 150, z);
-        const p2 = cam.project(500, 150, z);
-        if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
-      }
-      // 3D extruded bars
       const bars=[0.45,0.7,0.55,0.85,0.62,0.95];
       bars.forEach((v,i)=>{
         const rev = Math.min(1, (t*0.9)-(i*0.12));
@@ -1130,7 +1143,6 @@ const DB = [
           (f,a) => shadeColor(cfg.accentColor||'#d97706', f*(0.8+v*0.4), a*0.95),
           'rgba(244,237,227,0.2)', 1);
       });
-      // 3D rotating ring in space
       const ringPts = [];
       const ringR = 140;
       for(let i=0;i<=40;i++){
@@ -1139,14 +1151,12 @@ const DB = [
         if(p.visible) ringPts.push(p);
       }
       if(ringPts.length>1){
-        c.strokeStyle = cfg.accentColor||'#d97706'; c.lineWidth = 2;
+        c.strokeStyle = gs?'#f4ede3':(cfg.accentColor||'#d97706'); c.lineWidth = 2;
         c.beginPath(); c.moveTo(ringPts[0].x, ringPts[0].y);
         for(let i=1;i<ringPts.length;i++) c.lineTo(ringPts[i].x, ringPts[i].y);
         c.stroke();
       }
-      // depth particles
-      particles3D(c, cam, t, 50, a => shadeColor(cfg.accentColor||'#d97706', 1.5, a*0.4), 600, 1000);
-      // flat overlay text (counter + metrics)
+      if(!gs) particles3D(c, cam, t, 50, a => shadeColor(cfg.accentColor||'#d97706', 1.5, a*0.4), 600, 1000);
       const ease = Math.min(1, t*0.8);
       const pct = Math.round(87 * ease);
       c.textAlign='center';
@@ -1154,7 +1164,7 @@ const DB = [
       c.fillStyle=cfg.textColor||'#f4ede3';
       c.fillText(pct+'%', w*0.78, h*0.28);
       c.font='600 11px "JetBrains Mono"';
-      c.fillStyle=cfg.accentColor||'#d97706';
+      c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');
       c.fillText((cfg.headline||'ANNUAL GROWTH').toUpperCase(), w*0.78, h*0.33);
       const metrics=[['ENGAGEMENT','74%'],['RETENTION','62%'],['REACH','91%']];
       metrics.forEach((m,i)=>{
@@ -1162,18 +1172,18 @@ const DB = [
         if(reveal<=0) return;
         const y=h*0.86+i*(h*0.035);
         c.textAlign='left';
-        c.font='500 10px "JetBrains Mono"'; c.fillStyle='rgba(244,237,227,0.6)';
+        c.font='500 10px "JetBrains Mono"'; c.fillStyle=gs?'rgba(244,237,227,0.85)':'rgba(244,237,227,0.6)';
         c.fillText(m[0], w*0.08, y);
         c.textAlign='right';
         c.fillStyle=cfg.accentColor||'#d97706';
         c.fillText(m[1], w*0.42, y);
-        c.fillStyle='rgba(244,237,227,0.08)';
+        c.fillStyle=gs?'rgba(244,237,227,0.2)':'rgba(244,237,227,0.08)';
         c.fillRect(w*0.08, y+4, w*0.34, 2);
         c.fillStyle=cfg.accentColor||'#d97706';
         c.fillRect(w*0.08, y+4, w*0.34*parseInt(m[1])/100*reveal, 2);
       });
       c.textAlign='center'; c.font='500 10px "JetBrains Mono"';
-      c.fillStyle='rgba(244,237,227,0.35)';
+      c.fillStyle=gs?'rgba(244,237,227,0.6)':'rgba(244,237,227,0.35)';
       c.fillText((cfg.subtitle||'DATA DRIVEN · 2026').toUpperCase(), w/2, h*0.14);
     }
   },
@@ -1181,23 +1191,22 @@ const DB = [
   { id:'t28', title:'Exponential Growth 3D', category:'Corporate', style:'Modern', duration:'00:09', aspect:'16:9', resolution:'1920 × 1080', fps:60, fileSize:'7.9 MB', compatibility:'HTML5 Canvas 3D', isFree:false, trending:true, popularity:95, addedAt:20260120, headline:'SCALE YOUR BUSINESS', subtitle:'GROWTH COMPOUNDS · 2026',
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      c.fillStyle='#0f0d0b'; c.fillRect(0,0,w,h);
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0f0d0b';cc.fillRect(0,0,ww,hh);});
       const cam = new Camera3D();
       cam.cx = w/2; cam.cy = h*0.6;
       cam.cz = 900 - t*30;
       cam.rotX = -0.2;
       cam.rotY = -0.15 + t*0.1;
-      // parallax grid in 3D
-      c.strokeStyle='rgba(244,237,227,0.05)'; c.lineWidth=1;
-      for(let i=0;i<4;i++){
-        const yv = -100 + i*80;
-        const p1 = cam.project(-500, yv, 300);
-        const p2 = cam.project(500, yv, 300);
-        if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
+      if(!gs){
+        c.strokeStyle='rgba(244,237,227,0.05)'; c.lineWidth=1;
+        for(let i=0;i<4;i++){
+          const yv = -100 + i*80;
+          const p1 = cam.project(-500, yv, 300);
+          const p2 = cam.project(500, yv, 300);
+          if(p1.visible && p2.visible){ c.beginPath(); c.moveTo(p1.x,p1.y); c.lineTo(p2.x,p2.y); c.stroke(); }
+        }
+        particles3D(c, cam, t, 70, a => shadeColor(cfg.accentColor||'#d97706', 1.4, a*0.6), 400, 800);
       }
-      // depth particles along curve
-      particles3D(c, cam, t, 70, a => shadeColor(cfg.accentColor||'#d97706', 1.4, a*0.6), 400, 800);
-      // 3D curve projected
       const ease = Math.min(1, t/2.6);
       const steps = 60;
       const pts = [];
@@ -1210,19 +1219,17 @@ const DB = [
         if(pr.visible) pts.push(pr);
       }
       if(pts.length>1){
-        c.lineWidth = 3; c.strokeStyle = cfg.accentColor||'#d97706'; c.lineCap='round';
+        c.lineWidth = 3; c.strokeStyle = gs?'#f4ede3':(cfg.accentColor||'#d97706'); c.lineCap='round';
         c.beginPath(); c.moveTo(pts[0].x, pts[0].y);
         for(let i=1;i<pts.length;i++) c.lineTo(pts[i].x, pts[i].y);
         c.stroke();
-        // glow at head
         const last = pts[pts.length-1];
         const g = c.createRadialGradient(last.x,last.y,0,last.x,last.y,30);
-        g.addColorStop(0, cfg.accentColor||'#d97706');
+        g.addColorStop(0, gs?'#f4ede3':(cfg.accentColor||'#d97706'));
         g.addColorStop(1, 'rgba(217,119,6,0)');
         c.fillStyle=g; c.beginPath(); c.arc(last.x,last.y,30,0,Math.PI*2); c.fill();
       }
       c.lineCap='butt';
-      // 3D milestone orbs
       const milestones=[0.25,0.55,0.85];
       milestones.forEach((m,i)=>{
         const reveal = Math.max(0, Math.min(1, (ease - m) * 6));
@@ -1233,25 +1240,23 @@ const DB = [
         const pr = cam.project(x,y,z);
         if(!pr.visible) return;
         const orbR = 10 * pr.scale;
-        // 3D orb shading
         const grd = c.createRadialGradient(pr.x-orbR*0.3, pr.y-orbR*0.3, 0, pr.x, pr.y, orbR);
         grd.addColorStop(0, cfg.textColor||'#f4ede3');
         grd.addColorStop(1, shadeColor(cfg.accentColor||'#d97706', 0.6, 1));
         c.fillStyle=grd;
         c.beginPath(); c.arc(pr.x, pr.y, orbR*reveal, 0, Math.PI*2); c.fill();
         c.font='500 9px "JetBrains Mono"';
-        c.fillStyle='rgba(244,237,227,0.55)';
+        c.fillStyle=gs?'rgba(244,237,227,0.85)':'rgba(244,237,227,0.55)';
         c.textAlign = (i===milestones.length-1) ? 'right' : (i===0 ? 'left' : 'center');
         c.fillText(['LAUNCH','FIRST 100','SCALING'][i], pr.x, pr.y-orbR-6);
       });
-      // overlay text
       const count = Math.round(100 * Math.pow(ease, 2.4));
       c.textAlign='right';
       c.font=`800 ${Math.min(cfg.fontSize||56, Math.floor(w*0.06))}px ${cfg.fontFamily||'Montserrat'}`;
       c.fillStyle=cfg.textColor||'#f4ede3';
       c.fillText(count+'x', w*0.92, h*0.32);
       c.font='600 11px "JetBrains Mono"';
-      c.fillStyle=cfg.accentColor||'#d97706';
+      c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');
       c.fillText('REVENUE MULTIPLIER', w*0.92, h*0.37);
       c.textAlign='left';
       c.font=`800 ${Math.min(cfg.fontSize||34, Math.floor(w*0.035))}px ${cfg.fontFamily||'Montserrat'}`;
@@ -1260,7 +1265,7 @@ const DB = [
       c.fillText((cfg.headline||'SCALE YOUR BUSINESS').toUpperCase(), w*0.08, h*0.12);
       c.globalAlpha = Math.max(0, Math.min(1,(t-0.5)*1.5));
       c.font='600 10px "JetBrains Mono"';
-      c.fillStyle=cfg.accentColor||'#d97706';
+      c.fillStyle=gs?'#fef3c7':(cfg.accentColor||'#d97706');
       c.fillText((cfg.subtitle||'GROWTH COMPOUNDS · 2026').toUpperCase(), w*0.08, h*0.16);
       c.globalAlpha=1;
     }
@@ -1269,21 +1274,18 @@ const DB = [
   { id:'t29', title:'Why Most Content Fails 3D', category:'Social Media', style:'Editorial', duration:'00:08', aspect:'9:16', resolution:'1080 × 1920', fps:60, fileSize:'6.6 MB', compatibility:'HTML5 Canvas 3D', isFree:true, trending:true, popularity:94, addedAt:20240925, headline:'WHY MOST CONTENT FAILS', subtitle:'IT SELLS BEFORE IT SERVES',
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      c.fillStyle='#0f0d0b'; c.fillRect(0,0,w,h);
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0f0d0b';cc.fillRect(0,0,ww,hh);});
       const cam = new Camera3D();
       cam.cx = w/2; cam.cy = h/2;
       cam.cz = 1100 - t*50;
       cam.rotX = -0.15 + Math.sin(t*0.5)*0.08;
       cam.rotY = t*0.4;
-      // depth particles
-      particles3D(c, cam, t, 50, a => shadeColor(cfg.accentColor||'#ef4444', 1.2, a*0.4), 400, 1000);
-      // 3D rotating X stamp plate
+      if(!gs) particles3D(c, cam, t, 50, a => shadeColor(cfg.accentColor||'#ef4444', 1.2, a*0.4), 400, 1000);
       const stamp = Math.max(0, Math.min(1, (t-0.3)*2));
       if(stamp > 0){
         box3D(c, cam, 0, -40, 0, 300, 300, 20,
           (f,a) => shadeColor(cfg.accentColor||'#ef4444', f*0.7, a*0.35*stamp),
           'rgba(239,68,68,0.4)', 1);
-        // X strokes projected in 3D
         const p1 = cam.project(-120,-140,10);
         const p2 = cam.project(120,60,10);
         const p3 = cam.project(120,-140,10);
@@ -1298,7 +1300,6 @@ const DB = [
           c.lineCap='butt';
         }
       }
-      // floating word planes
       const words = (cfg.headline || 'WHY MOST CONTENT FAILS').toUpperCase().split(' ');
       const mid = Math.ceil(words.length/2);
       const lines = [words.slice(0,mid), words.slice(mid)];
@@ -1318,7 +1319,6 @@ const DB = [
         c.fillText(line.join(' '), pr.x, pr.y);
       });
       c.globalAlpha = 1;
-      // punch line
       const punchReveal = Math.max(0, Math.min(1, (t-1.4)*2.5));
       if(punchReveal > 0){
         const lastLine = lines[1].join(' ');
@@ -1327,22 +1327,21 @@ const DB = [
         c.fillStyle = cfg.accentColor || '#ef4444';
         c.fillRect(w/2 - lastW/2, strikeY, lastW * punchReveal, 6);
       }
-      // divider + subtitle
       const divReveal = Math.max(0, Math.min(1, (t-1.8)*2));
       if(divReveal > 0){
-        c.fillStyle = 'rgba(244,237,227,0.15)';
+        c.fillStyle = gs?'rgba(244,237,227,0.4)':'rgba(244,237,227,0.15)';
         c.fillRect(w*0.2, h*0.62, (w*0.6)*divReveal, 1.5);
       }
       const subReveal = Math.max(0, Math.min(1, (t-2.2)*2));
       if(subReveal > 0){
         c.globalAlpha = subReveal;
         c.font = `italic 600 ${Math.min(24, Math.floor(w*0.045))}px "Playfair Display"`;
-        c.fillStyle = cfg.accentColor || '#d97706';
+        c.fillStyle = gs?'#fef3c7':(cfg.accentColor || '#d97706');
         c.fillText((cfg.subtitle || 'IT SELLS BEFORE IT SERVES'), w/2, h*0.66);
         c.globalAlpha = 1;
       }
       c.font = '500 9px "JetBrains Mono"';
-      c.fillStyle = 'rgba(244,237,227,0.35)';
+      c.fillStyle = gs?'rgba(244,237,227,0.6)':'rgba(244,237,227,0.35)';
       c.fillText('MOTION MATRIX · EDITORIAL 3D SERIES', w/2, h*0.9);
     }
   },
@@ -1350,15 +1349,13 @@ const DB = [
   { id:'t30', title:'Secret Method Tutorial 3D', category:'Social Media', style:'Modern', duration:'00:08', aspect:'9:16', resolution:'1080 × 1920', fps:60, fileSize:'6.9 MB', compatibility:'HTML5 Canvas 3D', isFree:true, trending:true, popularity:93, addedAt:20260504, headline:'HOW TO RANK ON PINTEREST', subtitle:'VALIDATE BEFORE YOU UPLOAD',
     render:(c,t,cfg)=>{
       const w=c.canvas.width, h=c.canvas.height;
-      c.fillStyle='#0f0d0b'; c.fillRect(0,0,w,h);
+      const gs = bgFor(c,cfg,w,h,(cc,ww,hh)=>{cc.fillStyle='#0f0d0b';cc.fillRect(0,0,ww,hh);});
       const cam = new Camera3D();
       cam.cx = w/2; cam.cy = h*0.5;
       cam.cz = 1000 - t*30;
       cam.rotX = -0.1 + Math.sin(t*0.4)*0.06;
       cam.rotY = -t*0.3;
-      // depth particles
-      particles3D(c, cam, t, 60, a => shadeColor(cfg.accentColor||'#d97706', 1.4, a*0.5), 450, 1100);
-      // floating pill plate in 3D
+      if(!gs) particles3D(c, cam, t, 60, a => shadeColor(cfg.accentColor||'#d97706', 1.4, a*0.5), 450, 1100);
       const pillReveal = Math.min(1, t*2.5);
       if(pillReveal>0){
         const pr = cam.project(0, -260, 150);
@@ -1367,19 +1364,18 @@ const DB = [
           const ph = 60*pr.scale;
           c.globalAlpha = pillReveal;
           c.fillStyle = 'rgba(217,119,6,0.12)';
-          c.strokeStyle = cfg.accentColor||'#d97706'; c.lineWidth = 2;
+          c.strokeStyle = gs?'#f4ede3':(cfg.accentColor||'#d97706'); c.lineWidth = 2;
           c.beginPath();
           if(c.roundRect) c.roundRect(pr.x-pw/2, pr.y-ph/2, pw, ph, ph/2);
           else c.rect(pr.x-pw/2, pr.y-ph/2, pw, ph);
           c.fill(); c.stroke();
           c.font = `600 ${Math.max(10, 14*pr.scale)}px "JetBrains Mono"`;
-          c.fillStyle = cfg.accentColor||'#d97706';
+          c.fillStyle = gs?'#f4ede3':(cfg.accentColor||'#d97706');
           c.textAlign = 'center';
           c.fillText('THE SECRET METHOD', pr.x, pr.y + 4*pr.scale);
           c.globalAlpha = 1;
         }
       }
-      // 3D headline planes
       const size = Math.min(cfg.fontSize || 66, Math.floor(w*0.1));
       c.font = `900 ${size}px ${cfg.fontFamily || 'Oswald'}`;
       const lines = ['HOW TO RANK', 'ON PINTEREST?'];
@@ -1396,7 +1392,6 @@ const DB = [
         c.fillText(line, pr.x, pr.y);
       });
       c.globalAlpha = 1;
-      // 3D orbiting step orbs
       const steps = [
         ['01', 'WRITE YOUR PIN TITLE'],
         ['02', 'ADD RICH KEYWORDS'],
@@ -1412,7 +1407,6 @@ const DB = [
         const pr = cam.project(orbX, orbY, orbZ);
         if(!pr.visible) return;
         const orbR = 22 * pr.scale * reveal;
-        // 3D orb
         const grd = c.createRadialGradient(pr.x-orbR*0.3, pr.y-orbR*0.3, 0, pr.x, pr.y, orbR);
         grd.addColorStop(0, shadeColor(cfg.accentColor||'#d97706', 1.4, 1));
         grd.addColorStop(1, shadeColor(cfg.accentColor||'#d97706', 0.6, 1));
@@ -1421,23 +1415,21 @@ const DB = [
         c.font = `700 ${Math.max(9, 11*pr.scale)}px "JetBrains Mono"`;
         c.fillStyle = '#0f0d0b'; c.textAlign='center';
         c.fillText(s[0], pr.x, pr.y + 3*pr.scale);
-        // label
         c.font = `700 ${Math.max(10, Math.min(16, Math.floor(w*0.03)))}px ${cfg.fontFamily || 'Montserrat'}`;
         c.fillStyle = cfg.textColor||'#f4ede3';
         c.textAlign = 'left';
         c.fillText(s[1], pr.x + orbR + 12*pr.scale, pr.y + 4*pr.scale);
         c.globalAlpha = 1;
       });
-      // subtitle
       const subReveal = Math.max(0, Math.min(1, (t-2.8)*2));
       if(subReveal > 0){
         c.globalAlpha = subReveal;
         c.textAlign = 'center';
         c.font = 'italic 600 18px "Playfair Display"';
-        c.fillStyle = cfg.accentColor || '#d97706';
+        c.fillStyle = gs?'#fef3c7':(cfg.accentColor || '#d97706');
         c.fillText((cfg.subtitle || 'VALIDATE BEFORE YOU UPLOAD'), w/2, h*0.83);
         c.font = '500 9px "JetBrains Mono"';
-        c.fillStyle = 'rgba(244,237,227,0.35)';
+        c.fillStyle = gs?'rgba(244,237,227,0.6)':'rgba(244,237,227,0.35)';
         c.fillText('SAVE THIS FOR LATER', w/2, h*0.88);
         c.globalAlpha = 1;
       }
@@ -1454,7 +1446,8 @@ const STATE = {
     headline: DB[0].headline, subtitle: DB[0].subtitle,
     fontFamily:'Montserrat', fontWeight:900, fontSize:42, letterSpacing:0,
     accentColor:'#d97706', secondaryColor:'#ef4444', backgroundColor:'#141210', textColor:'#f4ede3',
-    speed:1.0, intensity:1.0, transitionStyle:'liquid', customLogoUrl:null
+    speed:1.0, intensity:1.0, transitionStyle:'liquid', customLogoUrl:null,
+    greenScreen: false
   },
   savedProjects: JSON.parse(localStorage.getItem('mm_projects') || '[]'),
   filterLicense: 'all',
@@ -1559,7 +1552,7 @@ function renderGrid() {
     const loop = () => {
       if (!document.body.contains(canvas)) return;
       time += 0.02;
-      try { tmp.render(ctx, time, { headline:tmp.headline, subtitle:tmp.subtitle }); } catch(e) {}
+      try { tmp.render(ctx, time, { headline:tmp.headline, subtitle:tmp.subtitle, greenScreen: STATE.customConfig.greenScreen }); } catch(e) {}
       requestAnimationFrame(loop);
     };
     loop();
@@ -1602,7 +1595,7 @@ function renderFeatured() {
     const loop = () => {
       if (!document.body.contains(c)) return;
       time += 0.03;
-      try { tpl.render(ctx, time, { headline:tpl.headline, subtitle:tpl.subtitle }); } catch(e){}
+      try { tpl.render(ctx, time, { headline:tpl.headline, subtitle:tpl.subtitle, greenScreen: STATE.customConfig.greenScreen }); } catch(e){}
       requestAnimationFrame(loop);
     };
     loop();
@@ -1665,6 +1658,8 @@ function loadTemplateToEditor(tpl) {
   document.getElementById('edit-secondary-color').value = STATE.customConfig.secondaryColor;
   document.getElementById('edit-color-text').value = STATE.customConfig.textColor;
   document.getElementById('edit-bg-color').value = STATE.customConfig.backgroundColor;
+  document.getElementById('edit-greenscreen').checked = !!STATE.customConfig.greenScreen;
+  document.getElementById('gs-indicator').classList.toggle('hidden', !STATE.customConfig.greenScreen);
   document.getElementById('canvas-aspect-readout').innerText = tpl.aspect;
 }
 
@@ -1909,6 +1904,10 @@ function wireEvents() {
   document.getElementById('edit-secondary-color')?.addEventListener('input', e => STATE.customConfig.secondaryColor = e.target.value);
   document.getElementById('edit-color-text')?.addEventListener('input', e => STATE.customConfig.textColor = e.target.value);
   document.getElementById('edit-bg-color')?.addEventListener('input', e => STATE.customConfig.backgroundColor = e.target.value);
+  document.getElementById('edit-greenscreen')?.addEventListener('change', e => {
+    STATE.customConfig.greenScreen = e.target.checked;
+    document.getElementById('gs-indicator').classList.toggle('hidden', !e.target.checked);
+  });
   document.getElementById('edit-anim-speed')?.addEventListener('input', e => {
     STATE.customConfig.speed = parseFloat(e.target.value);
     document.getElementById('val-edit-speed').innerText = e.target.value + 'x';
@@ -1982,7 +1981,8 @@ function wireEvents() {
             detail: {
               resolution: document.getElementById('export-res').value,
               format: document.getElementById('export-format').value,
-              quality: document.getElementById('export-quality').value
+              quality: document.getElementById('export-quality').value,
+              greenScreen: STATE.customConfig.greenScreen
             }
           }));
           document.getElementById('modal-export').classList.add('hidden');
